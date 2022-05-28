@@ -49,10 +49,7 @@ import com.runescape.cache.anim.Frame;
 import com.runescape.cache.anim.Graphic;
 import com.runescape.cache.config.VariableBits;
 import com.runescape.cache.config.VariablePlayer;
-import com.runescape.cache.def.FloorDefinition;
-import com.runescape.cache.def.ItemDefinition;
-import com.runescape.cache.def.NpcDefinition;
-import com.runescape.cache.def.ObjectDefinition;
+import com.runescape.cache.def.*;
 import com.runescape.cache.graphics.DropdownMenu;
 import com.runescape.cache.graphics.GameFont;
 import com.runescape.cache.graphics.IndexedImage;
@@ -2454,19 +2451,17 @@ public class Client extends GameApplet {
                     id = id >> 14 & 0x7fff;
 
                     int function = ObjectDefinition.lookup(id).minimapFunction;
-                    if (function >= 15 && function <= 67) {
-                    	function -= 2;
-					} else if (function == 13 || function >= 68 && function <= 84) {
-						function -= 1;
-					}
-                    if (function >= 0) {
-                        int viewportX = x;
-                        int viewportY = y;
 
-                        //minimapHint[anInt1071] = mapFunctions[function];
-                        minimapHintX[anInt1071] = viewportX;
-                        minimapHintY[anInt1071] = viewportY;
-                        anInt1071++;
+                    if (function != -1) {
+                        int sprite = AreaDefinition.lookup(function).spriteId;
+                        if(sprite != -1) {
+                            int viewportX = x;
+                            int viewportY = y;
+                            minimapHint[anInt1071] = AreaDefinition.getImage(sprite);
+                            minimapHintX[anInt1071] = viewportX;
+                            minimapHintY[anInt1071] = viewportY;
+                            anInt1071++;
+                        }
                     }
                 }
             }
@@ -4676,6 +4671,7 @@ public class Client extends GameApplet {
             NpcDefinition.init(configArchive);
             IdentityKit.init(configArchive);
             Graphic.init(configArchive);
+            AreaDefinition.init(configArchive);
             VariablePlayer.init(configArchive);
             VariableBits.init(configArchive);
             ItemDefinition.init(configArchive);
