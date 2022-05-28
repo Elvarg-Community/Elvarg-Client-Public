@@ -6204,8 +6204,8 @@ public class Client extends GameApplet {
         }
 
         // using item on object
-        if (action == 62 && clickObject(clicked, button, first)) {
-            packetSender.sendUseItemOnObject(anInt1284, clicked >> 14 & 0x7fff, button + regionBaseY, anInt1283, first + regionBaseX, anInt1285);
+        if (action == 62 && clickObject(clickedLong, button, first)) {
+            packetSender.sendUseItemOnObject(anInt1284, ObjectKeyUtil.getObjectId(clicked), button + regionBaseY, anInt1283, first + regionBaseX, anInt1285);
         }
 
         // using item on ground item
@@ -6393,10 +6393,10 @@ public class Client extends GameApplet {
                 // outgoing.writeTriByte(0xe63271);
                 anInt924 = 0;
             }
-            clickObject(clicked, button, first);
+            clickObject(clickedLong, button, first);
 
             // object option 5
-            packetSender.sendObjectOption5(clicked >> 14 & 0x7fff, button + regionBaseY, first + regionBaseX);
+            packetSender.sendObjectOption5(ObjectKeyUtil.getObjectId(clicked), button + regionBaseY, first + regionBaseX);
         }
 
         // continue dialogue
@@ -6968,9 +6968,9 @@ public class Client extends GameApplet {
         }
 
         if (action == 900) {
-            clickObject(clicked, button, first);
+            clickObject(clickedLong, button, first);
             // object option 2
-            packetSender.sendObjectOption2(clicked >> 14 & 0x7fff, button + regionBaseY, first + regionBaseX);
+            packetSender.sendObjectOption2(ObjectKeyUtil.getObjectId(clicked), button + regionBaseY, first + regionBaseX);
         }
 
         // Using the "Attack" option on a npc
@@ -7032,9 +7032,9 @@ public class Client extends GameApplet {
         }
 
         // Using a spell on an item
-        if (action == 956 && clickObject(clicked, button, first)) {
+        if (action == 956 && clickObject(clickedLong, button, first)) {
             // magic on item
-            //	sendPacket(new MagicOnItem(first + regionBaseX, anInt1137, button + regionBaseY, clicked >> 14 & 0x7fff));
+            //	sendPacket(new MagicOnItem(first + regionBaseX, anInt1137, button + regionBaseY, ObjectKeyUtil.getObjectId(clicked)));
         }
 
         // Some walking action (packet 23)
@@ -7194,21 +7194,21 @@ public class Client extends GameApplet {
 
         // Object option 3
         if (action == 113) {
-            clickObject(clicked, button, first);
+            clickObject(clickedLong, button, first);
             // object option 3
-            packetSender.sendObjectOption3(first + regionBaseX, button + regionBaseY, clicked >> 14 & 0x7fff);
+            packetSender.sendObjectOption3(first + regionBaseX, button + regionBaseY, ObjectKeyUtil.getObjectId(clicked));
         }
 
         // Object option 4
         if (action == 872) {
-            clickObject(clicked, button, first);
-            packetSender.sendObjectOption4(first + regionBaseX, clicked >> 14 & 0x7fff, button + regionBaseY);
+            clickObject(clickedLong, button, first);
+            packetSender.sendObjectOption4(first + regionBaseX, ObjectKeyUtil.getObjectId(clicked), button + regionBaseY);
         }
 
         // Object option 1
         if (action == 502) {
-            clickObject(clicked, button, first);
-            packetSender.sendObjectOption1(first + regionBaseX, clicked >> 14 & 0x7fff, button + regionBaseY);
+            clickObject(clickedLong, button, first);
+            packetSender.sendObjectOption1(first + regionBaseX, ObjectKeyUtil.getObjectId(clicked), button + regionBaseY);
         }
 
 
@@ -7238,7 +7238,7 @@ public class Client extends GameApplet {
         }
 
         if (action == 1226) {
-            int objectId = clicked >> 14 & 0x7fff;
+            int objectId = ObjectKeyUtil.getObjectId(clicked);
             ObjectDefinition definition = ObjectDefinition.lookup(objectId);
             String message;
             if (definition.description != null)
