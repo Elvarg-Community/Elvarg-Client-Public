@@ -8,6 +8,6 @@ public final class GroundItemTile {
     public Renderable topNode;
     public Renderable lowerNode;
     public Renderable middleNode;
-    public int uid;
+    public long uid;
     public int itemDropHeight;
 }

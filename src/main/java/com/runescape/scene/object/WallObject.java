@@ -11,7 +11,8 @@ public final class WallObject {
     public int orientation2;
     public Renderable renderable1;
     public Renderable renderable2;
-    public int uid;
-    public byte mask;
+    public long uid;
+    public int mask;
+
 
 }

@@ -13,7 +13,7 @@ public class Renderable extends Cacheable {
         modelBaseY = 1000;
     }
 
-    public void renderAtPoint(int i, int j, int k, int l, int i1, int j1, int k1, int l1, int i2) {
+    public void renderAtPoint(int i, int j, int k, int l, int i1, int j1, int k1, int l1, long i2) {
         Model model = getRotatedModel();
         if (model != null) {
             modelBaseY = model.modelBaseY;

@@ -10,6 +10,6 @@ public final class WallDecoration {
     public int orientation;
     public int orientation2;
     public Renderable renderable;
-    public int uid;
-    public byte mask;
+    public long uid;
+    public int mask;
 }

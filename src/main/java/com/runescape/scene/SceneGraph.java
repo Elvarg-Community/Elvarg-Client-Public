@@ -211,7 +211,7 @@ public final class SceneGraph {
         int i1 = j * camLeftRightX - k * camLeftRightY >> 16;
         int j1 = i * camUpDownY + i1 * camUpDownX >> 16;
         int k1 = i * camUpDownX - i1 * camUpDownY >> 16;
-        if (j1 < 50 || j1 > 3500)
+        if (j1 < 50 || j1 > 4500)
             return false;
         int l1 = viewportHalfWidth + (l << viewDistance) / j1;
         int i2 = viewportHalfHeight + (k1 << viewDistance) / j1;
@@ -296,7 +296,25 @@ public final class SceneGraph {
         }
     }
 
-    public void addGroundDecoration(int zLoc, int zPos, int yLoc, Renderable renderable, byte objectRotationType, int uid, int xLoc) {
+    public boolean getMask(int zLoc, int xLoc, int yLoc, long uid) {
+        Tile tile = tileArray[zLoc][xLoc][yLoc];
+        if (tile == null)
+            return false;
+        if (tile.wallObject != null && tile.wallObject.uid == uid)
+            return true;
+        if (tile.wallDecoration != null && tile.wallDecoration.uid == uid)
+            return true;
+        if (tile.groundDecoration != null && tile.groundDecoration.uid == uid)
+            return true;
+        for (int i = 0; i < tile.gameObjectIndex; i++) {
+            if (tile.gameObjects[i].uid == uid) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void addGroundDecoration(int zLoc, int zPos, int yLoc, Renderable renderable, byte objectRotationType, long uid, int xLoc) {
         if (renderable == null)
             return;
         GroundDecoration groundDecoration = new GroundDecoration();
@@ -311,7 +329,7 @@ public final class SceneGraph {
         tileArray[zLoc][xLoc][yLoc].groundDecoration = groundDecoration;
     }
 
-    public void addGroundItemTile(int xLoc, int uid, Renderable firstNode, int zPos, Renderable secondNode, Renderable thirdNode, int zLoc, int yLoc) {
+    public void addGroundItemTile(int xLoc, long uid, Renderable firstNode, int zPos, Renderable secondNode, Renderable thirdNode, int zLoc, int yLoc) {
         GroundItemTile groundItemTile = new GroundItemTile();
         groundItemTile.topNode = thirdNode;
         groundItemTile.xPos = xLoc * 128 + 64;
@@ -337,7 +355,7 @@ public final class SceneGraph {
         tileArray[zLoc][xLoc][yLoc].groundItemTile = groundItemTile;
     }
 
-    public void addWallObject(int orientation1, Renderable renderable1, int uid, int yLoc, byte objectFaceType, int xLoc, Renderable renderable2, int zPos, int orientation2, int zLoc) {
+    public void addWallObject(int orientation1, Renderable renderable1, long uid, int yLoc, byte objectFaceType, int xLoc, Renderable renderable2, int zPos, int orientation2, int zLoc) {
         if (renderable1 == null && renderable2 == null)
             return;
         WallObject wallObject = new WallObject();
@@ -357,11 +375,9 @@ public final class SceneGraph {
         tileArray[zLoc][xLoc][yLoc].wallObject = wallObject;
     }
 
-    public void addWallDecoration(int uid, int yLoc, int orientation2, int zLoc, int xOffset, int zPos, Renderable renderable, int xLoc, byte objectRotationType, int yOffset, int orientation) {
+    public void addWallDecoration(long uid, int yLoc, int orientation2, int zLoc, int xOffset, int zPos, Renderable renderable, int xLoc, byte objectRotationType, int yOffset, int orientation) {
         if (renderable == null)
             return;
-
-        int objectId = uid >> 14 & 0x7fff;
 
         WallDecoration wallDecoration = new WallDecoration();
         wallDecoration.uid = uid;
@@ -379,7 +395,7 @@ public final class SceneGraph {
         tileArray[zLoc][xLoc][yLoc].wallDecoration = wallDecoration;
     }
 
-    public boolean addTiledObject(int uid, byte objectRotationType, int tileHeight, int sizeY, Renderable renderable, int sizeX, int zLoc, int turnValue, int yLoc, int xLoc) {
+    public boolean addTiledObject(long uid, byte objectRotationType, int tileHeight, int sizeY, Renderable renderable, int sizeX, int zLoc, int turnValue, int yLoc, int xLoc) {
         if (renderable == null) {
             return true;
         } else {
@@ -389,7 +405,7 @@ public final class SceneGraph {
         }
     }
 
-    public boolean addAnimableA(int zLoc, int turnValue, int k, int uid, int yPos, int halfSizePos, int xPos, Renderable animable, boolean flag) {
+    public boolean addAnimableA(int zLoc, int turnValue, int k, long uid, int yPos, int halfSizePos, int xPos, Renderable animable, boolean flag) {
         if (animable == null)
             return true;
         int startXLoc = xPos - halfSizePos;
@@ -413,11 +429,11 @@ public final class SceneGraph {
         return addAnimableC(zLoc, startXLoc, startYLoc, (endXLoc - startXLoc) + 1, (endYLoc - startYLoc) + 1, xPos, yPos, k, animable, turnValue, true, uid, (byte) 0);
     }
 
-    public boolean addToScenePlayerAsObject(int zLoc, int playerYPos, Renderable playerAsObject, int playerTurnValue, int objectEndYLoc, int playerXPos, int playerHeight, int objectStartXLoc, int objectEndXLoc, int uid, int objectStartYLoc) {
+    public boolean addToScenePlayerAsObject(int zLoc, int playerYPos, Renderable playerAsObject, int playerTurnValue, int objectEndYLoc, int playerXPos, int playerHeight, int objectStartXLoc, int objectEndXLoc, long uid, int objectStartYLoc) {
         return playerAsObject == null || addAnimableC(zLoc, objectStartXLoc, objectStartYLoc, (objectEndXLoc - objectStartXLoc) + 1, (objectEndYLoc - objectStartYLoc) + 1, playerXPos, playerYPos, playerHeight, playerAsObject, playerTurnValue, true, uid, (byte) 0);
     }
 
-    private boolean addAnimableC(int zLoc, int xLoc, int yLoc, int sizeX, int sizeY, int xPos, int yPos, int tileHeight, Renderable renderable, int turnValue, boolean isDynamic, int uid, byte objectRotationType) {
+    private boolean addAnimableC(int zLoc, int xLoc, int yLoc, int sizeX, int sizeY, int xPos, int yPos, int tileHeight, Renderable renderable, int turnValue, boolean isDynamic, long uid, byte objectRotationType) {
         for (int x = xLoc; x < xLoc + sizeX; x++) {
             for (int y = yLoc; y < yLoc + sizeY; y++) {
                 if (x < 0 || y < 0 || x >= xRegionSize || y >= yRegionSize)
@@ -597,7 +613,7 @@ public final class SceneGraph {
             return tile.groundDecoration;
     }
 
-    public int getWallObjectUid(int zLoc, int xLoc, int yLoc) {
+    public long getWallObjectUid(int zLoc, int xLoc, int yLoc) {
         Tile tile = tileArray[zLoc][xLoc][yLoc];
         if (tile == null || tile.wallObject == null)
             return 0;
@@ -605,7 +621,7 @@ public final class SceneGraph {
             return tile.wallObject.uid;
     }
 
-    public int getWallDecorationUid(int zLoc, int xLoc, int yLoc) {
+    public long getWallDecorationUid(int zLoc, int xLoc, int yLoc) {
         Tile tile = tileArray[zLoc][xLoc][yLoc];
         if (tile == null || tile.wallDecoration == null)
             return 0;
@@ -613,7 +629,7 @@ public final class SceneGraph {
             return tile.wallDecoration.uid;
     }
 
-    public int getGameObjectUid(int zLoc, int xLoc, int yLoc) {
+    public long getGameObjectUid(int zLoc, int xLoc, int yLoc) {
         Tile tile = tileArray[zLoc][xLoc][yLoc];
         if (tile == null)
             return 0;
@@ -625,38 +641,12 @@ public final class SceneGraph {
         return 0;
     }
 
-    public int getGroundDecorationUid(int zLoc, int xLoc, int yLoc) {
+    public long getGroundDecorationUid(int zLoc, int xLoc, int yLoc) {
         Tile tile = tileArray[zLoc][xLoc][yLoc];
         if (tile == null || tile.groundDecoration == null)
             return 0;
         else
             return tile.groundDecoration.uid;
-    }
-
-    /**
-     * Retrieves the mask of the object with the given uid at the given location.
-     * -1 if there's no object.
-     *
-     * @param zLoc The zLoc.
-     * @param xLoc The xLoc.
-     * @param yLoc The yLoc.
-     * @param uid  The object's Uid.
-     * @return The mask, which is comprised out of the rotation (shifted 6 to the left) and the type (which has a maximum value of 22).
-     */
-    public int getMask(int zLoc, int xLoc, int yLoc, int uid) {
-        Tile tile = tileArray[zLoc][xLoc][yLoc];
-        if (tile == null)
-            return -1;
-        if (tile.wallObject != null && tile.wallObject.uid == uid)
-            return tile.wallObject.mask & 0xff;
-        if (tile.wallDecoration != null && tile.wallDecoration.uid == uid)
-            return tile.wallDecoration.mask & 0xff;
-        if (tile.groundDecoration != null && tile.groundDecoration.uid == uid)
-            return tile.groundDecoration.mask & 0xff;
-        for (int i = 0; i < tile.gameObjectIndex; i++)
-            if (tile.gameObjects[i].uid == uid)
-                return tile.gameObjects[i].mask & 0xff;
-        return -1;
     }
 
     public void shadeModels(int lightY, int lightX, int lightZ) {

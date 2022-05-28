@@ -16,8 +16,8 @@ public class Model extends Renderable {
     public static boolean aBoolean1684;
     public static int anInt1685;
     public static int anInt1686;
-    public static int anInt1687;
-    public static int anIntArray1688[] = new int[1000];
+    public static int obj_loaded;
+    public static long obj_key[] = new long[1000];
     public static int SINE[];
     public static int COSINE[];
     static ModelHeader modelHeader[];
@@ -1392,13 +1392,13 @@ public class Model extends Renderable {
     }
 
     @Override
-    public final void renderAtPoint(int i, int j, int k, int l, int i1, int j1, int k1, int l1, int i2) {
+    public final void renderAtPoint(int i, int j, int k, int l, int i1, int j1, int k1, int l1, long i2) {
 
         int j2 = l1 * i1 - j1 * l >> 16;
         int k2 = k1 * j + j2 * k >> 16;
         int l2 = maxVertexDistanceXZPlane * k >> 16;
         int i3 = k2 + l2;
-        if (i3 <= 50 || k2 >= 3500)
+        if (i3 <= 50 || k2 >= 4500)
             return;
 
         int j3 = l1 * l + j1 * i1 >> 16;
@@ -1449,7 +1449,7 @@ public class Model extends Renderable {
             int k6 = anInt1686 - Rasterizer3D.originViewY;
             if (i6 > k3 && i6 < l3 && k6 > i5 && k6 < k4)
                 if (fits_on_single_square)
-                    anIntArray1688[anInt1687++] = i2;
+                    obj_key[obj_loaded++] = i2;
                 else
                     flag1 = true;
         }
@@ -1503,7 +1503,7 @@ public class Model extends Renderable {
         }
     }
 
-    private final void method483(boolean flag, boolean flag1, int i) {
+    private final void method483(boolean flag, boolean flag1, long i) {
         for (int j = 0; j < maxRenderDepth; j++)
             depthListIndices[j] = 0;
 
@@ -1521,7 +1521,7 @@ public class Model extends Renderable {
                     faceLists[j5][depthListIndices[j5]++] = face;
                 } else {
                     if (flag1 && method486(anInt1685, anInt1686, projected_vertex_y[a], projected_vertex_y[b], projected_vertex_y[c], x_a, x_b, x_c)) {
-                        anIntArray1688[anInt1687++] = i;
+                        obj_key[obj_loaded++] = i;
                         flag1 = false;
                     }
                     if ((x_a - x_b) * (projected_vertex_y[c] - projected_vertex_y[b]) - (projected_vertex_y[a] - projected_vertex_y[b]) * (x_c - x_b) > 0) {
