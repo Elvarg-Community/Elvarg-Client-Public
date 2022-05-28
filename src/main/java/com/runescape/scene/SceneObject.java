@@ -42,9 +42,9 @@ public final class SceneObject extends Renderable {
             }
         }
         ObjectDefinition objectDef = ObjectDefinition.lookup(anInt1610);
-        anInt1601 = objectDef.varbit;
-        anInt1602 = objectDef.varp;
-        anIntArray1600 = objectDef.childrenIDs;
+        anInt1601 = objectDef.varbitID;
+        anInt1602 = objectDef.varpID;
+        anIntArray1600 = objectDef.configs;
     }
 
     private ObjectDefinition method457() {

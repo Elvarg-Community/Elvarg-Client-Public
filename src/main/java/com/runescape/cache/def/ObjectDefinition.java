@@ -11,6 +11,8 @@ import com.runescape.io.Buffer;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public final class ObjectDefinition {
 
@@ -26,44 +28,54 @@ public final class ObjectDefinition {
     public static ReferenceCache baseModels = new ReferenceCache(500);
     public static int TOTAL_OBJECTS;
     public boolean obstructsGround;
-    public byte ambientLighting;
+    public byte ambient;
     public int translateX;
     public String name;
     public int scaleZ;
-    public int lightDiffusion;
-    public int objectSizeX;
+    public int contrast;
+    public int sizeX;
     public int translateY;
     public int minimapFunction;
-    public int[] originalModelColors;
+    public int[] recolorToReplace;
     public int scaleX;
-    public int varp;
+    public int varpID;
     public boolean inverted;
     public int type;
-    public boolean impenetrable;
+    public boolean blocksProjectile;
     public int mapscene;
-    public int childrenIDs[];
+    public int configs[];
     public int supportItems;
-    public int objectSizeY;
+    public int sizeY;
     public boolean contouredGround;
     public boolean occludes;
     public boolean removeClipping;
-    public boolean solid;
+    public boolean interactType;
     public int surroundings;
-    public boolean delayShading;
+    public boolean mergeNormals;
     public int scaleY;
-    public int[] modelIds;
-    public int varbit;
+    public int[] objectModels;
+    public int varbitID;
     public int decorDisplacement;
-    public int[] modelTypes;
+    public int[] objectTypes;
     public String description;
     public boolean isInteractive;
     public boolean castsShadow;
     public int animation;
     public int translateZ;
-    public int[] modifiedModelColors;
-    public String interactions[];
-    private short[] originalModelTexture;
-    private short[] modifiedModelTexture;
+    public int anInt2083;
+    public int ambientSoundID;
+    public int category;
+    public int[] ambientSoundIds;
+    private int ambientSoundId;
+    private int int2083;
+    private int anInt2112;
+    private int anInt2113;
+    private boolean randomAnimStart;
+    private Map<Integer, Object> params = null;
+    public int[] recolorToFind;
+    public String actions[];
+    private short[] textureReplace;
+    private short[] textureFind;
 
     public ObjectDefinition() {
         type = -1;
@@ -101,22 +113,17 @@ public final class ObjectDefinition {
         stream.currentPosition = streamIndices[id];
         objectDef.type = id;
         objectDef.reset();
-        objectDef.readValues(stream);
-        if (objectDef.type > 14500) {
-			if (objectDef.delayShading) {
-				objectDef.delayShading = false;
-			}
-		}
+        objectDef.decode(stream);
 
         for (int obelisk : OBELISK_IDS) {
             if (id == obelisk) {
-                objectDef.interactions = new String[]{"Activate", null, null, null, null};
+                objectDef.actions = new String[]{"Activate", null, null, null, null};
             }
         }
 
         if (id == 29241) {
-            objectDef.interactions = new String[5];
-            objectDef.interactions[0] = "Restore-stats";
+            objectDef.actions = new String[5];
+            objectDef.actions[0] = "Restore-stats";
         }
         if (id == 4150) {
             objectDef.name = "Bank portal";
@@ -126,48 +133,48 @@ public final class ObjectDefinition {
 
         if (id == 26756) {
             objectDef.name = "Information";
-            objectDef.interactions = null;
+            objectDef.actions = null;
         }
 
         if (id == 29150) {
-            objectDef.interactions = new String[5];
-            objectDef.interactions[0] = "Venerate";
-            objectDef.interactions[1] = "Switch-normal";
-            objectDef.interactions[2] = "Switch-ancient";
-            objectDef.interactions[3] = "Switch-lunar";
+            objectDef.actions = new String[5];
+            objectDef.actions[0] = "Venerate";
+            objectDef.actions[1] = "Switch-normal";
+            objectDef.actions[2] = "Switch-ancient";
+            objectDef.actions[3] = "Switch-lunar";
             objectDef.name = "Magical altar";
         }
 
         if (id == 6552) {
-            objectDef.interactions = new String[5];
-            objectDef.interactions[0] = "Toggle-spells";
+            objectDef.actions = new String[5];
+            objectDef.actions[0] = "Toggle-spells";
             objectDef.name = "Ancient altar";
         }
 
         if (id == 14911) {
-            objectDef.interactions = new String[5];
-            objectDef.interactions[0] = "Toggle-spells";
+            objectDef.actions = new String[5];
+            objectDef.actions[0] = "Toggle-spells";
             objectDef.name = "Lunar altar";
         }
         if (id == 2164) {
             objectDef.isInteractive = true;
-            objectDef.interactions = new String[5];
-            objectDef.interactions[0] = "Fix";
-            objectDef.interactions[1] = null;
+            objectDef.actions = new String[5];
+            objectDef.actions[0] = "Fix";
+            objectDef.actions[1] = null;
             objectDef.name = "Trawler Net";
         }
         if (id == 1293) {
             objectDef.isInteractive = true;
-            objectDef.interactions = new String[5];
-            objectDef.interactions[0] = "Teleport";
-            objectDef.interactions[1] = null;
+            objectDef.actions = new String[5];
+            objectDef.actions[0] = "Teleport";
+            objectDef.actions[1] = null;
             objectDef.name = "Spirit Tree";
         }
 
         if (id == 2452) {
             objectDef.isInteractive = true;
-            objectDef.interactions = new String[5];
-            objectDef.interactions[0] = "Go Through";
+            objectDef.actions = new String[5];
+            objectDef.actions[0] = "Go Through";
             objectDef.name = "Passage";
         }
         switch (id) {
@@ -206,27 +213,27 @@ public final class ObjectDefinition {
     }
 
     public void reset() {
-        modelIds = null;
-        modelTypes = null;
+        objectModels = null;
+        objectTypes = null;
         name = null;
         description = null;
-        modifiedModelColors = null;
-        originalModelColors = null;
-		modifiedModelTexture = null;
-		originalModelTexture = null;
-        objectSizeX = 1;
-        objectSizeY = 1;
-        solid = true;
-        impenetrable = true;
+        recolorToFind = null;
+        recolorToReplace = null;
+		textureFind = null;
+		textureReplace = null;
+        sizeX = 1;
+        sizeY = 1;
+        interactType = true;
+        blocksProjectile = true;
         isInteractive = false;
         contouredGround = false;
-        delayShading = false;
+        mergeNormals = false;
         occludes = false;
         animation = -1;
         decorDisplacement = 16;
-        ambientLighting = 0;
-        lightDiffusion = 0;
-        interactions = null;
+        ambient = 0;
+        contrast = 0;
+        actions = null;
         minimapFunction = -1;
         mapscene = -1;
         inverted = false;
@@ -241,26 +248,26 @@ public final class ObjectDefinition {
         obstructsGround = false;
         removeClipping = false;
         supportItems = -1;
-        varbit = -1;
-        varp = -1;
-        childrenIDs = null;
+        varbitID = -1;
+        varpID = -1;
+        configs = null;
     }
 
     public boolean method577(int i) {
-        if (modelTypes == null) {
-            if (modelIds == null)
+        if (objectTypes == null) {
+            if (objectModels == null)
                 return true;
             if (i != 10)
                 return true;
             boolean flag1 = true;
-            for (int k = 0; k < modelIds.length; k++)
-                flag1 &= Model.isCached(modelIds[k] & 0xffff);
+            for (int k = 0; k < objectModels.length; k++)
+                flag1 &= Model.isCached(objectModels[k] & 0xffff);
 
             return flag1;
         }
-        for (int j = 0; j < modelTypes.length; j++)
-            if (modelTypes[j] == i)
-                return Model.isCached(modelIds[j] & 0xffff);
+        for (int j = 0; j < objectTypes.length; j++)
+            if (objectTypes[j] == i)
+                return Model.isCached(objectModels[j] & 0xffff);
 
         return true;
     }
@@ -269,8 +276,8 @@ public final class ObjectDefinition {
         Model model = model(type, frameId, orientation);
         if (model == null)
             return null;
-        if (contouredGround || delayShading)
-            model = new Model(contouredGround, delayShading, model);
+        if (contouredGround || mergeNormals)
+            model = new Model(contouredGround, mergeNormals, model);
         if (contouredGround) {
             int y = (aY + bY + cY + dY) / 4;
             for (int vertex = 0; vertex < model.numVertices; vertex++) {
@@ -288,35 +295,35 @@ public final class ObjectDefinition {
     }
 
     public boolean method579() {
-        if (modelIds == null)
+        if (objectModels == null)
             return true;
         boolean flag1 = true;
-        for (int i = 0; i < modelIds.length; i++)
-            flag1 &= Model.isCached(modelIds[i] & 0xffff);
+        for (int i = 0; i < objectModels.length; i++)
+            flag1 &= Model.isCached(objectModels[i] & 0xffff);
         return flag1;
     }
 
     public ObjectDefinition method580() {
         int i = -1;
-        if (varbit != -1) {
-            VariableBits varBit = VariableBits.varbits[varbit];
+        if (varbitID != -1) {
+            VariableBits varBit = VariableBits.varbits[varbitID];
             int j = varBit.getSetting();
             int k = varBit.getLow();
             int l = varBit.getHigh();
             int i1 = Client.BIT_MASKS[l - k];
             i = clientInstance.settings[j] >> k & i1;
-        } else if (varp != -1)
-            i = clientInstance.settings[varp];
-        if (i < 0 || i >= childrenIDs.length || childrenIDs[i] == -1)
+        } else if (varpID != -1)
+            i = clientInstance.settings[varpID];
+        if (i < 0 || i >= configs.length || configs[i] == -1)
             return null;
         else
-            return lookup(childrenIDs[i]);
+            return lookup(configs[i]);
     }
 
     public Model model(int j, int k, int l) {
         Model model = null;
         long l1;
-        if (modelTypes == null) {
+        if (objectTypes == null) {
             if (j != 10)
                 return null;
             l1 = (long) ((type << 6) + l) + ((long) (k + 1) << 32);
@@ -324,12 +331,12 @@ public final class ObjectDefinition {
             if (model_1 != null) {
                 return model_1;
             }
-            if (modelIds == null)
+            if (objectModels == null)
                 return null;
             boolean flag1 = inverted ^ (l > 3);
-            int k1 = modelIds.length;
+            int k1 = objectModels.length;
             for (int i2 = 0; i2 < k1; i2++) {
-                int l2 = modelIds[i2];
+                int l2 = objectModels[i2];
                 if (flag1)
                     l2 += 0x10000;
                 model = (Model) baseModels.get(l2);
@@ -346,11 +353,11 @@ public final class ObjectDefinition {
             }
 
             if (k1 > 1)
-                model = new Model(k1, aModelArray741s);
+                model = new Model(k1, aModelArray741s,true);
         } else {
             int i1 = -1;
-            for (int j1 = 0; j1 < modelTypes.length; j1++) {
-                if (modelTypes[j1] != j)
+            for (int j1 = 0; j1 < objectTypes.length; j1++) {
+                if (objectTypes[j1] != j)
                     continue;
                 i1 = j1;
                 break;
@@ -363,10 +370,10 @@ public final class ObjectDefinition {
             if (model_2 != null) {
                 return model_2;
             }
-            if (modelIds == null) {
+            if (objectModels == null) {
                 return null;
             }
-            int j2 = modelIds[i1];
+            int j2 = objectModels[i1];
             boolean flag3 = inverted ^ (l > 3);
             if (flag3)
                 j2 += 0x10000;
@@ -384,9 +391,9 @@ public final class ObjectDefinition {
         flag = scaleX != 128 || scaleY != 128 || scaleZ != 128;
         boolean flag2;
         flag2 = translateX != 0 || translateY != 0 || translateZ != 0;
-        Model model_3 = new Model(modifiedModelColors == null,
+        Model model_3 = new Model(recolorToFind == null,
                 Frame.noAnimationInProgress(k), l == 0 && k == -1 && !flag
-                && !flag2, modifiedModelTexture == null, model);
+                && !flag2, textureFind == null, model);
         if (k != -1) {
             model_3.skin();
             model_3.applyTransform(k);
@@ -395,30 +402,31 @@ public final class ObjectDefinition {
         }
         while (l-- > 0)
             model_3.rotate90Degrees();
-        if (modifiedModelColors != null) {
-            for (int k2 = 0; k2 < modifiedModelColors.length; k2++)
-                model_3.recolor(modifiedModelColors[k2],
-                        originalModelColors[k2]);
+        if (recolorToFind != null) {
+            for (int k2 = 0; k2 < recolorToFind.length; k2++)
+                model_3.recolor(recolorToFind[k2],
+                        recolorToReplace[k2]);
 
         }
-        if (modifiedModelTexture != null) {
-            for (int k2 = 0; k2 < modifiedModelTexture.length; k2++)
-                model_3.retexture(modifiedModelTexture[k2],
-                        originalModelTexture[k2]);
+        if (textureFind != null) {
+            for (int k2 = 0; k2 < textureFind.length; k2++)
+                model_3.retexture(textureFind[k2],
+                        textureReplace[k2]);
 
         }
         if (flag)
             model_3.scale(scaleX, scaleZ, scaleY);
         if (flag2)
             model_3.translate(translateX, translateY, translateZ);
-        model_3.light(85 + ambientLighting, 768 + lightDiffusion, -50, -10, -50, !delayShading);
+        model_3.light(85 + ambient, 768 + contrast, -50, -10, -50, !mergeNormals);
         if (supportItems == 1)
             model_3.itemDropHeight = model_3.modelBaseY;
         models.put(model_3, l1);
         return model_3;
     }
 
-    public void readValues(Buffer buffer) {
+
+    public void decode(Buffer buffer) {
         while(true) {
             int opcode = buffer.readUnsignedByte();
 
@@ -427,47 +435,48 @@ public final class ObjectDefinition {
             } else if (opcode == 1) {
                 int len = buffer.readUnsignedByte();
                 if (len > 0) {
-                    if (modelIds == null) {
-                        modelTypes = new int[len];
-                        modelIds = new int[len];
+                    if (objectModels == null) {
+                        objectTypes = new int[len];
+                        objectModels = new int[len];
 
                         for (int i = 0; i < len; i++) {
-                            modelIds[i] = buffer.readUShort();
-                            modelTypes[i] = buffer.readUnsignedByte();
+                            objectModels[i] = buffer.readUShort();
+                            objectTypes[i] = buffer.readUnsignedByte();
                         }
                     } else {
                         buffer.currentPosition += len * 3;
                     }
                 }
             } else if (opcode == 2) {
-                name = buffer.readString();
+                name = buffer.readJagexString();
             } else if (opcode == 5) {
                 int len = buffer.readUnsignedByte();
                 if (len > 0) {
-                    if (modelIds == null) {
-                        modelTypes = null;
-                        modelIds = new int[len];
+                    if (objectModels == null) {
+                        objectTypes = null;
+                        objectModels = new int[len];
                         for (int i = 0; i < len; i++) {
-                            modelIds[i] = buffer.readUShort();
+                            objectModels[i] = buffer.readUShort();
                         }
                     } else {
                         buffer.currentPosition += len * 2;
                     }
                 }
             } else if (opcode == 14) {
-                objectSizeX = buffer.readUnsignedByte();
+                sizeX = buffer.readUnsignedByte();
             } else if (opcode == 15) {
-                objectSizeY = buffer.readUnsignedByte();
+                sizeY = buffer.readUnsignedByte();
             } else if (opcode == 17) {
-                solid = false;
+                interactType = false;
+                blocksProjectile = false;
             } else if (opcode == 18) {
-                impenetrable = false;
+                blocksProjectile = false;
             } else if (opcode == 19) {
                 isInteractive = (buffer.readUnsignedByte() == 1);
             } else if (opcode == 21) {
                 contouredGround = true;
             } else if (opcode == 22) {
-                delayShading = true;
+                mergeNormals = true;
             } else if (opcode == 23) {
                 occludes = true;
             } else if (opcode == 24) {
@@ -476,38 +485,39 @@ public final class ObjectDefinition {
                     animation = -1;
                 }
             } else if (opcode == 27) {
-                // clipType = 1;
+                interactType = true;
             } else if (opcode == 28) {
                 decorDisplacement = buffer.readUnsignedByte();
             } else if (opcode == 29) {
-                ambientLighting = buffer.readSignedByte();
+                ambient = buffer.readSignedByte();
             } else if (opcode == 39) {
-                lightDiffusion = buffer.readSignedByte() * 25;
+                contrast = buffer.readSignedByte() * 25;
             } else if (opcode >= 30 && opcode < 35) {
-                if (interactions == null) {
-                    interactions = new String[5];
+                if (actions == null) {
+                    actions = new String[5];
                 }
-                interactions[opcode - 30] = buffer.readString();
-                if (interactions[opcode - 30].equalsIgnoreCase("Hidden")) {
-                    interactions[opcode - 30] = null;
+                actions[opcode - 30] = buffer.readString();
+                if (actions[opcode - 30].equalsIgnoreCase("Hidden")) {
+                    actions[opcode - 30] = null;
                 }
             } else if (opcode == 40) {
                 int len = buffer.readUnsignedByte();
-                modifiedModelColors = new int[len];
-                originalModelColors = new int[len];
+                recolorToFind = new int[len];
+                recolorToReplace = new int[len];
                 for (int i = 0; i < len; i++) {
-                    modifiedModelColors[i] = buffer.readUShort();
-                    originalModelColors[i] = buffer.readUShort();
+                    recolorToFind[i] = buffer.readUShort();
+                    recolorToReplace[i] = buffer.readUShort();
                 }
             } else if (opcode == 41) {
                 int len = buffer.readUnsignedByte();
-                modifiedModelTexture = new short[len];
-                originalModelTexture = new short[len];
+                textureFind = new short[len];
+                textureReplace = new short[len];
                 for (int i = 0; i < len; i++) {
-                    modifiedModelTexture[i] = (short) buffer.readUShort();
-                    originalModelTexture[i] = (short) buffer.readUShort();
+                    textureFind[i] = (short) buffer.readUShort();
+                    textureReplace[i] = (short) buffer.readUShort();
                 }
-
+            } else if (opcode == 61) {
+                category = buffer.readUShort();
             } else if (opcode == 62) {
                 inverted = true;
             } else if (opcode == 64) {
@@ -535,36 +545,38 @@ public final class ObjectDefinition {
             } else if (opcode == 75) {
                 supportItems = buffer.readUnsignedByte();
             } else if (opcode == 78) {
-                buffer.readUShort(); // ambient sound id
-                buffer.readUnsignedByte();
+                ambientSoundID = buffer.readUShort(); // ambient sound id
+                anInt2083 = buffer.readUnsignedByte();
             } else if (opcode == 79) {
-                buffer.readUShort();
-                buffer.readUShort();
-                buffer.readUnsignedByte();
-                int len = buffer.readUnsignedByte();
+                anInt2112 = buffer.readUShort();
+                anInt2113 = buffer.readUShort();
+                anInt2083 = buffer.readUShort();
 
-                for (int i = 0; i < len; i++) {
-                    buffer.readUShort();
+                int length = buffer.readUnsignedByte();
+                int[] anims = new int[length];
+
+                for (int index = 0; index < length; ++index)
+                {
+                    anims[index] = buffer.readUShort();
                 }
+                ambientSoundIds = anims;
             } else if (opcode == 81) {
                 buffer.readUnsignedByte();
             } else if (opcode == 82) {
                 minimapFunction = buffer.readUShort();
-
-                if (minimapFunction == 0xFFFF) {
-                    minimapFunction = -1;
-                }
+            } else if (opcode == 89) {
+                randomAnimStart = true;
             } else if (opcode == 77 || opcode == 92) {
-                varp = buffer.readUShort();
+                varpID = buffer.readUShort();
 
-                if (varp == 0xFFFF) {
-                    varp = -1;
+                if (varpID == 0xFFFF) {
+                    varpID = -1;
                 }
 
-                varbit = buffer.readUShort();
+                varbitID = buffer.readUShort();
 
-                if (varbit == 0xFFFF) {
-                    varbit = -1;
+                if (varbitID == 0xFFFF) {
+                    varbitID = -1;
                 }
 
                 int value = -1;
@@ -579,33 +591,54 @@ public final class ObjectDefinition {
 
                 int len = buffer.readUnsignedByte();
 
-                childrenIDs = new int[len + 2];
+                configs = new int[len + 2];
                 for (int i = 0; i <= len; ++i) {
-                    childrenIDs[i] = buffer.readUShort();
-                    if (childrenIDs[i] == 0xFFFF) {
-                        childrenIDs[i] = -1;
+                    configs[i] = buffer.readUShort();
+                    if (configs[i] == 0xFFFF) {
+                        configs[i] = -1;
                     }
                 }
-                childrenIDs[len + 1] = value;
+                configs[len + 1] = value;
+            } else if (opcode == 249) {
+                int length = buffer.readUnsignedByte();
+
+                Map<Integer, Object> params = new HashMap<>(length);
+                for (int i = 0; i < length; i++)
+                {
+                    boolean isString = buffer.readUnsignedByte() == 1;
+                    int key = buffer.read24Int();
+                    Object value;
+
+                    if (isString) {
+                        value = buffer.readString();
+                        System.out.println(value);
+                    } else {
+                        value = buffer.readInt();
+                    }
+
+                    params.put(key, value);
+                }
+
+                this.params = params;
             } else {
-                System.out.println("invalid opcode: " + opcode);
+
             }
 
         }
 
         if (name != null && !name.equals("null")) {
-            isInteractive = modelIds != null && (modelTypes == null || modelTypes[0] == 10);
-            if (interactions != null)
+            isInteractive = objectModels != null && (objectTypes == null || objectTypes[0] == 10);
+            if (actions != null)
                 isInteractive = true;
         }
 
         if (removeClipping) {
-            solid = false;
-            impenetrable = false;
+            interactType = false;
+            blocksProjectile = false;
         }
 
         if (supportItems == -1) {
-            supportItems = solid ? 1 : 0;
+            supportItems = interactType ? 1 : 0;
         }
     }
 

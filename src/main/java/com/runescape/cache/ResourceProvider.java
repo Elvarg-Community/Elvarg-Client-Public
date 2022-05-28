@@ -36,44 +36,7 @@ public final class ResourceProvider implements Runnable {
     public int errors;
     public String currentDownload = "";
     public int[] file_amounts = new int[4];
-    int[] cheapHaxValues = new int[]{
-            3627, 3628,
-            3655, 3656,
-            3625, 3626,
-            3629, 3630,
-            4071, 4072,
-            5253, 1816,
-            1817, 3653,
-            3654, 4067,
-            4068, 3639,
-            3640, 1976,
-            1977, 3571,
-            3572, 5129,
-            5130, 2066,
-            2067, 3545,
-            3546, 3559,
-            3560, 3569,
-            3570, 3551,
-            3552, 3579,
-            3580, 3575,
-            3576, 1766,
-            1767, 3547,
-            3548, 3682,
-            3683, 3696,
-            3697, 3692,
-            3693, 4013,
-            4079, 4080,
-            4082, 3996,
-            4083, 4084,
-            4075, 4076,
-            3664, 3993,
-            3994, 3995,
-            4077, 4078,
-            4073, 4074,
-            4011, 4012,
-            3998, 3999,
-            4081,
-    };
+
     private int totalFiles;
     private int maximumPriority;
     private int deadTime;
@@ -342,7 +305,7 @@ public final class ResourceProvider implements Runnable {
     }
 
     public int getModelCount() {
-        return 29191;
+        return 77136;
     }
 
     public void provide(int type, int file) {
@@ -489,53 +452,18 @@ public final class ResourceProvider implements Runnable {
         return resource;
     }
 
-    public int resolve(int landscapeOrObject, int regionY, int regionX) {
-        /*int code = (regionX << 8) + regionY;
+    public int resolve(int regionX, int regionY, int type) {
+        int code = (type << 8) + regionY;
         for (int area = 0; area < areas.length; area++) {
-			if (areas[area] == code) {
-				if (landscapeOrObject == 0) {
-					return mapFiles[area] > 3535 ? -1 : mapFiles[area];
-				} else {
-					return landscapes[area] > 3535 ? -1 : landscapes[area];
-				}
-			}
-		}
-*/
-        int mapNigga2;
-        int mapNigga3;
-        int regionId = (regionX << 8) + regionY;
-        for (int j1 = 0; j1 < areas.length; j1++)
-            if (areas[j1] == regionId) {
-                if (landscapeOrObject == 0) {
-                    //Soulwars
-                    if (mapFiles[j1] >= 3700 && mapFiles[j1] <= 3840)
-                        return mapFiles[j1];
-                    for (int cheapHax : mapFiles)
-                        if (mapFiles[j1] == cheapHax)
-                            return mapFiles[j1];
-                    mapNigga2 = mapFiles[j1] > 3535 ? -1 : mapFiles[j1];
-                    return mapNigga2;
+            if (areas[area] == code) {
+                if (regionX == 0) {
+                    return mapFiles[area];
                 } else {
-                    if (landscapes[j1] >= 3700 && landscapes[j1] <= 3840)
-                        return landscapes[j1];
-                    for (int cheapHax : cheapHaxValues)
-                        if (landscapes[j1] == cheapHax)
-                            return landscapes[j1];
-                    mapNigga3 = landscapes[j1] > 3535 ? -1 : landscapes[j1];
-                    return mapNigga3;
+                    return landscapes[area];
                 }
             }
+        }
         return -1;
-
-		/*int regionId = (regionX << 8) + regionY;
-		for(int j1 = 0; j1 < areas.length; j1++)
-			if(areas[j1] == regionId) {
-				if(landscapeOrObject == 0) {
-					return mapFiles[j1];
-				} else {
-					return landscapes[j1];
-				}
-			}*/
     }
 
     public void requestExtra(byte priority, int type, int file) {

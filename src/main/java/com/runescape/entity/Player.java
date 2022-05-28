@@ -324,7 +324,7 @@ public final class Player extends Mob {
                         aclass30_sub2_sub4_sub6s[j2++] = model_4;
                 }
             }
-            model_1 = new Model(j2, aclass30_sub2_sub4_sub6s);
+            model_1 = new Model(j2, aclass30_sub2_sub4_sub6s,true);
             for (int j3 = 0; j3 < 5; j3++)
                 if (appearanceColors[j3] != 0) {
                     model_1.recolor(Client.PLAYER_BODY_RECOLOURS[j3][0],
@@ -345,7 +345,7 @@ public final class Player extends Mob {
 
         Model emptyModel = Model.EMPTY_MODEL;
 
-        emptyModel.method464(model_1, Frame.noAnimationInProgress(currentFrame) & Frame.noAnimationInProgress(i1));
+        emptyModel.replace(model_1, Frame.noAnimationInProgress(currentFrame) & Frame.noAnimationInProgress(i1));
         if (currentFrame != -1 && i1 != -1) {
             emptyModel.applyAnimationFrames(Animation.animations[super.emoteAnimation].interleaveOrder, i1, currentFrame);
         } else if (currentFrame != -1) {
@@ -410,7 +410,7 @@ public final class Player extends Mob {
             }
         }
 
-        Model headModel = new Model(headModelsOffset, headModels);
+        Model headModel = new Model(headModelsOffset, headModels,true);
 
         for (int index = 0; index < 5; index++) {
             if (appearanceColors[index] != 0) {

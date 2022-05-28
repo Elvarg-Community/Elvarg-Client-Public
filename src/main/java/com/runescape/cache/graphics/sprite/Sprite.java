@@ -146,9 +146,9 @@ public final class Sprite extends Rasterizer2D {
         }
     }
 
-    public Sprite(FileArchive streamLoader, String name, int i) {
-        Buffer dataBuffer = new Buffer(streamLoader.readFile(name + ".dat"));
-        Buffer indexBuffer = new Buffer(streamLoader.readFile("index.dat"));
+    public Sprite(FileArchive archive, String name, int i) {
+        Buffer dataBuffer = new Buffer(archive.readFile(name + ".dat"));
+        Buffer indexBuffer = new Buffer(archive.readFile("index.dat"));
 
         indexBuffer.currentPosition = dataBuffer.readUShort();
 
@@ -196,6 +196,7 @@ public final class Sprite extends Rasterizer2D {
         }
         setTransparency(255, 0, 255);
     }
+
 
     public Sprite(byte spriteData[]) {
         try {

@@ -2462,7 +2462,8 @@ public class Client extends GameApplet {
                     if (function >= 0) {
                         int viewportX = x;
                         int viewportY = y;
-                        minimapHint[anInt1071] = mapFunctions[function];
+
+                        //minimapHint[anInt1071] = mapFunctions[function];
                         minimapHintX[anInt1071] = viewportX;
                         minimapHintY[anInt1071] = viewportY;
                         anInt1071++;
@@ -2504,7 +2505,7 @@ public class Client extends GameApplet {
         for (Item item = (Item) class19.reverseGetFirst(); item != null; item =
                 (Item) class19.reverseGetNext()) {
             ItemDefinition itemDef = ItemDefinition.lookup(item.ID);
-            int value = itemDef.value;
+            int value = itemDef.cost;
             if (itemDef.stackable) {
                 int count = item.itemCount;
                 if (count < Integer.MAX_VALUE) {
@@ -2917,10 +2918,10 @@ public class Client extends GameApplet {
                                     } else {
                                         if (childInterface.hasActions) {
                                             for (int l3 = 4; l3 >= 3; l3--)
-                                                if (itemDef.actions != null
-                                                        && itemDef.actions[l3] != null) {
+                                                if (itemDef.interfaceOptions != null
+                                                        && itemDef.interfaceOptions[l3] != null) {
                                                     menuActionText[menuActionRow] =
-                                                            itemDef.actions[l3]
+                                                            itemDef.interfaceOptions[l3]
                                                                     + " @lre@"
                                                                     + itemDef.name;
                                                     if (l3 == 3)
@@ -2928,7 +2929,7 @@ public class Client extends GameApplet {
                                                                 493;
                                                     if (l3 == 4) {
                                                         menuActionTypes[menuActionRow] = 847;
-                                                        hasDestroyOption = itemDef.actions[l3].contains("Destroy");
+                                                        hasDestroyOption = itemDef.interfaceOptions[l3].contains("Destroy");
                                                     }
                                                     selectedMenuActions[menuActionRow] = itemDef.id;
                                                     firstMenuAction[menuActionRow] = k2;
@@ -2956,10 +2957,10 @@ public class Client extends GameApplet {
                                                 removeShiftDropOnMenuOpen = true;
                                             }
                                         }
-                                        if (childInterface.hasActions && itemDef.actions != null) {
+                                        if (childInterface.hasActions && itemDef.interfaceOptions != null) {
                                             for (int i4 = 2; i4 >= 0; i4--) {
-                                                if (itemDef.actions[i4] != null) {
-                                                    menuActionText[menuActionRow] = itemDef.actions[i4] + " @lre@" + itemDef.name;
+                                                if (itemDef.interfaceOptions[i4] != null) {
+                                                    menuActionText[menuActionRow] = itemDef.interfaceOptions[i4] + " @lre@" + itemDef.name;
                                                     if (i4 == 0)
                                                         menuActionTypes[menuActionRow] = 74;
                                                     if (i4 == 1)
@@ -3574,7 +3575,7 @@ public class Client extends GameApplet {
                         // from
                         // original
                     }
-                    if (entityDef.childrenIDs != null)
+                    if (entityDef.configs != null)
                         entityDef = entityDef.morph();
                     if (entityDef == null)
                         continue;
@@ -4507,12 +4508,12 @@ public class Client extends GameApplet {
             if (updateRequired == 1)
                 mobsAwaitingUpdate[mobsAwaitingUpdateCount++] = k;
             npc.size = npc.desc.size;
-            npc.degreesToTurn = npc.desc.degreesToTurn;
-            npc.walkAnimIndex = npc.desc.walkAnim;
-            npc.turn180AnimIndex = npc.desc.turn180AnimIndex;
-            npc.turn90CWAnimIndex = npc.desc.turn90CWAnimIndex;
-            npc.turn90CCWAnimIndex = npc.desc.turn90CCWAnimIndex;
-            npc.idleAnimation = npc.desc.standAnim;
+            npc.degreesToTurn = npc.desc.rotationSpeed;
+            npc.walkAnimIndex = npc.desc.walkingAnimation;
+            npc.turn180AnimIndex = npc.desc.rotate180AnimIndex;
+            npc.turn90CWAnimIndex = npc.desc.rotate90CWAnimIndex;
+            npc.turn90CCWAnimIndex = npc.desc.rotate90CCWAnimIndex;
+            npc.idleAnimation = npc.desc.standingAnimation;
             npc.setPos(localPlayer.pathX[0] + i1, localPlayer.pathY[0] + l, j1 == 1);
         }
         stream.disableBitAccess();
@@ -4584,6 +4585,18 @@ public class Client extends GameApplet {
             Model.init();
             drawLoadingText(80, "Unpacking media");
 
+            if(Configuration.repackIndexOne) {
+                repackCacheIndex(1);
+            }
+            if(Configuration.repackIndexTwo) {
+                repackCacheIndex(2);
+            }
+            if(Configuration.repackIndexThree) {
+                repackCacheIndex(3);
+            }
+            if(Configuration.repackIndexFour) {
+                repackCacheIndex(4);
+            }
             /*byte soundData[] = soundArchive.readFile("sounds.dat");
             Buffer stream = new Buffer(soundData);
             Track.unpack(stream);*/
@@ -4598,7 +4611,7 @@ public class Client extends GameApplet {
             compass = new Sprite(mediaArchive, "compass", 0);
             try {
                 for (int k3 = 0; k3 < 100; k3++)
-                    mapScenes[k3] = new IndexedImage(mediaArchive, "mapscene", k3);
+                    mapScenes[k3] = new IndexedImage(mediaArchive, "mapsence", k3);
             } catch (Exception _ex) {
             }
             try {
@@ -4960,10 +4973,10 @@ public class Client extends GameApplet {
             if (def.mapscene != -1) {
                 IndexedImage background_2 = mapScenes[def.mapscene];
                 if (background_2 != null) {
-                    int i6 = (def.objectSizeX * 4 - background_2.width) / 2;
-                    int j6 = (def.objectSizeY * 4 - background_2.height) / 2;
+                    int i6 = (def.sizeX * 4 - background_2.width) / 2;
+                    int j6 = (def.sizeY * 4 - background_2.height) / 2;
                     background_2.draw(48 + l * 4 + i6,
-                            48 + (104 - i - def.objectSizeY) * 4 + j6);
+                            48 + (104 - i - def.sizeY) * 4 + j6);
                 }
             } else {
                 if (i3 == 0 || i3 == 2)
@@ -5031,10 +5044,10 @@ public class Client extends GameApplet {
             if (class46_1.mapscene != -1) {
                 IndexedImage background_1 = mapScenes[class46_1.mapscene];
                 if (background_1 != null) {
-                    int j5 = (class46_1.objectSizeX * 4 - background_1.width) / 2;
-                    int k5 = (class46_1.objectSizeY * 4 - background_1.height) / 2;
+                    int j5 = (class46_1.sizeX * 4 - background_1.width) / 2;
+                    int k5 = (class46_1.sizeY * 4 - background_1.height) / 2;
                     background_1.draw(48 + l * 4 + j5,
-                            48 + (104 - i - class46_1.objectSizeY) * 4 + k5);
+                            48 + (104 - i - class46_1.sizeY) * 4 + k5);
                 }
             } else if (j3 == 9) {
                 int l4 = 0xeeeeee;
@@ -5062,10 +5075,10 @@ public class Client extends GameApplet {
             if (class46.mapscene != -1) {
                 IndexedImage background = mapScenes[class46.mapscene];
                 if (background != null) {
-                    int i4 = (class46.objectSizeX * 4 - background.width) / 2;
-                    int j4 = (class46.objectSizeY * 4 - background.height) / 2;
+                    int i4 = (class46.sizeX * 4 - background.width) / 2;
+                    int j4 = (class46.sizeY * 4 - background.height) / 2;
                     background.draw(48 + l * 4 + i4,
-                            48 + (104 - i - class46.objectSizeY) * 4 + j4);
+                            48 + (104 - i - class46.sizeY) * 4 + j4);
                 }
             }
         }
@@ -5857,11 +5870,11 @@ public class Client extends GameApplet {
             int width;
             int height;
             if (orientation == 0 || orientation == 2) {
-                width = class46.objectSizeX;
-                height = class46.objectSizeY;
+                width = class46.sizeX;
+                height = class46.sizeY;
             } else {
-                width = class46.objectSizeY;
-                height = class46.objectSizeX;
+                width = class46.sizeY;
+                height = class46.sizeX;
             }
             int rotation = class46.surroundings;
             if (orientation != 0)
@@ -6959,7 +6972,7 @@ public class Client extends GameApplet {
             Npc npc = npcs[clicked];
             if (npc != null) {
                 NpcDefinition entityDef = npc.desc;
-                if (entityDef.childrenIDs != null)
+                if (entityDef.configs != null)
                     entityDef = entityDef.morph();
                 if (entityDef != null) {
                     packetSender.sendExamineNPC(entityDef.id);
@@ -7312,7 +7325,7 @@ public class Client extends GameApplet {
             j = l;
             if (k1 == 2 && scene.getMask(plane, i1, j1, l) >= 0) {
                 ObjectDefinition objectDef = ObjectDefinition.lookup(l1);
-                if (objectDef.childrenIDs != null)
+                if (objectDef.configs != null)
                     objectDef = objectDef.method580();
                 if (objectDef == null)
                     continue;
@@ -7335,11 +7348,11 @@ public class Client extends GameApplet {
                         menuActionRow++;
                     }
                 } else {
-                    if (objectDef.interactions != null) {
+                    if (objectDef.actions != null) {
                         for (int type = 4; type >= 0; type--)
-                            if (objectDef.interactions[type] != null) {
+                            if (objectDef.actions[type] != null) {
                                 menuActionText[menuActionRow] =
-                                        objectDef.interactions[type] + " @cya@"
+                                        objectDef.actions[type] + " @cya@"
                                                 + objectDef.name;
                                 if (type == 0)
                                     menuActionTypes[menuActionRow] = 502;
@@ -7455,10 +7468,10 @@ public class Client extends GameApplet {
                             }
                         } else {
                             for (int j3 = 4; j3 >= 0; j3--)
-                                if (itemDef.groundActions != null
-                                        && itemDef.groundActions[j3] != null) {
+                                if (itemDef.options != null
+                                        && itemDef.options[j3] != null) {
                                     menuActionText[menuActionRow] =
-                                            itemDef.groundActions[j3]
+                                            itemDef.options[j3]
                                                     + " @lre@"
                                                     + itemDef.name;
                                     if (j3 == 0)
@@ -8411,7 +8424,7 @@ public class Client extends GameApplet {
                                 IdentityKit.kits[k2].bodyModel();
                 }
 
-                Model model = new Model(i2, aclass30_sub2_sub4_sub6s);
+                Model model = new Model(i2, aclass30_sub2_sub4_sub6s,true);
                 for (int l2 = 0; l2 < 5; l2++)
                     if (characterDesignColours[l2] != 0) {
                         model.recolor(PLAYER_BODY_RECOLOURS[l2][0],
@@ -10005,12 +10018,12 @@ public class Client extends GameApplet {
                 if (transform) {
                     npc.desc = NpcDefinition.lookup(stream.readLEUShortA());
                     npc.size = npc.desc.size;
-                    npc.degreesToTurn = npc.desc.degreesToTurn;
-                    npc.walkAnimIndex = npc.desc.walkAnim;
-                    npc.turn180AnimIndex = npc.desc.turn180AnimIndex;
-                    npc.turn90CWAnimIndex = npc.desc.turn90CWAnimIndex;
-                    npc.turn90CCWAnimIndex = npc.desc.turn90CCWAnimIndex;
-                    npc.idleAnimation = npc.desc.standAnim;
+                    npc.degreesToTurn = npc.desc.rotationSpeed;
+                    npc.walkAnimIndex = npc.desc.walkingAnimation;
+                    npc.turn180AnimIndex = npc.desc.rotate180AnimIndex;
+                    npc.turn90CWAnimIndex = npc.desc.rotate90CWAnimIndex;
+                    npc.turn90CCWAnimIndex = npc.desc.rotate90CCWAnimIndex;
+                    npc.idleAnimation = npc.desc.standingAnimation;
                 }
             }
             if ((mask & 4) != 0) {
@@ -10026,7 +10039,7 @@ public class Client extends GameApplet {
         }
         if (menuActionRow >= 400)
             return;
-        if (entityDef.childrenIDs != null)
+        if (entityDef.configs != null)
             entityDef = entityDef.morph();
         if (entityDef == null)
             return;
@@ -12656,7 +12669,7 @@ public class Client extends GameApplet {
                     Widget other = Widget.interfaceCache[script[counter++]];
                     int item = script[counter++];
                     if (item >= 0 && item < ItemDefinition.totalItems
-                            && (!ItemDefinition.lookup(item).is_members_only
+                            && (!ItemDefinition.lookup(item).members
                             || isMembers)) {
                         for (int slot = 0; slot < other.inventoryItemId.length; slot++)
                             if (other.inventoryItemId[slot] == item + 1)
@@ -12929,10 +12942,10 @@ public class Client extends GameApplet {
             Npc npc = npcs[npcIndices[n]];
             if (npc != null && npc.isVisible()) {
                 NpcDefinition entityDef = npc.desc;
-                if (entityDef.childrenIDs != null) {
+                if (entityDef.configs != null) {
                     entityDef = entityDef.morph();
                 }
-                if (entityDef != null && entityDef.drawMinimapDot && entityDef.clickable) {
+                if (entityDef != null && entityDef.isMinimapVisible && entityDef.clickable) {
                     int mapX = npc.x / 32 - localPlayer.x / 32;
                     int mapY = npc.y / 32 - localPlayer.y / 32;
                     markMinimap(mapDotNPC, mapX, mapY);
@@ -13786,11 +13799,11 @@ public class Client extends GameApplet {
                     player.objectModelStart = startDelay + tick;
                     player.objectModelStop = stopDelay + tick;
                     player.playerModel = model;
-                    int playerSizeX = objectDefinition.objectSizeX;
-                    int playerSizeY = objectDefinition.objectSizeY;
+                    int playerSizeX = objectDefinition.sizeX;
+                    int playerSizeY = objectDefinition.sizeY;
                     if (objectFace == 1 || objectFace == 3) {
-                        playerSizeX = objectDefinition.objectSizeY;
-                        playerSizeY = objectDefinition.objectSizeX;
+                        playerSizeX = objectDefinition.sizeY;
+                        playerSizeY = objectDefinition.sizeX;
                     }
                     player.objectXPos = xLoc * 128 + playerSizeX * 64;
                     player.objectYPos = yLoc * 128 + playerSizeY * 64;
@@ -14083,27 +14096,27 @@ public class Client extends GameApplet {
                 if (group == 0) {
                     scene.removeWallObject(x, z, y);
                     ObjectDefinition objectDef = ObjectDefinition.lookup(id);
-                    if (objectDef.solid)
+                    if (objectDef.interactType)
                         collisionMaps[z].removeObject(orientation, objectType,
-                                objectDef.impenetrable, x, y);
+                                objectDef.blocksProjectile, x, y);
                 }
                 if (group == 1)
                     scene.removeWallDecoration(y, z, x);
                 if (group == 2) {
                     scene.removeTiledObject(z, x, y);
                     ObjectDefinition objectDef = ObjectDefinition.lookup(id);
-                    if (x + objectDef.objectSizeX > 103 || y + objectDef.objectSizeX > 103
-                            || x + objectDef.objectSizeY > 103
-                            || y + objectDef.objectSizeY > 103)
+                    if (x + objectDef.sizeX > 103 || y + objectDef.sizeX > 103
+                            || x + objectDef.sizeY > 103
+                            || y + objectDef.sizeY > 103)
                         return;
-                    if (objectDef.solid)
-                        collisionMaps[z].removeObject(orientation, objectDef.objectSizeX, x,
-                                y, objectDef.objectSizeY, objectDef.impenetrable);
+                    if (objectDef.interactType)
+                        collisionMaps[z].removeObject(orientation, objectDef.sizeX, x,
+                                y, objectDef.sizeY, objectDef.blocksProjectile);
                 }
                 if (group == 3) {
                     scene.removeGroundDecoration(z, y, x);
                     ObjectDefinition objectDef = ObjectDefinition.lookup(id);
-                    if (objectDef.solid && objectDef.isInteractive)
+                    if (objectDef.interactType && objectDef.isInteractive)
                         collisionMaps[z].removeFloorDecoration(y, x);
                 }
             }
@@ -15378,7 +15391,7 @@ public class Client extends GameApplet {
                     Widget.interfaceCache[widget].defaultMedia = item;
                     //Widget.interfaceCache[widget].modelRotation1 = definition.rotation_y;
                     //Widget.interfaceCache[widget].modelRotation2 = definition.rotation_x;
-                    Widget.interfaceCache[widget].modelZoom = (definition.modelZoom * 100) / scale;
+                    Widget.interfaceCache[widget].modelZoom = (definition.zoom2d * 100) / scale;
                     opcode = -1;
                     return true;
                 }
@@ -16225,7 +16238,7 @@ public class Client extends GameApplet {
                         ItemDefinition itemDef = ItemDefinition.lookup(item.ID);
                         calcEntityScreenPos((x << 7) + 64, 64, (y << 7) + 64);
                         // Red if default value is >= 50k || amount >= 100k
-                        newSmallFont.drawCenteredString((itemDef.value >= 0xC350 || item.itemCount >= 0x186A0 ? "<col=ff0000>" : "<trans=120>") +
+                        newSmallFont.drawCenteredString((itemDef.cost >= 0xC350 || item.itemCount >= 0x186A0 ? "<col=ff0000>" : "<trans=120>") +
                                         itemDef.name + (item.itemCount > 1 ? "</col> (" + StringUtils.insertCommasToNumber(item.itemCount + "") + "</col>)" : ""),
                                 spriteDrawX, spriteDrawY - offset, 0xffffff, 1);
                         offset += 12;

@@ -101,7 +101,7 @@ public class OSRSCreationMenu {
             String itemName = "";
             int zoom = 0;
             if (def != null) {
-                zoom = (def.modelZoom / 3) + 40;
+                zoom = (def.zoom2d / 3) + 40;
                 itemName = "(" + (i + 1) + ") " + def.name;
                 if (hover) {
                     GameFont font = Client.instance.gameFont;

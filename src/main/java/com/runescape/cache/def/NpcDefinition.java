@@ -8,6 +8,9 @@ import com.runescape.collection.ReferenceCache;
 import com.runescape.entity.model.Model;
 import com.runescape.io.Buffer;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Refactored reference:
  * http://www.rune-server.org/runescape-development/rs2-client/downloads/575183-almost-fully-refactored-317-client.html
@@ -42,53 +45,61 @@ public final class NpcDefinition {
 	public static Client clientInstance;
 	public static ReferenceCache modelCache = new ReferenceCache(30);
 	public final int anInt64;
-	public int turn90CCWAnimIndex;
-	public int varBitID;
-	public int turn180AnimIndex;
-	public int settingId;
+	public int rotate90CCWAnimIndex;
+	public int varbitId;
+	public int rotate180AnimIndex;
+	public int varpIndex;
 	public int combatLevel;
 	public String name;
 	public String actions[];
-	public int walkAnim;
+	public int walkingAnimation;
 	public int size;
-	public int[] recolourTarget;
-	public int[] additionalModels;
+	public int[] recolorToReplace;
+	public int[] chatheadModels;
 	public int headIcon;
-	public int[] recolourOriginal;
-	public int standAnim;
+	public int[] recolorToFind;
+	public int standingAnimation;
 	public long interfaceType;
-	public int degreesToTurn;
-	public int turn90CWAnimIndex;
+	public int rotationSpeed;
+	public boolean isPet = false;
+	public int rotate90CWAnimIndex;
 	public boolean clickable;
-	public int lightModifier;
-	public int scaleY;
-	public boolean drawMinimapDot;
-	public int childrenIDs[];
+	public int ambient;
+	public int heightScale;
+	public boolean isMinimapVisible;
+	public int configs[];
+	public boolean rotationFlag = true;
+	public int rotateLeftAnimation = -1;
+	public int rotateRightAnimation = -1;
+	private int category;
+	public short[] textureReplace;
+	public short[] textureFind;
 	public byte description[];
-	public int scaleXZ;
-	public int shadowModifier;
+	public int widthScale;
+	public int contrast;
 	public boolean priorityRender;
-	public int[] modelId;
+	public int[] models;
 	public int id;
+	private Map<Integer, Object> params = null;
 
 	public NpcDefinition() {
-		turn90CCWAnimIndex = -1;
-		varBitID = -1;
-		turn180AnimIndex = -1;
-		settingId = -1;
+		rotate90CCWAnimIndex = -1;
+		varbitId = -1;
+		rotate180AnimIndex = -1;
+		varpIndex = -1;
 		combatLevel = -1;
 		anInt64 = 1834;
-		walkAnim = -1;
+		walkingAnimation = -1;
 		size = 1;
 		headIcon = -1;
-		standAnim = -1;
+		standingAnimation = -1;
 		interfaceType = -1L;
-		degreesToTurn = 32;
-		turn90CWAnimIndex = -1;
+		rotationSpeed = 32;
+		rotate90CWAnimIndex = -1;
 		clickable = true;
-		scaleY = 128;
-		drawMinimapDot = true;
-		scaleXZ = 128;
+		heightScale = 128;
+		isMinimapVisible = true;
+		widthScale = 128;
 		priorityRender = false;
 	}
 
@@ -107,22 +118,22 @@ public final class NpcDefinition {
 		dataBuf.currentPosition = offsets[id];
 		definition.interfaceType = id;
 		definition.id = id;
-		definition.readValues(dataBuf);
+		definition.decode(dataBuf);
 
 		switch (id) {
 		// Pets
 		case 497: // Callisto pet
-			definition.scaleXZ = 45;
+			definition.widthScale = 45;
 			definition.size = 2;
 			break;
 		case 6609: // Callisto
 			definition.size = 4;
 			break;
 		case 995:
-			definition.recolourOriginal = new int[2];
-			definition.recolourTarget = new int[2];
-			definition.recolourOriginal[0] = 528;
-			definition.recolourTarget[0] = 926;
+			definition.recolorToFind = new int[2];
+			definition.recolorToReplace = new int[2];
+			definition.recolorToFind[0] = 528;
+			definition.recolorToReplace[0] = 926;
 			break;
 		case 7456:
 			definition.actions = new String[] { "Repairs", null, null, null, null, null, null };
@@ -145,7 +156,7 @@ public final class NpcDefinition {
 			definition.combatLevel = 38;
 			break;
 		case 100:
-			definition.drawMinimapDot = true;
+			definition.isMinimapVisible = true;
 			break;
 		case 1306:
 			definition.actions = new String[] { "Make-over", null, null, null, null, null, null };
@@ -158,35 +169,35 @@ public final class NpcDefinition {
 			definition.name = "@or1@Maxed bot";
 			definition.combatLevel = 126;
 			definition.actions = new String[] { null, "Attack", null, null, null, null, null };
-			definition.modelId[5] = 268; // platelegs rune
-			definition.modelId[0] = 18954; // Str cape
-			definition.modelId[1] = 21873; // Head - neitznot
-			definition.modelId[8] = 15413; // Shield rune defender
-			definition.modelId[7] = 5409; // weapon whip
-			definition.modelId[4] = 13307; // Gloves barrows
-			definition.modelId[6] = 3704; // boots climbing
-			definition.modelId[9] = 290; // amulet glory
+			definition.models[5] = 268; // platelegs rune
+			definition.models[0] = 18954; // Str cape
+			definition.models[1] = 21873; // Head - neitznot
+			definition.models[8] = 15413; // Shield rune defender
+			definition.models[7] = 5409; // weapon whip
+			definition.models[4] = 13307; // Gloves barrows
+			definition.models[6] = 3704; // boots climbing
+			definition.models[9] = 290; // amulet glory
 			break;
 		case 1200:
 			definition.copy(lookup(1158));
-			definition.modelId[7] = 539; // weapon dds
+			definition.models[7] = 539; // weapon dds
 			break;
 		case 4096:
 			definition.name = "@or1@Archer bot";
 			definition.combatLevel = 90;
 			definition.actions = new String[] { null, "Attack", null, null, null, null, null };
-			definition.modelId[0] = 20423; // cape avas
-			definition.modelId[1] = 21873; // Head - neitznot
-			definition.modelId[7] = 31237; // weapon crossbow
-			definition.modelId[4] = 13307; // Gloves barrows
-			definition.modelId[6] = 3704; // boots climbing
-			definition.modelId[5] = 20139; // platelegs zammy hides
-			definition.modelId[2] = 20157; // platebody zammy hides
-			definition.standAnim = 7220;
-			definition.walkAnim = 7223;
-			definition.turn180AnimIndex = 7220;
-			definition.turn90CCWAnimIndex = 7220;
-			definition.turn90CWAnimIndex = 7220;
+			definition.models[0] = 20423; // cape avas
+			definition.models[1] = 21873; // Head - neitznot
+			definition.models[7] = 31237; // weapon crossbow
+			definition.models[4] = 13307; // Gloves barrows
+			definition.models[6] = 3704; // boots climbing
+			definition.models[5] = 20139; // platelegs zammy hides
+			definition.models[2] = 20157; // platebody zammy hides
+			definition.standingAnimation = 7220;
+			definition.walkingAnimation = 7223;
+			definition.rotate180AnimIndex = 7220;
+			definition.rotate90CCWAnimIndex = 7220;
+			definition.rotate90CWAnimIndex = 7220;
 			break;
 		case 1576:
 			definition.actions = new String[] { "Trade", null, "Equipment", "Ammunition", null, null, null };
@@ -242,63 +253,63 @@ public final class NpcDefinition {
 
 	private void copy(NpcDefinition copy) {
 		size = copy.size;
-		degreesToTurn = copy.degreesToTurn;
-		walkAnim = copy.walkAnim;
-		turn180AnimIndex = copy.turn180AnimIndex;
-		turn90CWAnimIndex = copy.turn90CWAnimIndex;
-		turn90CCWAnimIndex = copy.turn90CCWAnimIndex;
-		varBitID = copy.varBitID;
-		settingId = copy.settingId;
+		rotationSpeed = copy.rotationSpeed;
+		walkingAnimation = copy.walkingAnimation;
+		rotate180AnimIndex = copy.rotate180AnimIndex;
+		rotate90CWAnimIndex = copy.rotate90CWAnimIndex;
+		rotate90CCWAnimIndex = copy.rotate90CCWAnimIndex;
+		varbitId = copy.varbitId;
+		varpIndex = copy.varpIndex;
 		combatLevel = copy.combatLevel;
 		name = copy.name;
 		description = copy.description;
 		headIcon = copy.headIcon;
 		clickable = copy.clickable;
-		lightModifier = copy.lightModifier;
-		scaleY = copy.scaleY;
-		scaleXZ = copy.scaleXZ;
-		drawMinimapDot = copy.drawMinimapDot;
-		shadowModifier = copy.shadowModifier;
+		ambient = copy.ambient;
+		heightScale = copy.heightScale;
+		widthScale = copy.widthScale;
+		isMinimapVisible = copy.isMinimapVisible;
+		contrast = copy.contrast;
 		actions = new String[copy.actions.length];
 		for (int i = 0; i < actions.length; i++) {
 			actions[i] = copy.actions[i];
 		}
-		modelId = new int[copy.modelId.length];
-		for (int i = 0; i < modelId.length; i++) {
-			modelId[i] = copy.modelId[i];
+		models = new int[copy.models.length];
+		for (int i = 0; i < models.length; i++) {
+			models[i] = copy.models[i];
 		}
 		priorityRender = copy.priorityRender;
 	}
 
 	public Model model() {
-		if (childrenIDs != null) {
+		if (configs != null) {
 			NpcDefinition entityDef = morph();
 			if (entityDef == null)
 				return null;
 			else
 				return entityDef.model();
 		}
-		if (additionalModels == null)
+		if (chatheadModels == null)
 			return null;
 		boolean flag1 = false;
-		for (int index = 0; index < additionalModels.length; index++)
-			if (!Model.isCached(additionalModels[index]))
+		for (int index = 0; index < chatheadModels.length; index++)
+			if (!Model.isCached(chatheadModels[index]))
 				flag1 = true;
 
 		if (flag1)
 			return null;
-		Model models[] = new Model[additionalModels.length];
-		for (int index = 0; index < additionalModels.length; index++)
-			models[index] = Model.getModel(additionalModels[index]);
+		Model models[] = new Model[chatheadModels.length];
+		for (int index = 0; index < chatheadModels.length; index++)
+			models[index] = Model.getModel(chatheadModels[index]);
 
 		Model model;
 		if (models.length == 1)
 			model = models[0];
 		else
-			model = new Model(models.length, models);
-		if (recolourOriginal != null) {
-			for (int index = 0; index < recolourOriginal.length; index++)
-				model.recolor(recolourOriginal[index], recolourTarget[index]);
+			model = new Model(models.length, models,true);
+		if (recolorToFind != null) {
+			for (int index = 0; index < recolorToFind.length; index++)
+				model.recolor(recolorToFind[index], recolorToReplace[index]);
 
 		}
 		return model;
@@ -306,23 +317,23 @@ public final class NpcDefinition {
 
 	public NpcDefinition morph() {
 		int child = -1;
-		if (varBitID != -1) {
-			VariableBits varBit = VariableBits.varbits[varBitID];
+		if (varbitId != -1) {
+			VariableBits varBit = VariableBits.varbits[varbitId];
 			int variable = varBit.getSetting();
 			int low = varBit.getLow();
 			int high = varBit.getHigh();
 			int mask = Client.BIT_MASKS[high - low];
 			child = clientInstance.settings[variable] >> low & mask;
-		} else if (settingId != -1)
-			child = clientInstance.settings[settingId];
-		if (child < 0 || child >= childrenIDs.length || childrenIDs[child] == -1)
+		} else if (varpIndex != -1)
+			child = clientInstance.settings[varpIndex];
+		if (child < 0 || child >= configs.length || configs[child] == -1)
 			return null;
 		else
-			return lookup(childrenIDs[child]);
+			return lookup(configs[child]);
 	}
 
 	public Model method164(int j, int frame, int ai[]) {
-		if (childrenIDs != null) {
+		if (configs != null) {
 			NpcDefinition entityDef = morph();
 			if (entityDef == null)
 				return null;
@@ -332,38 +343,38 @@ public final class NpcDefinition {
 		Model model = (Model) modelCache.get(interfaceType);
 		if (model == null) {
 			boolean flag = false;
-			for (int i1 = 0; i1 < modelId.length; i1++)
-				if (!Model.isCached(modelId[i1]))
+			for (int i1 = 0; i1 < models.length; i1++)
+				if (!Model.isCached(models[i1]))
 					flag = true;
 
 			if (flag)
 				return null;
-			Model models[] = new Model[modelId.length];
-			for (int j1 = 0; j1 < modelId.length; j1++)
-				models[j1] = Model.getModel(modelId[j1]);
+			Model models[] = new Model[this.models.length];
+			for (int j1 = 0; j1 < this.models.length; j1++)
+				models[j1] = Model.getModel(this.models[j1]);
 
 			if (models.length == 1)
 				model = models[0];
 			else
-				model = new Model(models.length, models);
-			if (recolourOriginal != null) {
-				for (int k1 = 0; k1 < recolourOriginal.length; k1++)
-					model.recolor(recolourOriginal[k1], recolourTarget[k1]);
+				model = new Model(models.length, models,true);
+			if (recolorToFind != null) {
+				for (int k1 = 0; k1 < recolorToFind.length; k1++)
+					model.recolor(recolorToFind[k1], recolorToReplace[k1]);
 
 			}
 			model.skin();
 			model.scale(132, 132, 132);
-			model.light(84 + lightModifier, 1000 + shadowModifier, -90, -580, -90, true);
+			model.light(84 + ambient, 1000 + contrast, -90, -580, -90, true);
 			modelCache.put(model, interfaceType);
 		}
 		Model empty = Model.EMPTY_MODEL;
-		empty.method464(model, Frame.noAnimationInProgress(frame) & Frame.noAnimationInProgress(j));
+		empty.replace(model, Frame.noAnimationInProgress(frame) & Frame.noAnimationInProgress(j));
 		if (frame != -1 && j != -1)
 			empty.applyAnimationFrames(ai, j, frame);
 		else if (frame != -1)
 			empty.applyTransform(frame);
-		if (scaleXZ != 128 || scaleY != 128)
-			empty.scale(scaleXZ, scaleXZ, scaleY);
+		if (widthScale != 128 || heightScale != 128)
+			empty.scale(widthScale, widthScale, heightScale);
 		empty.calculateDistances();
 		empty.faceGroups = null;
 		empty.vertexGroups = null;
@@ -373,7 +384,7 @@ public final class NpcDefinition {
 	}
 
 	public Model getAnimatedModel(int primaryFrame, int secondaryFrame, int interleaveOrder[]) {
-		if (childrenIDs != null) {
+		if (configs != null) {
 			NpcDefinition definition = morph();
 			if (definition == null)
 				return null;
@@ -383,38 +394,38 @@ public final class NpcDefinition {
 		Model model = (Model) modelCache.get(interfaceType);
 		if (model == null) {
 			boolean flag = false;
-			for (int index = 0; index < modelId.length; index++)
-				if (!Model.isCached(modelId[index]))
+			for (int index = 0; index < models.length; index++)
+				if (!Model.isCached(models[index]))
 					flag = true;
 			if (flag) {
 				return null;
 			}
-			Model models[] = new Model[modelId.length];
-			for (int index = 0; index < modelId.length; index++)
-				models[index] = Model.getModel(modelId[index]);
+			Model models[] = new Model[this.models.length];
+			for (int index = 0; index < this.models.length; index++)
+				models[index] = Model.getModel(this.models[index]);
 
 			if (models.length == 1)
 				model = models[0];
 			else
-				model = new Model(models.length, models);
-			if (recolourOriginal != null) {
-				for (int index = 0; index < recolourOriginal.length; index++)
-					model.recolor(recolourOriginal[index], recolourTarget[index]);
+				model = new Model(models.length, models,true);
+			if (recolorToFind != null) {
+				for (int index = 0; index < recolorToFind.length; index++)
+					model.recolor(recolorToFind[index], recolorToReplace[index]);
 
 			}
 			model.skin();
-			model.light(64 + lightModifier, 850 + shadowModifier, -30, -50, -30, true);
+			model.light(64 + ambient, 850 + contrast, -30, -50, -30, true);
 			modelCache.put(model, interfaceType);
 		}
 		Model model_1 = Model.EMPTY_MODEL;
-		model_1.method464(model,
+		model_1.replace(model,
 				Frame.noAnimationInProgress(secondaryFrame) & Frame.noAnimationInProgress(primaryFrame));
 		if (secondaryFrame != -1 && primaryFrame != -1)
 			model_1.applyAnimationFrames(interleaveOrder, primaryFrame, secondaryFrame);
 		else if (secondaryFrame != -1)
 			model_1.applyTransform(secondaryFrame);
-		if (scaleXZ != 128 || scaleY != 128)
-			model_1.scale(scaleXZ, scaleXZ, scaleY);
+		if (widthScale != 128 || heightScale != 128)
+			model_1.scale(widthScale, widthScale, heightScale);
 		model_1.calculateDistances();
 		model_1.faceGroups = null;
 		model_1.vertexGroups = null;
@@ -423,7 +434,7 @@ public final class NpcDefinition {
 		return model_1;
 	}
 
-	public void readValues(Buffer buffer) {
+	public void decode(Buffer buffer) {
 	    
 	    while(true) {
             int opcode = buffer.readUnsignedByte();
@@ -431,36 +442,29 @@ public final class NpcDefinition {
                 return;
             } else if (opcode == 1) {
                 int len = buffer.readUnsignedByte();
-                modelId = new int[len];
+				models = new int[len];
                 for (int i = 0; i < len; i++) {
-                    modelId[i] = buffer.readUShort();
+                    models[i] = buffer.readUShort();
                 }
             } else if (opcode == 2) {
-                name = buffer.readString();
+                name = buffer.readJagexString();
             } else if (opcode == 12) {
                 size = buffer.readUnsignedByte();
             } else if (opcode == 13) {
-                standAnim = buffer.readUShort();
+				standingAnimation = buffer.readUShort();
             } else if (opcode == 14) {
-                walkAnim = buffer.readUShort();
+				walkingAnimation = buffer.readUShort();
             } else if (opcode == 15) {
-                buffer.readUShort();
+				rotateLeftAnimation = buffer.readUShort();
             } else if (opcode == 16) {
-                buffer.readUShort();
+				rotateRightAnimation = buffer.readUShort();
             } else if (opcode == 17) {
-                walkAnim = buffer.readUShort();
-                turn180AnimIndex = buffer.readUShort();
-                turn90CWAnimIndex = buffer.readUShort();
-                turn90CCWAnimIndex = buffer.readUShort();
-                if (turn180AnimIndex == 65535) {
-                    turn180AnimIndex = walkAnim;
-                }
-                if (turn90CWAnimIndex == 65535) {
-                    turn90CWAnimIndex = walkAnim;
-                }
-                if (turn90CCWAnimIndex == 65535) {
-                    turn90CCWAnimIndex = walkAnim;
-                }
+                walkingAnimation = buffer.readUShort();
+                rotate180AnimIndex = buffer.readUShort();
+                rotate90CWAnimIndex = buffer.readUShort();
+                rotate90CCWAnimIndex = buffer.readUShort();
+			} else if (opcode == 18) {
+				category = buffer.readUShort();
             } else if (opcode >= 30 && opcode < 35) {
                 if (actions == null) {
                     actions = new String[5];
@@ -473,79 +477,102 @@ public final class NpcDefinition {
                 }
             } else if (opcode == 40) {
                 int len = buffer.readUnsignedByte();
-                recolourOriginal = new int[len];
-                recolourTarget = new int[len];
+                recolorToFind = new int[len];
+                recolorToReplace = new int[len];
                 for (int i = 0; i < len; i++) {
-                    recolourOriginal[i] = buffer.readUShort();
-                    recolourTarget[i] = buffer.readUShort();
+					recolorToFind[i] = buffer.readUShort();
+					recolorToReplace[i] = buffer.readUShort();
                 }
 
-            } else if (opcode == 41) {
-                int len = buffer.readUnsignedByte();
-
-                for (int i = 0; i < len; i++) {
-                    buffer.readUShort(); // textures
-                    buffer.readUShort();
-                }
+			} else if (opcode == 41) {
+				int length = buffer.readUnsignedByte();
+				textureFind = new short[length];
+				textureReplace = new short[length];
+				for (int index = 0; index < length; index++) {
+					textureFind[index] = (short) buffer.readUShort();
+					textureReplace[index] = (short) buffer.readUShort();
+				}
             } else if (opcode == 60) {
                 int len = buffer.readUnsignedByte();
-                additionalModels = new int[len];
+				chatheadModels = new int[len];
                 for (int i = 0; i < len; i++) {
-                    additionalModels[i] = buffer.readUShort();
+                    chatheadModels[i] = buffer.readUShort();
                 }
             } else if (opcode == 93) {
-                drawMinimapDot = false;
+				isMinimapVisible = false;
             } else if (opcode == 95)
                 combatLevel = buffer.readUShort();
             else if (opcode == 97)
-                scaleXZ = buffer.readUShort();
+				widthScale = buffer.readUShort();
             else if (opcode == 98)
-                scaleY = buffer.readUShort();
+				heightScale = buffer.readUShort();
             else if (opcode == 99)
                 priorityRender = true;
             else if (opcode == 100)
-                lightModifier = buffer.readSignedByte();
+				ambient = buffer.readSignedByte();
             else if (opcode == 101)
-                shadowModifier = buffer.readSignedByte();
+				contrast = buffer.readSignedByte();
             else if (opcode == 102)
                 headIcon = buffer.readUShort();
             else if (opcode == 103)
-                degreesToTurn = buffer.readUShort();
+				rotationSpeed = buffer.readUShort();
             else if (opcode == 106 || opcode == 118) {
-                varBitID = buffer.readUShort();
+				varbitId = buffer.readUShort();
 
-                if (varBitID == 65535) {
-                    varBitID = -1;
-                }
+				if (varbitId == 65535) {
+					varbitId = -1;
+				}
 
-                settingId = buffer.readUShort();
+				varpIndex = buffer.readUShort();
 
-                if (settingId == 65535) {
-                    settingId = -1;
-                }
+				if (varpIndex == 65535) {
+					varpIndex = -1;
+				}
 
-                int value = -1;
+				int value = -1;
 
-                if (opcode == 118) {
-                    value = buffer.readUShort();
-                }
+				if (opcode == 118) {
+					value = buffer.readUShort();
+				}
 
-                int len = buffer.readUnsignedByte();
-                childrenIDs = new int[len + 2];
-                for (int i = 0; i <= len; i++) {
-                    childrenIDs[i] = buffer.readUShort();
-                    if (childrenIDs[i] == 65535) {
-                        childrenIDs[i] = -1;
-                    }
-                }
-                childrenIDs[len + 1] = value;
-            } else if (opcode == 109) {
-                clickable = false;
-            } else if (opcode == 107 || opcode == 111) {
-                
+				int len = buffer.readUnsignedByte();
+				configs = new int[len + 2];
+				for (int i = 0; i <= len; i++) {
+					configs[i] = buffer.readUShort();
+					if (configs[i] == 65535) {
+						configs[i] = -1;
+					}
+				}
+				configs[len + 1] = value;
+			} else if (opcode == 109) {
+					rotationFlag = false;
+			} else if (opcode == 111) {
+					isPet = true;
+			} else if (opcode == 107) {
+				clickable = false;
+			} else if (opcode == 249)  {
+				int length = buffer.readUnsignedByte();
+
+				params = new HashMap<>(length);
+
+				for (int i = 0; i < length; i++) {
+					boolean isString = buffer.readUnsignedByte() == 1;
+					int key = buffer.read24Int();
+					Object value;
+
+					if (isString) {
+						value = buffer.readString();
+					} else {
+						value = buffer.readInt();
+					}
+
+					params.put(key, value);
+				}
             } else {
                 System.out.println(String.format("npc def invalid opcode: %d", opcode));
             }
         }
 	}
+
+
 }

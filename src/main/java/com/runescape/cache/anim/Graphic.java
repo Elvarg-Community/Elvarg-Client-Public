@@ -9,8 +9,8 @@ public final class Graphic {
 
     public static Graphic cache[];
     public static ReferenceCache models = new ReferenceCache(30);
-    private int[] originalModelColours;
-    private int[] modifiedModelColours;
+    private int[] recolorToFind;
+    private int[] recolorToReplace;
     public Animation animationSequence;
     public int resizeXY;
     public int resizeZ;
@@ -23,8 +23,8 @@ public final class Graphic {
 
     private Graphic() {
         animationId = -1;
-        originalModelColours = new int[6];
-        modifiedModelColours = new int[6];
+        recolorToFind = new int[6];
+        recolorToReplace = new int[6];
         resizeXY = 128;
         resizeZ = 128;
     }
@@ -43,6 +43,9 @@ public final class Graphic {
 
         System.out.println("Loaded: " + length + " graphics");
     }
+
+    public short[] textureReplace;
+    public short[] textureFind;
 
     public void readValues(Buffer buffer) {
         while(true) {
@@ -69,18 +72,19 @@ public final class Graphic {
                 modelShadow = buffer.readUnsignedByte();
             } else if (opcode == 40) {
                 int len = buffer.readUnsignedByte();
-                originalModelColours = new int[len];
-                modifiedModelColours = new int[len];
+                recolorToFind = new int[len];
+                recolorToReplace = new int[len];
                 for (int i = 0; i < len; i++) {
-                    originalModelColours[i] = buffer.readUShort();
-                    modifiedModelColours[i] = buffer.readUShort();
+                    recolorToFind[i] = buffer.readUShort();
+                    recolorToReplace[i] = buffer.readUShort();
                 }
             } else if (opcode == 41) { // re-texture
                 int len = buffer.readUnsignedByte();
-
+                textureFind = new short[len];
+                textureReplace = new short[len];
                 for (int i = 0; i < len; i++) {
-                    buffer.readUShort();
-                    buffer.readUShort();
+                    textureFind[i] = (short) buffer.readUShort();
+                    textureReplace[i] = (short) buffer.readUShort();
                 }
             } else {
                 System.out.println("gfx invalid opcode: " + opcode);
@@ -96,8 +100,8 @@ public final class Graphic {
         if (model == null)
             return null;
         for (int i = 0; i < 6; i++)
-            if (originalModelColours[0] != 0)
-                model.recolor(originalModelColours[i], modifiedModelColours[i]);
+            if (recolorToFind[0] != 0)
+                model.recolor(recolorToFind[i], recolorToReplace[i]);
 
         models.put(model, anInt404);
         return model;

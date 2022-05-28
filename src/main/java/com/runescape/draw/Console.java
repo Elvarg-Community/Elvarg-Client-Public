@@ -87,7 +87,7 @@ public class Console {
 				if (def == null || def.name == null || !def.name.toLowerCase().contains(name)) {
 					continue;
 				}
-				printMessage("NPC " + i + ", name: " + def.name + ", stand anim: " + def.standAnim, 1);
+				printMessage("NPC " + i + ", name: " + def.name + ", stand anim: " + def.standingAnimation, 1);
 			}
 			return;
 		} else if (cmd.startsWith("finditem")) {

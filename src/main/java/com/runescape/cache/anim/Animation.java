@@ -10,6 +10,8 @@ public final class Animation {
     public int frameCount;
     public int primaryFrames[];
     public int secondaryFrames[];
+    public int chatFrameIds[];
+    public int frameSounds[];
     public int[] durations;
     public int loopOffset;
     public int interleaveOrder[];
@@ -115,18 +117,19 @@ public final class Animation {
             } else if (opcode == 12) {
                 int len = buffer.readUnsignedByte();
 
+                chatFrameIds = new int[len];
                 for (int i = 0; i < len; i++) {
-                    buffer.readUShort();
+                    chatFrameIds[i] = buffer.readUShort();
                 }
 
                 for (int i = 0; i < len; i++) {
-                    buffer.readUShort();
+                    chatFrameIds[i] = buffer.readUShort() << 16;
                 }
             } else if (opcode == 13) {
                 int len = buffer.readUnsignedByte();
-
+                frameSounds = new int[len];
                 for (int i = 0; i < len; i++) {
-                    buffer.read24Int();
+                    frameSounds[i] = buffer.read24Int();
                 }
             }
         }

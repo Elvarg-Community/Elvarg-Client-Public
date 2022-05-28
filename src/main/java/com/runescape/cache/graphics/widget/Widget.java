@@ -4253,7 +4253,7 @@ public class Widget {
 		widget.defaultMediaType = 4;
 		widget.defaultMedia = item;
 		if (widget.defaultMedia != -1)
-			widget.modelZoom = (ItemDefinition.lookup(item).modelZoom * 100) / zoom;
+			widget.modelZoom = (ItemDefinition.lookup(item).zoom2d * 100) / zoom;
 		widget.height = h;
 		widget.width = w;
 	}

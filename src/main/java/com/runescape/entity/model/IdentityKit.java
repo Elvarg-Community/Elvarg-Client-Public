@@ -99,7 +99,7 @@ public final class IdentityKit {
         if (models.length == 1) {
             model = models[0];
         } else {
-            model = new Model(models.length, models);
+            model = new Model(models.length, models,true);
         }
         for (int part = 0; part < 6; part++) {
             if (originalColors[part] == 0) {
@@ -129,7 +129,7 @@ public final class IdentityKit {
             }
         }
 
-        Model model = new Model(count, models);
+        Model model = new Model(count, models,true);
         for (int part = 0; part < 6; part++) {
             if (originalColors[part] == 0) {
                 break;

@@ -120,7 +120,7 @@ public class WheelOfFortune {
             ItemDefinition definition = ItemDefinition.lookup(item);
             Widget.interfaceCache[widget].defaultMediaType = 4;
             Widget.interfaceCache[widget].defaultMedia = item;
-            Widget.interfaceCache[widget].modelZoom = (definition.modelZoom * 100) / scale;
+            Widget.interfaceCache[widget].modelZoom = (definition.zoom2d * 100) / scale;
         }
         if ((rotation - previousSpinRotation) % 90 == 0.0 && spinning) quarterRotations++;
     }
