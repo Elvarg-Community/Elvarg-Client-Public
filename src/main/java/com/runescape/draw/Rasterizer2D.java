@@ -22,6 +22,17 @@ public class Rasterizer2D extends Cacheable {
     public static int viewportCenterX;
     public static int viewportCenterY;
 
+    public static void drawAlpha(int[] pixels, int index, int color, int alpha) {
+        pixels[index] = color;
+    }
+    public static void drawAlpha(int[] pixels, int index, int value, int color, int alpha) {
+        pixels[index] = value;
+    }
+
+    public static void drawAlpha(byte[] pixels, int index, byte color, int alpha) {
+        pixels[index] = color;
+    }
+
     /**
      * Sets the Rasterizer2D in the upper left corner with height, width and pixels set.
      *

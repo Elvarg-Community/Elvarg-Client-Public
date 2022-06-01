@@ -11282,7 +11282,7 @@ public class Client extends GameApplet {
                     }
                     try {
                         if (model != null)
-                            model.method482(childInterface.modelRotation2, 0, childInterface.modelRotation1, 0, sine, cosine);
+                            model.render_2D(childInterface.modelRotation2, 0, childInterface.modelRotation1, 0, sine, cosine);
                     } catch (ArithmeticException e) {
                     }
                     Rasterizer3D.originViewX = centreX;
@@ -15845,7 +15845,7 @@ public class Client extends GameApplet {
                 }
             }
         int k2 = Rasterizer3D.lastTextureRetrievalCount;
-        Model.aBoolean1684 = true;
+        Model.obj_exists = true;
         Model.obj_loaded = 0;
         Model.anInt1685 = super.mouseX - (frameMode == ScreenMode.FIXED ? 4 : 0);
         Model.anInt1686 = super.mouseY - (frameMode == ScreenMode.FIXED ? 4 : 0);

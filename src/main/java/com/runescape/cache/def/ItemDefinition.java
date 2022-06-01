@@ -22,8 +22,8 @@ public final class ItemDefinition {
     private static int[] streamIndices;
     public int cost;
     public int[] colorReplace;
-    public short[] textureReplace;
-    public short[] textureFind;
+    private short[] textureReplace;
+    private short[] textureFind;
 
     public int id;
     public int[] colorFind;
@@ -250,7 +250,7 @@ public final class ItemDefinition {
             k3 = (int) ((double) k3 * 1.04D);
         int l3 = Rasterizer3D.anIntArray1470[itemDef.xan2d] * k3 >> 16;
         int i4 = Rasterizer3D.COSINE[itemDef.xan2d] * k3 >> 16;
-        model.method482(itemDef.yan2d, itemDef.zan2d, itemDef.xan2d, itemDef.xOffset2d,
+        model.render_2D(itemDef.yan2d, itemDef.zan2d, itemDef.xan2d, itemDef.xOffset2d,
                 l3 + model.modelBaseY / 2 + itemDef.yOffset2d, i4 + itemDef.yOffset2d);
 
         enabledSprite.outline(1);
@@ -321,7 +321,7 @@ public final class ItemDefinition {
         Rasterizer3D.useViewport();
         int l3 = Rasterizer3D.anIntArray1470[itemDef.xan2d] * zoom >> 15;
         int i4 = Rasterizer3D.COSINE[itemDef.xan2d] * zoom >> 15;
-        model.method482(itemDef.yan2d, itemDef.zan2d, itemDef.xan2d, itemDef.xOffset2d,
+        model.render_2D(itemDef.yan2d, itemDef.zan2d, itemDef.xan2d, itemDef.xOffset2d,
                 l3 + model.modelBaseY / 2 + itemDef.yOffset2d, i4 + itemDef.yOffset2d);
         sprite.outline(1);
         if (outlineColor > 0) {
@@ -499,10 +499,7 @@ public final class ItemDefinition {
         yOffset2d = copy.yOffset2d;
         inventory_model = copy.inventory_model;
         stackable = copy.stackable;
-        colorReplace = copy.colorReplace;
-        colorFind = copy.colorFind;
-        textureFind = copy.textureFind;
-        textureReplace = copy.textureReplace;
+
     }
 
     private void toNote() {
@@ -515,10 +512,7 @@ public final class ItemDefinition {
         zan2d = itemDef.zan2d;
         xOffset2d = itemDef.xOffset2d;
         yOffset2d = itemDef.yOffset2d;
-        colorReplace = itemDef.colorReplace;
-        textureFind = itemDef.textureFind;
-        textureReplace = itemDef.textureReplace;
-        colorFind = itemDef.colorFind;
+
         ItemDefinition itemDef_1 = lookup(unnoted_item_id);
         name = itemDef_1.name;
         members = itemDef_1.members;

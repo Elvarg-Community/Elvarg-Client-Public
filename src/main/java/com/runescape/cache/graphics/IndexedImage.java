@@ -53,6 +53,7 @@ public final class IndexedImage extends Rasterizer2D {
                 }
             }
         }
+
     }
 
     public void downscale() {

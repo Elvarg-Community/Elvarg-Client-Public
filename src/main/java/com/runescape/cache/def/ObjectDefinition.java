@@ -219,8 +219,8 @@ public final class ObjectDefinition {
         description = null;
         recolorToFind = null;
         recolorToReplace = null;
-		textureFind = null;
-		textureReplace = null;
+        textureFind = null;
+        textureReplace = null;
         sizeX = 1;
         sizeY = 1;
         interactType = true;
@@ -345,7 +345,7 @@ public final class ObjectDefinition {
                     if (model == null)
                         return null;
                     if (flag1)
-                        model.method477();
+                        model.invert();
                     baseModels.put(model, l2);
                 }
                 if (k1 > 1)
@@ -383,7 +383,7 @@ public final class ObjectDefinition {
                 if (model == null)
                     return null;
                 if (flag3)
-                    model.method477();
+                    model.invert();
                 baseModels.put(model, j2);
             }
         }
@@ -402,6 +402,7 @@ public final class ObjectDefinition {
         }
         while (l-- > 0)
             model_3.rotate90Degrees();
+
         if (recolorToFind != null) {
             for (int k2 = 0; k2 < recolorToFind.length; k2++)
                 model_3.recolor(recolorToFind[k2],

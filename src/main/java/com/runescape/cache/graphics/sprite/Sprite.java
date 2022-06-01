@@ -44,7 +44,7 @@ public final class Sprite extends Rasterizer2D {
         this.myPixels = pixels;
 
         Color color = Color.MAGENTA;
-        setTransparency(color.getRed(), color.getGreen(), color.getBlue());
+        setTransparency (color.getRed(), color.getGreen(), color.getBlue());
     }
 
     public Sprite(int i, int j) {

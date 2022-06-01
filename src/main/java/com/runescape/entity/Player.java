@@ -351,7 +351,7 @@ public final class Player extends Mob {
         } else if (currentFrame != -1) {
             emptyModel.applyTransform(currentFrame);
         }
-        emptyModel.calculateDistances();
+        emptyModel.calc_diagonals();
         emptyModel.faceGroups = null;
         emptyModel.vertexGroups = null;
         return emptyModel;

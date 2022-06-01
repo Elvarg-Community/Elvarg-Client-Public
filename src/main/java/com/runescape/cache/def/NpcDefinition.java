@@ -375,7 +375,7 @@ public final class NpcDefinition {
 			empty.applyTransform(frame);
 		if (widthScale != 128 || heightScale != 128)
 			empty.scale(widthScale, widthScale, heightScale);
-		empty.calculateDistances();
+		empty.calc_diagonals();
 		empty.faceGroups = null;
 		empty.vertexGroups = null;
 		if (size == 1)
@@ -426,7 +426,7 @@ public final class NpcDefinition {
 			model_1.applyTransform(secondaryFrame);
 		if (widthScale != 128 || heightScale != 128)
 			model_1.scale(widthScale, widthScale, heightScale);
-		model_1.calculateDistances();
+		model_1.calc_diagonals();
 		model_1.faceGroups = null;
 		model_1.vertexGroups = null;
 		if (size == 1)

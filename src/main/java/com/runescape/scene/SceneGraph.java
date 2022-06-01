@@ -665,22 +665,22 @@ public final class SceneGraph {
                             if (wallObject.renderable2 != null && wallObject.renderable2.vertexNormals != null) {
                                 method307(zLoc, 1, 1, xLoc, yLoc, (Model) wallObject.renderable2);
                                 mergeNormals((Model) wallObject.renderable1, (Model) wallObject.renderable2, 0, 0, 0, false);
-                                ((Model) wallObject.renderable2).doShading(intensity, someLightQualityVariable, lightX, lightY, lightZ);
+                                ((Model) wallObject.renderable2).flat_lighting(intensity, someLightQualityVariable, lightX, lightY, lightZ);
                             }
-                            ((Model) wallObject.renderable1).doShading(intensity, someLightQualityVariable, lightX, lightY, lightZ);
+                            ((Model) wallObject.renderable1).flat_lighting(intensity, someLightQualityVariable, lightX, lightY, lightZ);
                         }
                         for (int k2 = 0; k2 < tile.gameObjectIndex; k2++) {
                             GameObject interactableObject = tile.gameObjects[k2];
                             if (interactableObject != null && interactableObject.renderable != null && interactableObject.renderable.vertexNormals != null) {
                                 method307(zLoc, (interactableObject.xLocHigh - interactableObject.xLocLow) + 1, (interactableObject.yLocLow - interactableObject.yLocHigh) + 1, xLoc, yLoc, (Model) interactableObject.renderable);
-                                ((Model) interactableObject.renderable).doShading(intensity, someLightQualityVariable, lightX, lightY, lightZ);
+                                ((Model) interactableObject.renderable).flat_lighting(intensity, someLightQualityVariable, lightX, lightY, lightZ);
                             }
                         }
 
                         GroundDecoration groundDecoration = tile.groundDecoration;
                         if (groundDecoration != null && groundDecoration.renderable.vertexNormals != null) {
                             method306GroundDecorationOnly(xLoc, zLoc, (Model) groundDecoration.renderable, yLoc);
-                            ((Model) groundDecoration.renderable).doShading(intensity, someLightQualityVariable, lightX, lightY, lightZ);
+                            ((Model) groundDecoration.renderable).flat_lighting(intensity, someLightQualityVariable, lightX, lightY, lightZ);
                         }
                     }
                 }
@@ -755,25 +755,25 @@ public final class SceneGraph {
         int secondVertices = model2.numVertices;
         for (int model1Vertex = 0; model1Vertex < model1.numVertices; model1Vertex++) {
             VertexNormal vertexNormal1 = model1.vertexNormals[model1Vertex];
-            VertexNormal alsoVertexNormal1 = model1.alsoVertexNormals[model1Vertex];
+            VertexNormal alsoVertexNormal1 = model1.gouraud_vertex[model1Vertex];
             if (alsoVertexNormal1.magnitude != 0) {
                 int dY = model1.vertexY[model1Vertex] - offsetY;
-                if (dY <= model2.maximumYVertex) {
+                if (dY <= model2.max_y) {
                     int dX = model1.vertexX[model1Vertex] - offsetX;
-                    if (dX >= model2.minimumXVertex && dX <= model2.maximumXVertex) {
+                    if (dX >= model2.min_x && dX <= model2.max_x) {
                         int k2 = model1.vertexZ[model1Vertex] - offsetZ;
-                        if (k2 >= model2.minimumZVertex && k2 <= model2.maximumZVertex) {
+                        if (k2 >= model2.min_z && k2 <= model2.max_z) {
                             for (int l2 = 0; l2 < secondVertices; l2++) {
                                 VertexNormal vertexNormal2 = model2.vertexNormals[l2];
-                                VertexNormal alsoVertexNormal2 = model2.alsoVertexNormals[l2];
+                                VertexNormal alsoVertexNormal2 = model2.gouraud_vertex[l2];
                                 if (dX == second[l2] && k2 == model2.vertexZ[l2] && dY == model2.vertexY[l2] && alsoVertexNormal2.magnitude != 0) {
-                                    vertexNormal1.normalX += alsoVertexNormal2.normalX;
-                                    vertexNormal1.normalY += alsoVertexNormal2.normalY;
-                                    vertexNormal1.normalZ += alsoVertexNormal2.normalZ;
+                                    vertexNormal1.x += alsoVertexNormal2.x;
+                                    vertexNormal1.y += alsoVertexNormal2.y;
+                                    vertexNormal1.z += alsoVertexNormal2.z;
                                     vertexNormal1.magnitude += alsoVertexNormal2.magnitude;
-                                    vertexNormal2.normalX += alsoVertexNormal1.normalX;
-                                    vertexNormal2.normalY += alsoVertexNormal1.normalY;
-                                    vertexNormal2.normalZ += alsoVertexNormal1.normalZ;
+                                    vertexNormal2.x += alsoVertexNormal1.x;
+                                    vertexNormal2.y += alsoVertexNormal1.y;
+                                    vertexNormal2.z += alsoVertexNormal1.z;
                                     vertexNormal2.magnitude += alsoVertexNormal1.magnitude;
                                     count++;
                                     anIntArray486[model1Vertex] = anInt488;
@@ -1521,7 +1521,7 @@ public final class SceneGraph {
             }
             if (simpleTile.getTexture() == -1) {
                 if (simpleTile.getCenterColor() != 0xbc614e)
-                    Rasterizer3D.drawGouraudTriangle(j6, l6, l5, i6, k6, k5, simpleTile.getCenterColor(), simpleTile.getEastColor(), simpleTile.getNorthColor());
+                    Rasterizer3D.drawShadedTriangle(j6, l6, l5, i6, k6, k5, simpleTile.getCenterColor(), simpleTile.getEastColor(), simpleTile.getNorthColor());
             } else if (!lowMem) {
                 if (simpleTile.isFlat())
                     Rasterizer3D.drawTexturedTriangle(j6, l6, l5, i6, k6, k5, simpleTile.getCenterColor(), simpleTile.getEastColor(), simpleTile.getNorthColor(), i2, i3, l1, l3, i4, k4, k2, j2, j3, simpleTile.getTexture());
@@ -1529,7 +1529,7 @@ public final class SceneGraph {
                     Rasterizer3D.drawTexturedTriangle(j6, l6, l5, i6, k6, k5, simpleTile.getCenterColor(), simpleTile.getEastColor(), simpleTile.getNorthColor(), l2, l1, i3, j4, k4, i4, k3, j3, j2, simpleTile.getTexture());
             } else {
                 int textureColor = TEXTURE_COLORS[simpleTile.getTexture()];
-                Rasterizer3D.drawGouraudTriangle(j6, l6, l5, i6, k6, k5, light(textureColor, simpleTile.getCenterColor()), light(textureColor, simpleTile.getEastColor()), light(textureColor, simpleTile.getNorthColor()));
+                Rasterizer3D.drawShadedTriangle(j6, l6, l5, i6, k6, k5, light(textureColor, simpleTile.getCenterColor()), light(textureColor, simpleTile.getEastColor()), light(textureColor, simpleTile.getNorthColor()));
             }
         }
         if ((i5 - k5) * (l6 - l5) - (j5 - l5) * (k6 - k5) > 0) {
@@ -1540,7 +1540,7 @@ public final class SceneGraph {
             }
             if (simpleTile.getTexture() == -1) {
                 if (simpleTile.getNorthEastColor() != 0xbc614e) {
-                    Rasterizer3D.drawGouraudTriangle(j5, l5, l6, i5, k5, k6, simpleTile.getNorthEastColor(), simpleTile.getNorthColor(),
+                    Rasterizer3D.drawShadedTriangle(j5, l5, l6, i5, k5, k6, simpleTile.getNorthEastColor(), simpleTile.getNorthColor(),
                             simpleTile.getEastColor());
                 }
             } else {
@@ -1550,7 +1550,7 @@ public final class SceneGraph {
                     return;
                 }
                 int j7 = TEXTURE_COLORS[simpleTile.getTexture()];
-                Rasterizer3D.drawGouraudTriangle(j5, l5, l6, i5, k5, k6, light(j7, simpleTile.getNorthEastColor()), light(j7, simpleTile.getNorthColor()), light(j7, simpleTile.getEastColor()));
+                Rasterizer3D.drawShadedTriangle(j5, l5, l6, i5, k5, k6, light(j7, simpleTile.getNorthEastColor()), light(j7, simpleTile.getNorthColor()), light(j7, simpleTile.getEastColor()));
             }
         }
     }
@@ -1599,7 +1599,7 @@ public final class SceneGraph {
                 }
                 if (class40.anIntArray682 == null || class40.anIntArray682[j2] == -1) {
                     if (class40.anIntArray676[j2] != 0xbc614e)
-                        Rasterizer3D.drawGouraudTriangle(l4, i5, j5, i4, j4, k4, class40.anIntArray676[j2],
+                        Rasterizer3D.drawShadedTriangle(l4, i5, j5, i4, j4, k4, class40.anIntArray676[j2],
                                 class40.anIntArray677[j2], class40.anIntArray678[j2]);
                 } else if (!lowMem) {
                     if (class40.flat)
@@ -1616,7 +1616,7 @@ public final class SceneGraph {
                                 ShapedTile.anIntArray692[j3], ShapedTile.anIntArray692[l3], class40.anIntArray682[j2]);
                 } else {
                     int k5 = TEXTURE_COLORS[class40.anIntArray682[j2]];
-                    Rasterizer3D.drawGouraudTriangle(l4, i5, j5, i4, j4, k4, light(k5, class40.anIntArray676[j2]),
+                    Rasterizer3D.drawShadedTriangle(l4, i5, j5, i4, j4, k4, light(k5, class40.anIntArray676[j2]),
                             light(k5, class40.anIntArray677[j2]), light(k5, class40.anIntArray678[j2]));
                 }
             }
