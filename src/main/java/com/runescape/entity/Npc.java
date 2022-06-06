@@ -324,12 +324,12 @@ public final class Npc extends Mob implements RSNPC {
 
     @Override
     public void draw(int orientation, int pitchSin, int pitchCos, int yawSin, int yawCos, int x, int y, int z, long hash) {
-        renderAtPoint(orientation,pitchSin,pitchCos,yawSin,yawCos,x,y,z,hash);
+
     }
 
     @Override
     public boolean isHidden() {
-        return isHidden;
+        return false;
     }
 
     @Override

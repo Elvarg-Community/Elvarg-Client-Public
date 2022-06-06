@@ -113,18 +113,6 @@ public class GameApplet extends Applet implements Runnable, MouseListener, Mouse
         return gameFrame == null && isApplet == true;
     }
 
-    final void createClientFrame(int w, int h) {
-        isApplet = false;
-        myWidth = w;
-        myHeight = h;
-        gameFrame = new GameFrame(this, myWidth, myHeight, Client.frameMode == Client.ScreenMode.RESIZABLE,
-                Client.frameMode == Client.ScreenMode.FULLSCREEN);
-        gameFrame.setFocusTraversalKeysEnabled(false);
-        graphics = getGameComponent().getGraphics();
-        fullGameScreen = new ProducingGraphicsBuffer(myWidth, myHeight);
-        startRunnable(this, 1);
-    }
-
     final void initClientFrame(int w, int h) {
         isApplet = true;
         myWidth = w;
@@ -132,6 +120,14 @@ public class GameApplet extends Applet implements Runnable, MouseListener, Mouse
         graphics = getGameComponent().getGraphics();
         fullGameScreen = new ProducingGraphicsBuffer(myWidth, myHeight);
         startRunnable(this, 1);
+    }
+
+    public void refreshFrameSize(boolean undecorated, int width, int height,
+                                 boolean resizable, boolean full) {
+        boolean createdByApplet = (isApplet && !full);
+        myWidth = width;
+        myHeight = height;
+
     }
 
     public Thread clientThread;

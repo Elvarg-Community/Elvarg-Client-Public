@@ -570,7 +570,7 @@ public final class Player extends Mob implements RSPlayer {
 
     @Override
     public boolean isHidden() {
-        return isHidden;
+        return false;
     }
 
     @Override
@@ -900,6 +900,6 @@ public final class Player extends Mob implements RSPlayer {
 
     @Override
     public void draw(int orientation, int pitchSin, int pitchCos, int yawSin, int yawCos, int x, int y, int z, long hash) {
-        renderAtPoint(orientation,pitchSin,pitchCos,yawSin,yawCos,x,y,z,hash);
+
     }
 }

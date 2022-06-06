@@ -60,8 +60,10 @@ import net.runelite.api.Point;
 import net.runelite.api.clan.ClanRank;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.events.CanvasSizeChanged;
 import net.runelite.api.events.ClientTick;
 import net.runelite.api.events.GameStateChanged;
+import net.runelite.api.events.ResizeableChanged;
 import net.runelite.api.hooks.Callbacks;
 import net.runelite.api.hooks.DrawCallbacks;
 import net.runelite.api.vars.AccountType;
@@ -227,14 +229,12 @@ public class Client extends GameApplet implements RSClient {
     private static int anInt1005;
     private static int anInt1051;
     private static int anInt1097;
-    private static ProducingGraphicsBuffer loginBoxImageProducer;
+
     private static int anInt1117;
     private static int anInt1134;
     private static int anInt1142;
     private static int anInt1155;
-    private static ProducingGraphicsBuffer tabImageProducer;
-    private static ProducingGraphicsBuffer gameScreenImageProducer;
-    private static ProducingGraphicsBuffer chatboxImageProducer;
+
     private static int anInt1175;
     private static int[] anIntArray1180;
     private static int[] anIntArray1181;
@@ -421,7 +421,7 @@ public class Client extends GameApplet implements RSClient {
     private String objectMaps = "", floorMaps = "";
     private int poisonType;
     private int specialAttack = 0;
-    private ProducingGraphicsBuffer loginScreenAccessories;
+
     private boolean rememberUsernameHover, rememberPasswordHover, forgottenPasswordHover;
     private boolean rememberUsername = true;
     private boolean rememberPassword = false;
@@ -438,8 +438,7 @@ public class Client extends GameApplet implements RSClient {
             specialHover, expCounterHover, worldHover, autocast;
     @SuppressWarnings("unused")
     private int currentTrackPlaying;
-    private ProducingGraphicsBuffer leftFrame;
-    private ProducingGraphicsBuffer topFrame;
+
     private int ignoreCount;
     private long loadingStartTime;
     private int[][] anIntArrayArray825;
@@ -602,19 +601,11 @@ public class Client extends GameApplet implements RSClient {
     private int speed;
     private int angle;
     private int systemUpdateTime;
-    private ProducingGraphicsBuffer topLeft1BackgroundTile;
-    private ProducingGraphicsBuffer bottomLeft1BackgroundTile;
-    private ProducingGraphicsBuffer flameLeftBackground;
-    private ProducingGraphicsBuffer flameRightBackground;
-    private ProducingGraphicsBuffer bottomLeft0BackgroundTile;
-    private ProducingGraphicsBuffer bottomRightImageProducer;
-    private ProducingGraphicsBuffer loginMusicImageProducer;
-    private ProducingGraphicsBuffer middleLeft1BackgroundTile;
-    private ProducingGraphicsBuffer aRSImageProducer_1115;
+
     private int membersInt;
     private String aString1121;
     private Sprite compass;
-    private ProducingGraphicsBuffer chatSettingImageProducer;
+
     private int cameraY;
     private int menuActionRow;
     private int spellSelected;
@@ -631,7 +622,7 @@ public class Client extends GameApplet implements RSClient {
     private boolean canMute;
     private boolean requestMapReconstruct;
     private boolean inCutScene;
-    private ProducingGraphicsBuffer minimapImageProducer;
+
     private int daysSinceRecovChange;
     private BufferedConnection socketStream;
     public PacketSender packetSender;
@@ -868,87 +859,64 @@ public class Client extends GameApplet implements RSClient {
         bigY = new int[4000];
     }
 
-    public void frameMode(ScreenMode screenMode) {
-        if (frameMode != screenMode) {
-            frameMode = screenMode;
-            if (screenMode == ScreenMode.FIXED) {
-                frameWidth = 765;
-                frameHeight = 503;
-                cameraZoom = 600;
-                SceneGraph.viewDistance = 9;
-            } else if (screenMode == ScreenMode.RESIZABLE) {
-                frameWidth = 766;
-                frameHeight = 529;
-                cameraZoom = 850;
-                SceneGraph.viewDistance = 10;
-            } else if (screenMode == ScreenMode.FULLSCREEN) {
-                cameraZoom = 600;
-                SceneGraph.viewDistance = 10;
-                frameWidth = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
-                frameHeight = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight();
+
+    public void refreshFrameSize() {
+        if (frameMode == ScreenMode.RESIZABLE) {
+            if (frameWidth != (appletClient() ? getGameComponent().getWidth()
+                    : gameFrame.getFrameWidth())) {
+                frameWidth = (appletClient() ? getGameComponent().getWidth()
+                        : gameFrame.getFrameWidth());
+                screenAreaWidth = frameWidth;
+                setBounds();
+                getCallbacks().post(CanvasSizeChanged.INSTANCE);
             }
-            rebuildFrameSize(screenMode, frameWidth, frameHeight);
-            setBounds();
+            if (frameHeight != (appletClient() ? getGameComponent().getHeight()
+                    : gameFrame.getFrameHeight())) {
+                frameHeight = (appletClient() ? getGameComponent().getHeight()
+                        : gameFrame.getFrameHeight());
+                screenAreaHeight = frameHeight;
+                setBounds();
+                getCallbacks().post(CanvasSizeChanged.INSTANCE);
+            }
         }
-        stackSideStones = screenMode == ScreenMode.FIXED ? false : stackSideStones;
-        showChatComponents = screenMode == ScreenMode.FIXED ? true : showChatComponents;
-        showTabComponents = screenMode == ScreenMode.FIXED ? true : showTabComponents;
-    }
-
-
-    public void rebuildFrameSize(ScreenMode screenMode, int width, int height) {
-    	screenAreaWidth = (screenMode == ScreenMode.FIXED) ? 512 : width;
-        screenAreaHeight = (screenMode == ScreenMode.FIXED) ? 334 : height;
-        frameWidth = width;
-        frameHeight = height;
-        instance.rebuildFrame(width, height, screenMode == ScreenMode.RESIZABLE, screenMode == ScreenMode.FULLSCREEN);
     }
 
     private static void setBounds() {
         Rasterizer3D.reposition(frameWidth, frameHeight);
         fullScreenTextureArray = Rasterizer3D.scanOffsets;
-        Rasterizer3D.reposition(
-                frameMode == ScreenMode.FIXED
-                        ? (chatboxImageProducer != null
-                        ? chatboxImageProducer.canvasWidth : 519)
-                        : frameWidth,
-                frameMode == ScreenMode.FIXED
-                        ? (chatboxImageProducer != null
-                        ? chatboxImageProducer.canvasHeight : 165)
-                        : frameHeight);
         anIntArray1180 = Rasterizer3D.scanOffsets;
-        Rasterizer3D.reposition(
-                frameMode == ScreenMode.FIXED
-                        ? (tabImageProducer != null ? tabImageProducer.canvasWidth
-                        : 249)
-                        : frameWidth,
-                frameMode == ScreenMode.FIXED ? (tabImageProducer != null
-                        ? tabImageProducer.canvasHeight : 335) : frameHeight);
         anIntArray1181 = Rasterizer3D.scanOffsets;
-        Rasterizer3D.reposition(screenAreaWidth, screenAreaHeight);
-        anIntArray1182 = Rasterizer3D.scanOffsets;
-        int ai[] = new int[9];
-        for (int i8 = 0; i8 < 9; i8++) {
-            int k8 = 128 + i8 * 32 + 15;
-            int l8 = 600 + k8 * 3;
-            int i9 = Rasterizer3D.anIntArray1470[k8];
-            ai[i8] = l8 * i9 >> 16;
+        Rasterizer3D.scanOffsets = new int[frameHeight];
+        for (int x = 0; x < frameHeight; x++) {
+            Rasterizer3D.scanOffsets[x] = frameWidth * x;
         }
+        anIntArray1182 = Rasterizer3D.scanOffsets;
+        Rasterizer3D.originViewX = screenAreaWidth / 2;
+        Rasterizer3D.originViewY = screenAreaHeight / 2;
+
+        Rasterizer3D.fieldOfView = screenAreaWidth * screenAreaHeight / 85504 << 1;
+
+        if(!Client.processGpuPlugin()) {
+            int ai[] = new int[9];
+            for (int i8 = 0; i8 < 9; i8++) {
+                int k8 = 128 + i8 * 32 + 15;
+                int l8 = 600 + k8 * 3;
+                int i9 = Rasterizer3D.anIntArray1470[k8];
+                ai[i8] = l8 * i9 >> 16;
+            }
+            SceneGraph.buildVisibilityMap(500, 800, screenAreaWidth, screenAreaHeight, ai);
+        }
+
         if (frameMode == ScreenMode.RESIZABLE && (frameWidth >= 765) && (frameWidth <= 1025)
                 && (frameHeight >= 503) && (frameHeight <= 850)) {
-            SceneGraph.viewDistance = 9;
             cameraZoom = 575;
         } else if (frameMode == ScreenMode.FIXED) {
             cameraZoom = 600;
-        } else if (frameMode == ScreenMode.RESIZABLE || frameMode == ScreenMode.FULLSCREEN) {
-            SceneGraph.viewDistance = 10;
+        } else if (frameMode == ScreenMode.RESIZABLE) {
             cameraZoom = 600;
         }
-        SceneGraph.buildVisibilityMap(500, 800, screenAreaWidth, screenAreaHeight, ai);
-        if (loggedIn) {
-            gameScreenImageProducer =
-                    new ProducingGraphicsBuffer(screenAreaWidth, screenAreaHeight);
-        }
+
+        gameScreenImageProducer = new ProducingGraphicsBuffer(frameWidth, frameHeight);
     }
 
     private static String intToKOrMilLongName(int i) {
@@ -1223,6 +1191,51 @@ public class Client extends GameApplet implements RSClient {
             frameMode(ScreenMode.FIXED);
             instance = this;
             initClientFrame(503, 765);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void frameMode(ScreenMode screenMode) {
+        if (frameMode != screenMode) {
+            frameMode = screenMode;
+            if (screenMode == ScreenMode.FIXED) {
+                frameWidth = 765;
+                frameHeight = 503;
+                cameraZoom = 600;
+                SceneGraph.viewDistance = 9;
+            } else if (screenMode == ScreenMode.RESIZABLE) {
+                frameWidth = 766;
+                frameHeight = 529;
+                cameraZoom = 850;
+                SceneGraph.viewDistance = 10;
+            } else if (screenMode == ScreenMode.FULLSCREEN) {
+                cameraZoom = 600;
+                SceneGraph.viewDistance = 10;
+                frameWidth = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
+                frameHeight = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight();
+            }
+            rebuildFrameSize(screenMode, frameWidth, frameHeight);
+            ResizeableChanged resizeableChanged = new ResizeableChanged();
+            resizeableChanged.setResized(Client.instance.isResized());
+            Client.instance.getCallbacks().post(resizeableChanged);
+            setBounds();
+        }
+        showChatComponents = screenMode == ScreenMode.FIXED || showChatComponents;
+        showTabComponents = screenMode == ScreenMode.FIXED || showTabComponents;
+    }
+
+    public static void rebuildFrameSize(ScreenMode screenMode, int screenWidth,
+                                        int screenHeight) {
+        try {
+            screenAreaWidth = (screenMode == ScreenMode.FIXED) ? 512 : screenWidth;
+            screenAreaHeight = (screenMode == ScreenMode.FIXED) ? 334 : screenHeight;
+            frameWidth = screenWidth;
+            frameHeight = screenHeight;
+            instance.refreshFrameSize(screenMode == ScreenMode.FULLSCREEN, screenWidth,
+                    screenHeight, screenMode == ScreenMode.RESIZABLE,
+                    screenMode != ScreenMode.FIXED);
+            setBounds();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1613,21 +1626,6 @@ public class Client extends GameApplet implements RSClient {
         }
     }
 
-    public void refreshFrameSize() {
-        if (frameMode == ScreenMode.RESIZABLE) {
-            if (frameWidth != (appletClient() ? getGameComponent().getWidth() : GameWindow.getInstance().getFrameWidth())) {
-                frameWidth = (appletClient() ? getGameComponent().getWidth() : GameWindow.getInstance().getFrameWidth());
-                screenAreaWidth = frameWidth;
-                setBounds();
-            }
-            if (frameHeight != (appletClient() ? getGameComponent().getHeight() : GameWindow.getInstance().getFrameHeight())) {
-                frameHeight = (appletClient() ? getGameComponent().getHeight() : GameWindow.getInstance().getFrameHeight());
-                screenAreaHeight = frameHeight;
-                setBounds();
-            }
-        }
-    }
-
     public boolean getMousePositions() {
         if (mouseInRegion(frameWidth - (frameWidth <= 1000 ? 240 : 420),
                 frameWidth, frameHeight - (frameWidth <= 1000 ? 90 : 37), frameHeight)) {
@@ -1774,7 +1772,7 @@ public class Client extends GameApplet implements RSClient {
     }
 
     public void drawChannelButtons() {
-        final int yOffset = frameMode == ScreenMode.FIXED ? 0 : frameHeight - 165;
+        int yOffset = frameMode == ScreenMode.FIXED ? 338 : frameHeight - 165;
         spriteCache.draw(49, 0, 143 + yOffset);
         String text[] = {"On", "Friends", "Off", "Hide"};
         int textColor[] = {65280, 0xffff00, 0xff0000, 65535};
@@ -1832,10 +1830,8 @@ public class Client extends GameApplet implements RSClient {
     }
 
     private void drawChatArea() {
-        int yOffset = frameMode == ScreenMode.FIXED ? 0 : frameHeight - 165;
-        if (frameMode == ScreenMode.FIXED) {
-            chatboxImageProducer.initDrawingArea();
-        }
+        int yOffset = frameMode == ScreenMode.FIXED ? 338 : frameHeight - 165;
+
         Rasterizer3D.scanOffsets = anIntArray1180;
         if (chatStateCheck()) {
             showChatComponents = true;
@@ -1844,7 +1840,7 @@ public class Client extends GameApplet implements RSClient {
         if (showChatComponents) {
             if ((changeChatArea && frameMode != ScreenMode.FIXED) && !chatStateCheck()) {
                 Rasterizer2D.drawHorizontalLine(7, 7 + yOffset, 506, 0x575757);
-                Rasterizer2D.fillGradientRectangle(7, 7 + yOffset, 510, 130, 0x00000000, 0x5A000000);
+                Rasterizer2D.drawTransparentGradientBox(7, 7 + yOffset, 510, 130, 0x00000000, 0x5A000000,255);
             } else {
                 spriteCache.draw(20, 0, yOffset);
             }
@@ -2029,7 +2025,7 @@ public class Client extends GameApplet implements RSClient {
                     }
                 }
             }
-            Rasterizer2D.defaultDrawingAreaSize();
+            gameScreenImageProducer.initDrawingArea();
             anInt1211 = j * 14 + 7 + 5;
             if (anInt1211 < 111) {
                 anInt1211 = 111;
@@ -2058,16 +2054,10 @@ public class Client extends GameApplet implements RSClient {
                     xOffset + font.getTextWidth(s + ": "), 133 + yOffset,
                     (changeChatArea && frameMode != ScreenMode.FIXED) ? 0x7FA9FF : 255, shadow);
             Rasterizer2D.drawHorizontalLine(7, 121 + yOffset, 506, (changeChatArea && frameMode != ScreenMode.FIXED) ? 0x575757 : 0x807660);
-            Rasterizer2D.defaultDrawingAreaSize();
+            gameScreenImageProducer.initDrawingArea();
         }
-        if (menuOpen) {
-            drawMenu(0, frameMode == ScreenMode.FIXED ? 338 : 0);
-        } else {
-        	drawHoverMenu(0, frameMode == ScreenMode.FIXED ? 338 : 0);
-        }
-        if (frameMode == ScreenMode.FIXED) {
-            chatboxImageProducer.drawGraphics(338, super.graphics, 0);
-        }
+
+
         gameScreenImageProducer.initDrawingArea();
         Rasterizer3D.scanOffsets = anIntArray1182;
     }
@@ -2207,6 +2197,7 @@ public class Client extends GameApplet implements RSClient {
 
     private void loadRegion() {
         try {
+            setGameState(GameState.LOADING);
             lastKnownPlane = -1;
             incompleteAnimables.clear();
             projectiles.clear();
@@ -2379,6 +2370,7 @@ public class Client extends GameApplet implements RSClient {
                 }
             }
         }
+        setGameState(GameState.LOGGED_IN);
     }
 
     private void unlinkCaches() {
@@ -3875,7 +3867,7 @@ public class Client extends GameApplet implements RSClient {
                                 0);
                         boldText.render(0, s, spriteDrawY + 1, (spriteDrawX + 50) - k4);
                         boldText.render(i3, s, spriteDrawY, (spriteDrawX + 50) - k4);
-                        Rasterizer2D.defaultDrawingAreaSize();
+                        gameScreenImageProducer.initDrawingArea();
                     }
                     if (anIntArray981[defaultText] == 5) {
                         int j4 = 150 - anIntArray982[defaultText];
@@ -3888,7 +3880,7 @@ public class Client extends GameApplet implements RSClient {
                                 spriteDrawY - boldText.verticalSpace - 1);
                         boldText.drawText(0, s, spriteDrawY + 1 + l4, spriteDrawX);
                         boldText.drawText(i3, s, spriteDrawY + l4, spriteDrawX);
-                        Rasterizer2D.defaultDrawingAreaSize();
+                        gameScreenImageProducer.initDrawingArea();
                     }
                 } else {
                     boldText.drawText(0, s, spriteDrawY + 1, spriteDrawX);
@@ -3900,8 +3892,8 @@ public class Client extends GameApplet implements RSClient {
     }
 
     public void drawSideIcons() {
-        int xOffset = frameMode == ScreenMode.FIXED ? 0 : frameWidth - 247;
-        int yOffset = frameMode == ScreenMode.FIXED ? 0 : frameHeight - 336;
+        final int xOffset = frameMode == ScreenMode.FIXED ? 516 : frameWidth - 247;
+        final int yOffset = frameMode == ScreenMode.FIXED ? 168 : frameHeight - 336;
         if (frameMode == ScreenMode.FIXED || frameMode != ScreenMode.FIXED && !stackSideStones) {
             for (int i = 0; i < sideIconsTab.length; i++) {
                 if (tabInterfaceIDs[sideIconsTab[i]] != -1) {
@@ -3959,8 +3951,9 @@ public class Client extends GameApplet implements RSClient {
                 redStonesY = {0, 0, 0, 0, 0, 0, 0, 298, 298, 298, 298, 298, 298, 298},
                 redStonesId = {35, 39, 39, 39, 39, 39, 36, 37, 39, 39, 39, 39, 39, 38};
 
-        int xOffset = frameMode == ScreenMode.FIXED ? 0 : frameWidth - 247;
-        int yOffset = frameMode == ScreenMode.FIXED ? 0 : frameHeight - 336;
+        final int xOffset = frameMode == ScreenMode.FIXED ? 516 : frameWidth - 247;
+        final int yOffset = frameMode == ScreenMode.FIXED ? 168 : frameHeight - 336;
+
         if (frameMode == ScreenMode.FIXED || frameMode != ScreenMode.FIXED && !stackSideStones) {
             if (tabInterfaceIDs[tabId] != -1 && tabId != 15) {
                 spriteCache.draw(redStonesId[tabId], redStonesX[tabId] + xOffset,
@@ -4020,14 +4013,12 @@ public class Client extends GameApplet implements RSClient {
     }
 
     private void drawTabArea() {
-		final int xOffset = frameMode == ScreenMode.FIXED ? 0 : frameWidth - 241;
-		final int yOffset = frameMode == ScreenMode.FIXED ? 0 : frameHeight - 336;
-		if (frameMode == ScreenMode.FIXED) {
-			tabImageProducer.initDrawingArea();
-		}
+        final int xOffset = frameMode == ScreenMode.FIXED ? 516 : frameWidth - 241;
+        final int yOffset = frameMode == ScreenMode.FIXED ? 168 : frameHeight - 336;
+
 		Rasterizer3D.scanOffsets = anIntArray1181;
 		if (frameMode == ScreenMode.FIXED) {
-		    spriteCache.draw(21, 0, 0);
+		    spriteCache.draw(21, xOffset, yOffset);
 		} else if (frameMode != ScreenMode.FIXED && !stackSideStones) {
             Rasterizer2D.drawTransparentBox(frameWidth - 217, frameHeight - 304, 195, 270, 0x3E3529, transparentTabArea ? 80 : 256);
             spriteCache.draw(47, xOffset, yOffset);
@@ -4058,8 +4049,8 @@ public class Client extends GameApplet implements RSClient {
 			drawSideIcons();
 		}
 		if (showTabComponents) {
-			int x = frameMode == ScreenMode.FIXED ? 31 : frameWidth - 215;
-			int y = frameMode == ScreenMode.FIXED ? 37 : frameHeight - 299;
+            int x = frameMode == ScreenMode.FIXED ? xOffset + 31 : frameWidth - 215;
+            int y = frameMode == ScreenMode.FIXED ? yOffset + 37 : frameHeight - 299;
 			if (stackSideStones) {
 				x = frameWidth - 197;
 				y = frameWidth >= 1000 ? frameHeight - 303 : frameHeight - 340;
@@ -4075,14 +4066,11 @@ public class Client extends GameApplet implements RSClient {
             }
 		}
 		if (menuOpen) {
-			drawMenu(frameMode == ScreenMode.FIXED ? 516 : 0, frameMode == ScreenMode.FIXED ? 168 : 0);
+			drawMenu(0, 0);
 		} else {
-			drawHoverMenu(frameMode == ScreenMode.FIXED ? 516 : 0, frameMode == ScreenMode.FIXED ? 168 : 0);
+			drawHoverMenu(0,0);
 		}
-		if (frameMode == ScreenMode.FIXED) {
-			tabImageProducer.drawGraphics(168, super.graphics, 516);
-			gameScreenImageProducer.initDrawingArea();
-		}
+
 		Rasterizer3D.scanOffsets = anIntArray1182;
 	}
 
@@ -4375,6 +4363,7 @@ public class Client extends GameApplet implements RSClient {
                 socketStream.close();
         } catch (Exception _ex) {
         }
+        setGameState(GameState.LOGIN_SCREEN);
         firstLoginMessage = secondLoginMessage = "";
         effects_list.clear();
         socketStream = null;
@@ -4455,7 +4444,6 @@ public class Client extends GameApplet implements RSClient {
     
     void startUp() {
 
-
         drawLoadingText(20, "Starting up");
         if (SignLink.cache_dat != null) {
             for (int i = 0; i < 5; i++)
@@ -4482,8 +4470,7 @@ public class Client extends GameApplet implements RSClient {
             newFancyFont = new RSFont(true, "q8_full", titleArchive);
             gameFont = new GameFont(true, "q8_full", titleArchive);
 
-            drawLogo();
-            loadTitleScreen();
+
             FileArchive configArchive = createArchive(2, "config", "config", 30);
             FileArchive interfaceArchive = createArchive(3, "interface", "interface", 35);
             FileArchive mediaArchive = createArchive(4, "2d graphics", "media", 40);
@@ -4533,6 +4520,8 @@ public class Client extends GameApplet implements RSClient {
             for (int j3 = 0; j3 <= 14; j3++)
                 sideIcons[j3] = new Sprite(mediaArchive, "sideicons", j3);
             compass = new Sprite(mediaArchive, "compass", 0);
+            leftFrame = new Sprite(mediaArchive, "screenframe", 0);
+            topFrame = new Sprite(mediaArchive, "screenframe", 1);
             try {
                 for (int k3 = 0; k3 < 100; k3++)
                     mapScenes[k3] = new IndexedImage(mediaArchive, "mapsence", k3);
@@ -4572,12 +4561,7 @@ public class Client extends GameApplet implements RSClient {
             mapDotClan = new Sprite(mediaArchive, "mapdots", 5);
             scrollBar1 = new Sprite(mediaArchive, "scrollbar", 0);
             scrollBar2 = new Sprite(mediaArchive, "scrollbar", 1);
-            Sprite sprite = new Sprite(mediaArchive, "screenframe", 0);
-            leftFrame = new ProducingGraphicsBuffer(sprite.myWidth, sprite.myHeight);
-            sprite.method346(0, 0);
-            sprite = new Sprite(mediaArchive, "screenframe", 1);
-            topFrame = new ProducingGraphicsBuffer(sprite.myWidth, sprite.myHeight);
-            sprite.method346(0, 0);
+
             int i5 = (int) (Math.random() * 21D) - 10;
             int j5 = (int) (Math.random() * 21D) - 10;
             int k5 = (int) (Math.random() * 21D) - 10;
@@ -5086,12 +5070,6 @@ public class Client extends GameApplet implements RSClient {
             }
 
         }
-        flameLeftSprite = new Sprite(128, 265);
-        flameRightSprite = new Sprite(128, 265);
-
-        System.arraycopy(flameLeftBackground.canvasRaster, 0, flameLeftSprite.myPixels, 0, 33920);
-
-        System.arraycopy(flameRightBackground.canvasRaster, 0, flameRightSprite.myPixels, 0, 33920);
 
         anIntArray851 = new int[256];
 
@@ -5156,10 +5134,10 @@ public class Client extends GameApplet implements RSClient {
 
     private void loadingStages() {
         if (lowMemory && loadingStage == 2 && MapRegion.anInt131 != plane) {
-            gameScreenImageProducer.initDrawingArea();
+
             drawLoadingMessages(1, "Loading - please wait.", null);
-            gameScreenImageProducer.drawGraphics(frameMode == ScreenMode.FIXED ? 4 : 0,
-                    super.graphics, frameMode == ScreenMode.FIXED ? 4 : 0);
+            gameScreenImageProducer.drawGraphics(0,
+                    super.graphics, 0);
             loadingStage = 1;
             loadingStartTime = System.currentTimeMillis();
         }
@@ -5267,65 +5245,6 @@ public class Client extends GameApplet implements RSClient {
             return SignLink.mainapp.getAppletContext();
         else
             return super.getAppletContext();
-    }
-
-    private void drawLogo() {
-        byte sprites[] = titleArchive.readFile("title.dat");
-        Sprite sprite = new Sprite(sprites, this);
-        flameLeftBackground.initDrawingArea();
-        sprite.method346(0, 0);
-        flameRightBackground.initDrawingArea();
-        sprite.method346(-637, 0);
-        topLeft1BackgroundTile.initDrawingArea();
-        sprite.method346(-128, 0);
-        bottomLeft1BackgroundTile.initDrawingArea();
-        sprite.method346(-202, -371);
-        loginBoxImageProducer.initDrawingArea();
-        sprite.method346(-202, -171);
-        loginScreenAccessories.initDrawingArea();
-        sprite.method346(0, -400);
-        bottomLeft0BackgroundTile.initDrawingArea();
-        sprite.method346(0, -265);
-        bottomRightImageProducer.initDrawingArea();
-        sprite.method346(-562, -265);
-        loginMusicImageProducer.initDrawingArea();
-        sprite.method346(-562, -265);
-        middleLeft1BackgroundTile.initDrawingArea();
-        sprite.method346(-128, -171);
-        aRSImageProducer_1115.initDrawingArea();
-        sprite.method346(-562, -171);
-        int ai[] = new int[sprite.myWidth];
-        for (int j = 0; j < sprite.myHeight; j++) {
-            for (int k = 0; k < sprite.myWidth; k++)
-                ai[k] = sprite.myPixels[(sprite.myWidth - k - 1) + sprite.myWidth * j];
-
-            System.arraycopy(ai, 0, sprite.myPixels, sprite.myWidth * j, sprite.myWidth);
-        }
-        flameLeftBackground.initDrawingArea();
-        sprite.method346(382, 0);
-        flameRightBackground.initDrawingArea();
-        sprite.method346(-255, 0);
-        topLeft1BackgroundTile.initDrawingArea();
-        sprite.method346(254, 0);
-        bottomLeft1BackgroundTile.initDrawingArea();
-        sprite.method346(180, -371);
-        loginBoxImageProducer.initDrawingArea();
-        sprite.method346(180, -171);
-        bottomLeft0BackgroundTile.initDrawingArea();
-        sprite.method346(382, -265);
-        bottomRightImageProducer.initDrawingArea();
-        sprite.method346(-180, -265);
-        loginMusicImageProducer.initDrawingArea();
-        sprite.method346(-180, -265);
-        middleLeft1BackgroundTile.initDrawingArea();
-        sprite.method346(254, -171);
-        aRSImageProducer_1115.initDrawingArea();
-        sprite.method346(-180, -171);
-        sprite = new Sprite(titleArchive, "logo", 0);
-        topLeft1BackgroundTile.initDrawingArea();
-        sprite.drawSprite(382 - sprite.myWidth / 2 - 128, 18);
-        sprite = null;
-        System.gc();
     }
 
     private void calcFlamesPosition() {
@@ -5733,81 +5652,14 @@ public class Client extends GameApplet implements RSClient {
 
     }
 
-    private void setupLoginScreen() {
-        if (topLeft1BackgroundTile != null)
-            return;
-        super.fullGameScreen = null;
-        chatboxImageProducer = null;
-        minimapImageProducer = null;
-        tabImageProducer = null;
-        gameScreenImageProducer = null;
-        chatSettingImageProducer = null;
-        Rasterizer2D.clear();
-        flameLeftBackground = new ProducingGraphicsBuffer(128, 265);
-        Rasterizer2D.clear();
-        flameRightBackground = new ProducingGraphicsBuffer(128, 265);
-        Rasterizer2D.clear();
-        topLeft1BackgroundTile = new ProducingGraphicsBuffer(509, 171);
-        Rasterizer2D.clear();
-        bottomLeft1BackgroundTile = new ProducingGraphicsBuffer(360, 132);
-        Rasterizer2D.clear();
-        loginBoxImageProducer = new ProducingGraphicsBuffer(360, 200);
-        Rasterizer2D.clear();
-        loginScreenAccessories = new ProducingGraphicsBuffer(300, 800);
-        Rasterizer2D.clear();
-        bottomLeft0BackgroundTile = new ProducingGraphicsBuffer(202, 238);
-        Rasterizer2D.clear();
-        bottomRightImageProducer = new ProducingGraphicsBuffer(203, 238);
-        Rasterizer2D.clear();
-        loginMusicImageProducer = new ProducingGraphicsBuffer(203, 238);
-        Rasterizer2D.clear();
-        middleLeft1BackgroundTile = new ProducingGraphicsBuffer(74, 94);
-        Rasterizer2D.clear();
-        aRSImageProducer_1115 = new ProducingGraphicsBuffer(75, 94);
-        Rasterizer2D.clear();
-        if (titleArchive != null) {
-            drawLogo();
-            loadTitleScreen();
-        }
-        welcomeScreenRaised = true;
+
+
+    public static ProducingGraphicsBuffer gameScreenImageProducer;
+
+    public int getPixelAmt(int current, int pixels) {
+        return (int) (pixels * .01 * current);
     }
 
-    public void drawLoadingText(int i, String s) {
-        anInt1079 = i;
-        aString1049 = s;
-        setupLoginScreen();
-        if (titleArchive == null) {
-            super.drawLoadingText(i, s);
-            return;
-        }
-        loginBoxImageProducer.initDrawingArea();
-        char c = '\u0168';
-        char c1 = '\310';
-        byte byte1 = 20;
-        boldText.drawText(0xffffff, Configuration.CLIENT_NAME + " is loading - please wait...",
-                c1 / 2 - 26 - byte1, c / 2);
-        int j = c1 / 2 - 18 - byte1;
-        Rasterizer2D.drawBoxOutline(c / 2 - 152, j, 304, 34, 0x8c1111);
-        Rasterizer2D.drawBoxOutline(c / 2 - 151, j + 1, 302, 32, 0);
-        Rasterizer2D.drawBox(c / 2 - 150, j + 2, i * 3, 30, 0x8c1111);
-        Rasterizer2D.drawBox((c / 2 - 150) + i * 3, j + 2, 300 - i * 3, 30, 0);
-        boldText.drawText(0xffffff, s, (c1 / 2 + 5) - byte1, c / 2);
-        loginBoxImageProducer.drawGraphics(171, super.graphics, 202);
-        if (welcomeScreenRaised) {
-            welcomeScreenRaised = false;
-            if (!aBoolean831) {
-                flameLeftBackground.drawGraphics(0, super.graphics, 0);
-                flameRightBackground.drawGraphics(0, super.graphics, 637);
-            }
-            topLeft1BackgroundTile.drawGraphics(0, super.graphics, 128);
-            bottomLeft1BackgroundTile.drawGraphics(371, super.graphics, 202);
-            bottomLeft0BackgroundTile.drawGraphics(265, super.graphics, 0);
-            bottomRightImageProducer.drawGraphics(265, super.graphics, 562);
-            loginMusicImageProducer.drawGraphics(265, super.graphics, 562);
-            middleLeft1BackgroundTile.drawGraphics(171, super.graphics, 128);
-            aRSImageProducer_1115.drawGraphics(171, super.graphics, 562);
-        }
-    }
 
     private void method65(int i, int j, int k, int l, Widget class9, int i1, boolean flag,
                           int j1) {
@@ -5948,6 +5800,7 @@ public class Client extends GameApplet implements RSClient {
     }
 
     private void dropClient() {
+        setGameState(GameState.CONNECTION_LOST);
         if (anInt1011 > 0) {
             resetLogout();
             return;
@@ -5958,8 +5811,7 @@ public class Client extends GameApplet implements RSClient {
         regularText.drawText(0xffffff, "Connection lost.", 18, 119);
         regularText.drawText(0, "Please wait - attempting to reestablish.", 34, 117);
         regularText.drawText(0xffffff, "Please wait - attempting to reestablish.", 34, 116);
-        gameScreenImageProducer.drawGraphics(frameMode == ScreenMode.FIXED ? 4 : 0,
-                super.graphics, frameMode == ScreenMode.FIXED ? 4 : 0);
+        gameScreenImageProducer.drawGraphics(0, super.graphics, 0);
         minimapState = 0;
         destinationX = 0;
         BufferedConnection rsSocket = socketStream;
@@ -7272,11 +7124,7 @@ public class Client extends GameApplet implements RSClient {
     }
 
     public void run() {
-        if (drawFlames) {
-            drawFlames();
-        } else {
-            super.run();
-        }
+        super.run();
     }
 
     private void createMenu() {
@@ -7530,13 +7378,7 @@ public class Client extends GameApplet implements RSClient {
         bigX = null;
         bigY = null;
         aByteArray912 = null;
-        tabImageProducer = null;
-        leftFrame = null;
-        topFrame = null;
-        minimapImageProducer = null;
         gameScreenImageProducer = null;
-        chatboxImageProducer = null;
-        chatSettingImageProducer = null;
 		/* Null pointers for custom sprites */
         mapBack = null;
         sideIcons = null;
@@ -7578,17 +7420,6 @@ public class Client extends GameApplet implements RSClient {
         friendsList = null;
         friendsListAsLongs = null;
         friendsNodeIDs = null;
-        flameLeftBackground = null;
-        flameRightBackground = null;
-        topLeft1BackgroundTile = null;
-        bottomLeft1BackgroundTile = null;
-        loginBoxImageProducer = null;
-        loginScreenAccessories = null;
-        bottomLeft0BackgroundTile = null;
-        bottomRightImageProducer = null;
-        loginMusicImageProducer = null;
-        middleLeft1BackgroundTile = null;
-        aRSImageProducer_1115 = null;
         multiOverlay = null;
         nullLoader();
         ObjectDefinition.clear();
@@ -9058,35 +8889,6 @@ public class Client extends GameApplet implements RSClient {
         }
     }
 
-    private void setupGameplayScreen() {
-        if (chatboxImageProducer != null) {
-            return;
-        }
-
-        nullLoader();
-        super.fullGameScreen = null;
-        topLeft1BackgroundTile = null;
-        bottomLeft1BackgroundTile = null;
-        loginBoxImageProducer = null;
-        loginScreenAccessories = null;
-        flameLeftBackground = null;
-        flameRightBackground = null;
-        bottomLeft0BackgroundTile = null;
-        bottomRightImageProducer = null;
-        loginMusicImageProducer = null;
-        middleLeft1BackgroundTile = null;
-        aRSImageProducer_1115 = null;
-        chatboxImageProducer = new ProducingGraphicsBuffer(519, 165);// chatback
-        minimapImageProducer = new ProducingGraphicsBuffer(249, 168);// mapback
-        Rasterizer2D.clear();
-        spriteCache.draw(19, 0, 0);
-        tabImageProducer = new ProducingGraphicsBuffer(249, 335);// inventory
-        gameScreenImageProducer = new ProducingGraphicsBuffer(512, 334);// gamescreen
-        Rasterizer2D.clear();
-        chatSettingImageProducer = new ProducingGraphicsBuffer(249, 45);
-        welcomeScreenRaised = true;
-    }
-
     private void refreshMinimap(Sprite sprite, int j, int k) {
         int l = k * k + j * j;
         if (l > 4225 && l < 0x15f90) {
@@ -9367,6 +9169,9 @@ public class Client extends GameApplet implements RSClient {
                 secondLoginMessage = "Connecting to server...";
                 drawLoginScreen(true);
             }
+
+            setGameState(GameState.LOGGING_IN);
+
 
             socketStream = new BufferedConnection(this,
                     openSocket(Configuration.SERVER_PORT + portOffset));
@@ -9677,6 +9482,16 @@ public class Client extends GameApplet implements RSClient {
         }
         secondLoginMessage = "Error connecting to server.";
     }
+
+    private void setupGameplayScreen() {
+        nullLoader();
+        Rasterizer2D.clear();
+        spriteCache.lookup(19).drawSprite(0, 0);
+        gameScreenImageProducer = new ProducingGraphicsBuffer(frameWidth, frameHeight);// gamescreen
+        Rasterizer2D.clear();
+        welcomeScreenRaised = true;
+    }
+
 
     private void clearRegionalSpawns() {
         for (int plane = 0; plane < 4; plane++) {
@@ -10573,11 +10388,9 @@ public class Client extends GameApplet implements RSClient {
                 if (!menuOpen) {
                     processRightClick();
                     drawTooltip();
-                    drawHoverMenu(frameMode == ScreenMode.FIXED ? 4 : 0,
-                            frameMode == ScreenMode.FIXED ? 4 : 0);
+                    drawHoverMenu(0, 0);
                 } else {
-                    drawMenu(frameMode == ScreenMode.FIXED ? 4 : 0,
-                            frameMode == ScreenMode.FIXED ? 4 : 0);
+                    drawMenu(0, 0);
                 }
             }
             drawCount++;
@@ -10590,20 +10403,10 @@ public class Client extends GameApplet implements RSClient {
         }
         if (welcomeScreenRaised) {
             welcomeScreenRaised = false;
-            if (frameMode == ScreenMode.FIXED) {
-                topFrame.drawGraphics(0, super.graphics, 0);
-                leftFrame.drawGraphics(4, super.graphics, 0);
-            }
+
             updateChatbox = true;
             tabAreaAltered = true;
-            if (loadingStage != 2) {
-                if (frameMode == ScreenMode.FIXED) {
-                    gameScreenImageProducer.drawGraphics(
-                            frameMode == ScreenMode.FIXED ? 4 : 0, super.graphics,
-                            frameMode == ScreenMode.FIXED ? 4 : 0);
-                    minimapImageProducer.drawGraphics(0, super.graphics, 516);
-                }
-            }
+
         }
         if (overlayInterfaceId != -1) {
             try {
@@ -10662,10 +10465,7 @@ public class Client extends GameApplet implements RSClient {
         if (loadingStage == 2)
             moveCameraWithPlayer();
         if (loadingStage == 2) {
-            if (frameMode == ScreenMode.FIXED) {
-                drawMinimap();
-                minimapImageProducer.drawGraphics(0, super.graphics, 516);
-            }
+
         }
         if (flashingSidebarId != -1)
             tabAreaAltered = true;
@@ -10677,8 +10477,7 @@ public class Client extends GameApplet implements RSClient {
 				outgoing.writeByte(tabId);*/
             }
             tabAreaAltered = false;
-            chatSettingImageProducer.initDrawingArea();
-            gameScreenImageProducer.initDrawingArea();
+
         }
         tickDelta = 0;
     }
@@ -11250,6 +11049,7 @@ public class Client extends GameApplet implements RSClient {
                     if (autocast && childInterface.id == autoCastId)
                         spriteCache.draw(43, _x - 2, currentY - 1);
                 } else if (childInterface.type == Widget.TYPE_MODEL) {
+                    Rasterizer3D.renderOnGpu = true;
                     int centreX = Rasterizer3D.originViewX;
                     int centreY = Rasterizer3D.originViewY;
                     Rasterizer3D.originViewX = _x + childInterface.width / 2;
@@ -11274,11 +11074,14 @@ public class Client extends GameApplet implements RSClient {
                     }
                     try {
                         if (model != null)
+                            Rasterizer3D.world = false;
                             model.render_2D(childInterface.modelRotation2, 0, childInterface.modelRotation1, 0, sine, cosine);
+                        Rasterizer3D.world = true;
                     } catch (ArithmeticException e) {
                     }
                     Rasterizer3D.originViewX = centreX;
                     Rasterizer3D.originViewY = centreY;
+                    Rasterizer3D.renderOnGpu = false;
                 } else if (childInterface.type == Widget.TYPE_ITEM_LIST) {
                     GameFont font = childInterface.textDrawingAreas;
                     int slot = 0;
@@ -12047,6 +11850,8 @@ public class Client extends GameApplet implements RSClient {
             drawLoginScreen(false);
         else
             drawGameScreen();
+
+        gameScreenImageProducer.drawGraphics(0, super.graphics, 0);
         anInt1213 = 0;
     }
 
@@ -12138,11 +11943,9 @@ public class Client extends GameApplet implements RSClient {
         if (!menuOpen) {
             processRightClick();
             drawTooltip();
-            drawHoverMenu(frameMode == ScreenMode.FIXED ? 4 : 0,
-                    frameMode == ScreenMode.FIXED ? 4 : 0);
+            drawHoverMenu(0, 0);
         } else if (menuScreenArea == 0) {
-            drawMenu(frameMode == ScreenMode.FIXED ? 4 : 0,
-                    frameMode == ScreenMode.FIXED ? 4 : 0);
+            drawMenu(0,0);
         }
 
         // Multi sign
@@ -12817,7 +12620,7 @@ public class Client extends GameApplet implements RSClient {
 		}
 		drawX -= x;
 		drawY -= y;
-		Rasterizer2D.fillRectangle(drawX, drawY, width, height, 0x534B40, 250);
+		Rasterizer2D.drawTransparentBox(drawX, drawY, width, height, 0x534B40, 250);
 		Rasterizer2D.drawBoxOutline(drawX, drawY, width, height, 0x383023);
 		int textY = drawY + font.verticalSpace + 4;
 		font.drawTextWithPotentialShadow(true, drawX + 3, 0xffffff, text, textY);
@@ -12848,6 +12651,8 @@ public class Client extends GameApplet implements RSClient {
         if (l > 6400) {
             return;
         }
+        int xOffset = frameMode == ScreenMode.FIXED ? 516 : 0;
+        int yOffset = frameMode == ScreenMode.FIXED ? 0 : 0;
         int sineAngle = Model.SINE[angle];
         int cosineAngle = Model.COSINE[angle];
         sineAngle = (sineAngle * 256) / (minimapZoom + 256);
@@ -12855,23 +12660,23 @@ public class Client extends GameApplet implements RSClient {
         int spriteOffsetX = y * sineAngle + x * cosineAngle >> 16;
         int spriteOffsetY = y * cosineAngle - x * sineAngle >> 16;
         if (frameMode == ScreenMode.FIXED) {
-            sprite.drawSprite(((94 + spriteOffsetX) - sprite.maxWidth / 2) + 4 + 30,
-                    83 - spriteOffsetY - sprite.maxHeight / 2 - 4 + 5);
+            sprite.drawSprite(xOffset + ((94 + spriteOffsetX) - sprite.maxWidth / 2) + 4 + 30,
+                    yOffset+ 83 - spriteOffsetY - sprite.maxHeight / 2 - 4 + 5);
         } else {
             sprite.drawSprite(
-                    ((77 + spriteOffsetX) - sprite.maxWidth / 2) + 4 + 5
+                    xOffset+ ((77 + spriteOffsetX) - sprite.maxWidth / 2) + 4 + 5
                             + (frameWidth - 167),
-                    85 - spriteOffsetY - sprite.maxHeight / 2);
+                    yOffset+ 85 - spriteOffsetY - sprite.maxHeight / 2);
         }
     }
 
     private void drawMinimap() {
-        if (frameMode == ScreenMode.FIXED) {
-            minimapImageProducer.initDrawingArea();
-        }
+        int xOffset = frameMode == ScreenMode.FIXED ? 516 : 0;
+
+
         if (minimapState == 2) {
             if (frameMode == ScreenMode.FIXED) {
-                spriteCache.draw(19, 0, 0);
+                spriteCache.draw(19, xOffset, 0);
             } else {
                 spriteCache.draw(44, frameWidth - 181, 0);
                 spriteCache.draw(45, frameWidth - 158, 7);
@@ -12887,22 +12692,16 @@ public class Client extends GameApplet implements RSClient {
             loadAllOrbs();
             compass.rotate(33, cameraHorizontal, anIntArray1057, 256, anIntArray968,
                     (frameMode == ScreenMode.FIXED ? 25 : 24), 4,
-                    (frameMode == ScreenMode.FIXED ? 29 : frameWidth - 176), 33, 25);
-            if (menuOpen) {
-                drawMenu(frameMode == ScreenMode.FIXED ? 516 : 0, 0);
-            } else {
-            	drawHoverMenu(frameMode == ScreenMode.FIXED ? 516 : 0, 0);
-            }
-            if (frameMode == ScreenMode.FIXED) {
-                minimapImageProducer.initDrawingArea();
-            }
+                    (frameMode == ScreenMode.FIXED ? xOffset + 29 : frameWidth - 176), 33, 25);
+
+
             return;
         }
         int angle = cameraHorizontal + minimapRotation & 0x7ff;
         int centreX = 48 + localPlayer.x / 32;
         int centreY = 464 - localPlayer.y / 32;
         minimapImage.rotate(151, angle, minimapLineWidth, 256 + minimapZoom, minimapLeft, centreY, (frameMode == ScreenMode.FIXED ? 9 : 7),
-                (frameMode == ScreenMode.FIXED ? 54 : frameWidth - 158), 146, centreX);
+                (frameMode == ScreenMode.FIXED ? xOffset + 54 : frameWidth - 158), 146, centreX);
         for (int icon = 0; icon < anInt1071; icon++) {
             int mapX = (minimapHintX[icon] * 4 + 2) - localPlayer.x / 32;
             int mapY = (minimapHintY[icon] * 4 + 2) - localPlayer.y / 32;
@@ -13000,16 +12799,16 @@ public class Client extends GameApplet implements RSClient {
             int mapY = (destinationY * 4 + 2) - localPlayer.y / 32;
             markMinimap(mapFlag, mapX, mapY);
         }
-        Rasterizer2D.drawBox((frameMode == ScreenMode.FIXED ? 127 : frameWidth - 88), (frameMode == ScreenMode.FIXED ? 83 : 80), 3, 3,
+        Rasterizer2D.drawBox((frameMode == ScreenMode.FIXED ? xOffset + 127 : frameWidth - 88), (frameMode == ScreenMode.FIXED ? 83 : 80), 3, 3,
                 0xffffff);
         if (frameMode == ScreenMode.FIXED) {
-            spriteCache.draw(19, 0, 0);
+            spriteCache.draw(19, xOffset, 0);
         } else {
             spriteCache.draw(44, frameWidth - 181, 0);
         }
         compass.rotate(33, cameraHorizontal, anIntArray1057, 256, anIntArray968,
                 (frameMode == ScreenMode.FIXED ? 25 : 24), 4,
-                (frameMode == ScreenMode.FIXED ? 29 : frameWidth - 176), 33, 25);
+                (frameMode == ScreenMode.FIXED ? xOffset + 29 : frameWidth - 176), 33, 25);
         if (frameMode != ScreenMode.FIXED && stackSideStones) {
             if (super.mouseX >= frameWidth - 26 && super.mouseX <= frameWidth - 1
                     && super.mouseY >= 2 && super.mouseY <= 24 || tabId == 10) {
@@ -13019,21 +12818,14 @@ public class Client extends GameApplet implements RSClient {
             }
         }
         loadAllOrbs();
-        if (menuOpen) {
-            drawMenu(frameMode == ScreenMode.FIXED ? 516 : 0, 0);
-        } else {
-        	drawHoverMenu(frameMode == ScreenMode.FIXED ? 516 : 0, 0);
-        }
-        if (frameMode == ScreenMode.FIXED) {
-            gameScreenImageProducer.initDrawingArea();
-        }
+
     }
 
     private void loadAllOrbs() {
 
         boolean fixed = frameMode == ScreenMode.FIXED;
         boolean specOrb = Configuration.enableSpecOrb;
-        int xOffset = fixed ? 0 : frameWidth - 217;
+        int xOffset = fixed ? 516 : frameWidth - 217;
 
         if (specOrb) {
             loadSpecialOrb(xOffset);
@@ -13048,11 +12840,11 @@ public class Client extends GameApplet implements RSClient {
         loadRunOrb(specOrb ? xOffset : xOffset + 13, specOrb ? 0 : 15);
 
 		/* World map */
-        spriteCache.draw(worldHover ? 52 : 51, fixed ? 196 : frameWidth - 34, fixed ? 126 : 139);
+        spriteCache.draw(worldHover ? 52 : 51, fixed ? xOffset + 196 : frameWidth - 34, fixed ? 126 : 139);
 		/* Xp counter */
         int offSprite = Configuration.expCounterOpen ? 53 : 22;
         int onSprite = Configuration.expCounterOpen ? 54 : 23;
-        spriteCache.draw(expCounterHover ? onSprite : offSprite, fixed ? 0 : frameWidth - 216, 21);
+        spriteCache.draw(expCounterHover ? onSprite : offSprite, fixed ? xOffset : frameWidth - 216, 21);
     }
 
     private void loadHpOrb(int xOffset) {
@@ -13160,8 +12952,8 @@ public class Client extends GameApplet implements RSClient {
         l = i1 * j1 + l * k1 >> 16;
         i1 = j2;
         if (l >= 50) {
-            spriteDrawX = Rasterizer3D.originViewX + (i << SceneGraph.viewDistance) / l;
-            spriteDrawY = Rasterizer3D.originViewY + (i1 << SceneGraph.viewDistance) / l;
+            spriteDrawX = Rasterizer3D.originViewX * Rasterizer3D.fieldOfView / l;
+            spriteDrawY = Rasterizer3D.originViewY * Rasterizer3D.fieldOfView / l;
         } else {
             spriteDrawX = -1;
             spriteDrawY = -1;
@@ -13301,94 +13093,7 @@ public class Client extends GameApplet implements RSClient {
     }
 
     private void doFlamesDrawing() {
-        char c = '\u0100';
-        if (anInt1040 > 0) {
-            for (int i = 0; i < 256; i++)
-                if (anInt1040 > 768)
-                    anIntArray850[i] = method83(anIntArray851[i], anIntArray852[i],
-                            1024 - anInt1040);
-                else if (anInt1040 > 256)
-                    anIntArray850[i] = anIntArray852[i];
-                else
-                    anIntArray850[i] = method83(anIntArray852[i], anIntArray851[i],
-                            256 - anInt1040);
 
-        } else if (anInt1041 > 0) {
-            for (int j = 0; j < 256; j++)
-                if (anInt1041 > 768)
-                    anIntArray850[j] = method83(anIntArray851[j], anIntArray853[j],
-                            1024 - anInt1041);
-                else if (anInt1041 > 256)
-                    anIntArray850[j] = anIntArray853[j];
-                else
-                    anIntArray850[j] = method83(anIntArray853[j], anIntArray851[j],
-                            256 - anInt1041);
-
-        } else {
-            System.arraycopy(anIntArray851, 0, anIntArray850, 0, 256);
-
-        }
-        System.arraycopy(flameLeftSprite.myPixels, 0,
-                flameLeftBackground.canvasRaster, 0, 33920);
-
-        int i1 = 0;
-        int j1 = 1152;
-        for (int k1 = 1; k1 < c - 1; k1++) {
-            int l1 = (anIntArray969[k1] * (c - k1)) / c;
-            int j2 = 22 + l1;
-            if (j2 < 0)
-                j2 = 0;
-            i1 += j2;
-            for (int l2 = j2; l2 < 128; l2++) {
-                int j3 = anIntArray828[i1++];
-                if (j3 != 0) {
-                    int l3 = j3;
-                    int j4 = 256 - j3;
-                    j3 = anIntArray850[j3];
-                    int l4 = flameLeftBackground.canvasRaster[j1];
-                    flameLeftBackground.canvasRaster[j1++] =
-                            ((j3 & 0xff00ff) * l3 + (l4 & 0xff00ff) * j4 & 0xff00ff00)
-                                    + ((j3 & 0xff00) * l3 + (l4 & 0xff00) * j4
-                                    & 0xff0000) >> 8;
-                } else {
-                    j1++;
-                }
-            }
-
-            j1 += j2;
-        }
-
-        flameLeftBackground.drawGraphics(0, super.graphics, 0);
-        System.arraycopy(flameRightSprite.myPixels, 0,
-                flameRightBackground.canvasRaster, 0, 33920);
-
-        i1 = 0;
-        j1 = 1176;
-        for (int k2 = 1; k2 < c - 1; k2++) {
-            int i3 = (anIntArray969[k2] * (c - k2)) / c;
-            int k3 = 103 - i3;
-            j1 += i3;
-            for (int i4 = 0; i4 < k3; i4++) {
-                int k4 = anIntArray828[i1++];
-                if (k4 != 0) {
-                    int i5 = k4;
-                    int j5 = 256 - k4;
-                    k4 = anIntArray850[k4];
-                    int k5 = flameRightBackground.canvasRaster[j1];
-                    flameRightBackground.canvasRaster[j1++] =
-                            ((k4 & 0xff00ff) * i5 + (k5 & 0xff00ff) * j5 & 0xff00ff00)
-                                    + ((k4 & 0xff00) * i5 + (k5 & 0xff00) * j5
-                                    & 0xff0000) >> 8;
-                } else {
-                    j1++;
-                }
-            }
-
-            i1 += 128 - k3;
-            j1 += 128 - k3 - i3;
-        }
-
-        flameRightBackground.drawGraphics(0, super.graphics, 637);
     }
 
     private void updateOtherPlayerMovement(Buffer stream) {
@@ -13453,49 +13158,10 @@ public class Client extends GameApplet implements RSClient {
         }
     }
 
-    private void loginScreenAccessories() {
-		/*
-		 * World-selection
-		 */
-        setupLoginScreen();
-
-        loginScreenAccessories.drawGraphics(400, super.graphics, 0);
-        loginScreenAccessories.initDrawingArea();
-        spriteCache.draw(57, 6, 63);
-
-        boldText.method382(0xffffff, 55, "World 1", 78, true);
-        smallText.method382(0xffffff, 55, "Main world", 92, true);
-
-        loginMusicImageProducer.drawGraphics(265, super.graphics, 562);
-        loginMusicImageProducer.initDrawingArea();
-        if (Configuration.enableMusic) {
-            spriteCache.draw(58, 158, 196);
-        } else {
-            spriteCache.draw(59, 158, 196);
-            stopMidi();
-        }
-
-    }
-
-    public void drawMusicSprites() {
-
-        int musicState = 0;
-        bottomRightImageProducer.initDrawingArea();
-        switch (musicState) {
-            case 0:
-                spriteCache.draw(58, 158, 196);
-                break;
-
-            case 1:
-                spriteCache.draw(59, 158, 196);
-                break;
-        }
-    }
-
     private void drawLoginScreen(boolean flag) {
-        setupLoginScreen();
-        loginBoxImageProducer.initDrawingArea();
-        titleBoxIndexedImage.draw(0, 0);
+        setGameState(GameState.LOGIN_SCREEN);
+        resetAllImageProducers();
+       // titleBoxIndexedImage.draw(0, 0);
         char c = '\u0168';
         char c1 = '\310';
         if (Configuration.enableMusic && !lowMemory) {
@@ -13509,10 +13175,10 @@ public class Client extends GameApplet implements RSClient {
             i += 30;
             int l = c / 2 - 80;
             int k1 = c1 / 2 + 20;
-            titleButtonIndexedImage.draw(l - 73, k1 - 20);
+            //titleButtonIndexedImage.draw(l - 73, k1 - 20);
             boldText.method382(0xffffff, l, "New User", k1 + 5, true);
             l = c / 2 + 80;
-            titleButtonIndexedImage.draw(l - 73, k1 - 20);
+           // titleButtonIndexedImage.draw(l - 73, k1 - 20);
             boldText.method382(0xffffff, l, "Existing User", k1 + 5, true);
         }
         if (loginScreenState == 2) {
@@ -13562,52 +13228,19 @@ public class Client extends GameApplet implements RSClient {
             if (!flag) {
                 int i1 = c / 2 - 80;
                 int l1 = c1 / 2 + 50;
-                titleButtonIndexedImage.draw(i1 - 73, l1 - 20);
+               // titleButtonIndexedImage.draw(i1 - 73, l1 - 20);
                 boldText.method382(0xffffff, i1, "Login", l1 + 5, true);
                 i1 = c / 2 + 80;
-                titleButtonIndexedImage.draw(i1 - 73, l1 - 20);
+               // titleButtonIndexedImage.draw(i1 - 73, l1 - 20);
                 boldText.method382(0xffffff, i1, "Cancel", l1 + 5, true);
             }
         }
-        loginBoxImageProducer.drawGraphics(171, super.graphics, 202);
-        if (welcomeScreenRaised) {
-            welcomeScreenRaised = false;
-            topLeft1BackgroundTile.drawGraphics(0, super.graphics, 128);
-            bottomLeft1BackgroundTile.drawGraphics(371, super.graphics, 202);
-            bottomLeft0BackgroundTile.drawGraphics(265, super.graphics, 0);
-            bottomRightImageProducer.drawGraphics(265, super.graphics, 562);
-            middleLeft1BackgroundTile.drawGraphics(171, super.graphics, 128);
-            aRSImageProducer_1115.drawGraphics(171, super.graphics, 562);
-        }
-        loginScreenAccessories();
+
+
     }
 
     private void drawFlames() {
-        drawingFlames = true;
-        try {
-            long l = System.currentTimeMillis();
-            int i = 0;
-            int j = 20;
-            while (aBoolean831) {
-                calcFlamesPosition();
-                doFlamesDrawing();
-                if (++i > 10) {
-                    long l1 = System.currentTimeMillis();
-                    int k = (int) (l1 - l) / 10 - j;
-                    j = 40 - k;
-                    if (j < 5)
-                        j = 5;
-                    i = 0;
-                    l = l1;
-                }
-                try {
-                    Thread.sleep(j);
-                } catch (Exception _ex) {
-                }
-            }
-        } catch (Exception _ex) {
-        }
-        drawingFlames = false;
+
     }
 
     public void raiseWelcomeScreen() {
@@ -14693,6 +14326,7 @@ public class Client extends GameApplet implements RSClient {
             }
 
             if (opcode == PacketConstants.SEND_MAP_REGION || opcode == PacketConstants.SEND_REGION_MAP_REGION) {
+                setGameState(GameState.LOADING);
                 int regionX = currentRegionX;
                 int regionY = currentRegionY;
                 if (opcode == PacketConstants.SEND_MAP_REGION) {
@@ -14732,10 +14366,9 @@ public class Client extends GameApplet implements RSClient {
                     inTutorialIsland = true;
                 loadingStage = 1;
                 loadingStartTime = System.currentTimeMillis();
-                gameScreenImageProducer.initDrawingArea();
+
                 drawLoadingMessages(1, "Loading - please wait.", null);
-                gameScreenImageProducer.drawGraphics(frameMode == ScreenMode.FIXED ? 4 : 0, super.graphics,
-                        frameMode == ScreenMode.FIXED ? 4 : 0);
+                gameScreenImageProducer.drawGraphics(0, super.graphics, 0);
                 if (opcode == 73) {
                     int regionCount = 0;
                     for (int x = (currentRegionX - 6) / 8; x <= (currentRegionX + 6) / 8; x++) {
@@ -15841,9 +15474,26 @@ public class Client extends GameApplet implements RSClient {
         Model.obj_loaded = 0;
         Model.anInt1685 = super.mouseX - (frameMode == ScreenMode.FIXED ? 4 : 0);
         Model.anInt1686 = super.mouseY - (frameMode == ScreenMode.FIXED ? 4 : 0);
+
+
+        if (Client.processGpuPlugin() && gameState != GameState.LOGGED_IN) {
+            return;
+        }
+
         Rasterizer2D.clear();
+        if (Rasterizer3D.fieldOfView != cameraZoom) {
+            Rasterizer3D.fieldOfView = cameraZoom;
+        }
+
+        // Cap the buffer
+        Rasterizer2D.setDrawingArea(screenAreaHeight,
+                (frameMode == ScreenMode.FIXED ? 4 : 0),
+                screenAreaWidth,
+                (frameMode == ScreenMode.FIXED ? 4 : 0));
         scene.render(xCameraPos, yCameraPos, xCameraCurve, zCameraPos, j, yCameraCurve);
+        gameScreenImageProducer.initDrawingArea();
         scene.clearGameObjectCache();
+
         if (Configuration.enableGroundItemNames) {
             renderGroundItemNames();
         }
@@ -15865,12 +15515,15 @@ public class Client extends GameApplet implements RSClient {
                 drawExpCounterDrops();
             }
         }
-        if (frameMode != ScreenMode.FIXED) {
-            drawChatArea();
-            drawMinimap();
-            drawTabArea();
+        if(frameMode == ScreenMode.FIXED) {
+            leftFrame.method346(0, 4);
+            topFrame.method346(0, 0);
         }
-        gameScreenImageProducer.drawGraphics(frameMode == ScreenMode.FIXED ? 4 : 0, super.graphics, frameMode == ScreenMode.FIXED ? 4 : 0);
+        drawChatArea();
+        drawMinimap();
+        drawTabArea();
+
+
         if (Client.processGpuPlugin()) {
             drawCallbacks.draw(0);
         }
@@ -15881,6 +15534,10 @@ public class Client extends GameApplet implements RSClient {
         yCameraCurve = k1;
         xCameraCurve = l1;
     }
+
+
+    public Sprite leftFrame;
+    public Sprite topFrame;
 
     private void tabToReplyPm() {
         String name = null;
@@ -16150,25 +15807,8 @@ public class Client extends GameApplet implements RSClient {
     }
 
     public void resetAllImageProducers() {
-        if (super.fullGameScreen != null) {
-            return;
-        }
-        chatboxImageProducer = null;
-        minimapImageProducer = null;
-        tabImageProducer = null;
-        gameScreenImageProducer = null;
-        chatSettingImageProducer = null;
-        topLeft1BackgroundTile = null;
-        bottomLeft1BackgroundTile = null;
-        loginBoxImageProducer = null;
-        flameLeftBackground = null;
-        flameRightBackground = null;
-        bottomLeft0BackgroundTile = null;
-        bottomRightImageProducer = null;
-        loginMusicImageProducer = null;
-        middleLeft1BackgroundTile = null;
-        aRSImageProducer_1115 = null;
-        super.fullGameScreen = new ProducingGraphicsBuffer(765, 503);
+        gameScreenImageProducer = new ProducingGraphicsBuffer(frameWidth, frameHeight);
+        Rasterizer2D.clear();
         welcomeScreenRaised = true;
     }
 
@@ -18397,7 +18037,7 @@ public class Client extends GameApplet implements RSClient {
     public boolean addEntityMarker(int x, int y, RSRenderable entity)
     {
 
-        return false;
+        return true;
     }
 
     public boolean shouldDraw(Object entity, boolean drawingUI)

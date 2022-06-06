@@ -109,7 +109,7 @@ public class OSRSCreationMenu {
                     int hoverX = x + itemX + (boxWidth / 2);
                     int hoverY = y + 132;          
                     Rasterizer2D.drawBox(hoverX - (textWidth / 2) - 2, hoverY - 1, textWidth + 5, 19, 0x000000);
-                    Rasterizer2D.fillRectangle(17, hoverY, hoverX - (textWidth / 2) - 1, 0xFFFFA0, textWidth + 3);
+                    Rasterizer2D.drawBox(17, hoverY, hoverX - (textWidth / 2) - 1, 0xFFFFA0, textWidth + 3);
                     font.drawCenteredText(itemName, hoverX, hoverY + 14, 0x605048, false);
                 }
             }

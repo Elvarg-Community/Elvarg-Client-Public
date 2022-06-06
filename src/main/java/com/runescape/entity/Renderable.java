@@ -9,31 +9,34 @@ import net.runelite.rs.api.RSRenderable;
 
 public class Renderable extends Cacheable implements RSRenderable {
 
-    public boolean isHidden = false;
     public int modelBaseY;
     public VertexNormal normals[];
-    public long hash;
-
-    public Renderable() {
-        modelBaseY = 1000;
-    }
 
     public void renderAtPoint(int i, int j, int k, int l, int i1, int j1, int k1, int l1, long i2) {
         Model model = getRotatedModel();
-        if (model != null) {
+        if(model != null) {
             modelBaseY = model.modelBaseY;
+
             model.renderAtPoint(i, j, k, l, i1, j1, k1, l1, i2);
-            hash = i2;
         }
+    }
+
+    @Override
+    public void draw(int orientation, int pitchSin, int pitchCos, int yawSin, int yawCos, int x, int y, int z, long hash) {
+        renderAtPoint(orientation,pitchSin,pitchCos,yawSin,yawCos,x,y,z,hash);
+    }
+
+    @Override
+    public boolean isHidden() {
+        return false;
     }
 
     public Model getRotatedModel() {
         return null;
     }
 
-    @Override
-    public boolean isHidden() {
-        return false;
+    public Renderable() {
+        modelBaseY = 1000;
     }
 
     @Override
@@ -43,7 +46,7 @@ public class Renderable extends Cacheable implements RSRenderable {
 
     @Override
     public long getHash() {
-        return hash;
+        return 0;
     }
 
     @Override
@@ -53,7 +56,6 @@ public class Renderable extends Cacheable implements RSRenderable {
 
     @Override
     public void onUnlink() {
-
     }
 
     @Override
@@ -63,7 +65,7 @@ public class Renderable extends Cacheable implements RSRenderable {
 
     @Override
     public void setModelHeight(int modelHeight) {
-        this.modelBaseY = modelHeight;
+        modelBaseY = modelHeight;
     }
 
     @Override
@@ -71,9 +73,5 @@ public class Renderable extends Cacheable implements RSRenderable {
         return getRotatedModel();
     }
 
-    @Override
-    public void draw(int orientation, int pitchSin, int pitchCos, int yawSin, int yawCos, int x, int y, int z, long hash) {
-        renderAtPoint(orientation,pitchSin,pitchCos,yawSin,yawCos,x,y,z,hash);
-    }
 
 }

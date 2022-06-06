@@ -242,9 +242,10 @@ public final class ItemDefinition implements RSItemComposition {
         int vp_right = Rasterizer2D.bottomX;
         int vp_top = Rasterizer2D.topY;
         int vp_bottom = Rasterizer2D.bottomY;
+        Rasterizer3D.world = false;
         Rasterizer3D.aBoolean1464 = false;
         Rasterizer2D.initDrawingArea(32, 32, enabledSprite.myPixels);
-        Rasterizer2D.drawBox(0, 0, 32, 32, 0);
+        Rasterizer2D.drawItemBox(0, 0, 32, 32, 0);
         Rasterizer3D.useViewport();
         int k3 = itemDef.zoom2d;
         if (outlineColor == -1)
@@ -253,8 +254,10 @@ public final class ItemDefinition implements RSItemComposition {
             k3 = (int) ((double) k3 * 1.04D);
         int l3 = Rasterizer3D.anIntArray1470[itemDef.xan2d] * k3 >> 16;
         int i4 = Rasterizer3D.COSINE[itemDef.xan2d] * k3 >> 16;
+        Rasterizer3D.renderOnGpu = true;
         model.render_2D(itemDef.yan2d, itemDef.zan2d, itemDef.xan2d, itemDef.xOffset2d,
                 l3 + model.modelBaseY / 2 + itemDef.yOffset2d, i4 + itemDef.yOffset2d);
+        Rasterizer3D.renderOnGpu = false;
 
         enabledSprite.outline(1);
         if (outlineColor > 0) {
@@ -283,6 +286,7 @@ public final class ItemDefinition implements RSItemComposition {
         Rasterizer3D.originViewY = centerY;
         Rasterizer3D.scanOffsets = lineOffsets;
         Rasterizer3D.aBoolean1464 = true;
+        Rasterizer3D.world = true;
         if (itemDef.stackable)
             enabledSprite.maxWidth = 33;
         else
@@ -318,15 +322,20 @@ public final class ItemDefinition implements RSItemComposition {
         int vp_right = Rasterizer2D.bottomX;
         int vp_top = Rasterizer2D.topY;
         int vp_bottom = Rasterizer2D.bottomY;
+        Rasterizer3D.world = false;
         Rasterizer3D.aBoolean1464 = false;
         Rasterizer2D.initDrawingArea(90, 90, sprite.myPixels);
-        Rasterizer2D.drawBox(0, 0, 90, 90, 0);
+        Rasterizer2D.drawItemBox(0, 0, 90, 90, 0);
         Rasterizer3D.useViewport();
         int l3 = Rasterizer3D.anIntArray1470[itemDef.xan2d] * zoom >> 15;
         int i4 = Rasterizer3D.COSINE[itemDef.xan2d] * zoom >> 15;
+        Rasterizer3D.renderOnGpu = true;
+
         model.render_2D(itemDef.yan2d, itemDef.zan2d, itemDef.xan2d, itemDef.xOffset2d,
                 l3 + model.modelBaseY / 2 + itemDef.yOffset2d, i4 + itemDef.yOffset2d);
         sprite.outline(1);
+        Rasterizer3D.renderOnGpu = false;
+
         if (outlineColor > 0) {
             sprite.outline(16777215);
         }
@@ -340,6 +349,7 @@ public final class ItemDefinition implements RSItemComposition {
         Rasterizer3D.originViewY = centerY;
         Rasterizer3D.scanOffsets = lineOffsets;
         Rasterizer3D.aBoolean1464 = true;
+        Rasterizer3D.world = true;
         if (itemDef.stackable)
             sprite.maxWidth = 33;
         else

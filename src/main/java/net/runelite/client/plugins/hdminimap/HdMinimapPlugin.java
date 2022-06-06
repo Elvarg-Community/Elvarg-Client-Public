@@ -28,6 +28,7 @@ package net.runelite.client.plugins.hdminimap;
 import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.GameState;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
@@ -60,7 +61,13 @@ public class HdMinimapPlugin extends Plugin
 	protected void startUp() throws Exception
 	{
 		client.setHdMinimapEnabled(true);
-		client.setGameState(1);
+		clientThread.invoke(() ->
+		{
+			if (client.getGameState() == GameState.LOGGED_IN)
+			{
+				client.setGameState(GameState.LOADING);
+			}
+		});
 	}
 
 }

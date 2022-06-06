@@ -3,7 +3,7 @@ package com.runescape.draw;
 import com.runescape.Client;
 import com.runescape.cache.FileArchive;
 import com.runescape.cache.graphics.IndexedImage;
-import com.runescape.scene.SceneGraph;
+
 
 public final class Rasterizer3D extends Rasterizer2D {
 
