@@ -1,25 +1,27 @@
 package com.runescape.entity.model;
 
-final class ModelHeader {
+public final class ModelHeader
+{
 
-    public byte aByteArray368[];
-    public int anInt369;
-    public int anInt370;
-    public int anInt371;
-    public int anInt372;
-    public int anInt373;
-    public int anInt374;
-    public int anInt375;
-    public int anInt376;
-    public int anInt377;
-    public int anInt378;
-    public int anInt379;
-    public int anInt380;
-    public int anInt381;
-    public int anInt382;
-    public int anInt383;
-    public int anInt384;
-
-    public ModelHeader() {
+    public ModelHeader()
+    {
     }
+
+    public byte data[];
+    public int vertices;
+    public int faces;
+    public int texture_faces;
+    public int vertex_offset;
+    public int vertex_x_offset;
+    public int vertex_y_offset;
+    public int vertex_z_offset;
+    public int bones_offset;
+    public int points_offset;
+    public int face_offset;
+    public int color_id;
+    public int render_type_offset;
+    public int face_pri_offset;
+    public int alpha_offset;
+    public int muscle_offset;
+    public int texture_id;
 }

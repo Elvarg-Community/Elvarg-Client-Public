@@ -1,6 +1,8 @@
 package com.runescape.scene;
 
-public final class CollisionMap {
+import net.runelite.rs.api.RSCollisionMap;
+
+public final class CollisionMap implements RSCollisionMap {
 
     private static final int BLOCKED_TILE = 0x200000;
     //private static final int OBJECT_TILE = 0x100;
@@ -506,5 +508,10 @@ public final class CollisionMap {
                 && (rotation & 4) == 0 || y == maxY + 1 && x >= finalX && x <= maxX
                 && (clipData[x - xOffset][y - yOffset] & 0x20) == 0
                 && (rotation & 1) == 0;
+    }
+
+    @Override
+    public int[][] getFlags() {
+        return clipData;
     }
 }

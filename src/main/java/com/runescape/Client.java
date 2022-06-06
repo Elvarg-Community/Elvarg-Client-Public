@@ -1,45 +1,5 @@
 package com.runescape;
 
-import java.applet.AppletContext;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.Toolkit;
-import java.awt.event.KeyEvent;
-import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.zip.CRC32;
-import java.util.zip.Deflater;
-import java.util.zip.DeflaterOutputStream;
-
-import javax.imageio.ImageIO;
-
 import com.runescape.cache.FileArchive;
 import com.runescape.cache.FileStore;
 import com.runescape.cache.Resource;
@@ -50,11 +10,8 @@ import com.runescape.cache.anim.Graphic;
 import com.runescape.cache.config.VariableBits;
 import com.runescape.cache.config.VariablePlayer;
 import com.runescape.cache.def.*;
-import com.runescape.cache.graphics.DropdownMenu;
-import com.runescape.cache.graphics.GameFont;
-import com.runescape.cache.graphics.IndexedImage;
 import com.runescape.cache.graphics.RSFont;
-import com.runescape.cache.graphics.Slider;
+import com.runescape.cache.graphics.*;
 import com.runescape.cache.graphics.sprite.Sprite;
 import com.runescape.cache.graphics.sprite.SpriteCache;
 import com.runescape.cache.graphics.widget.Bank;
@@ -71,10 +28,9 @@ import com.runescape.draw.skillorbs.SkillOrbs;
 import com.runescape.draw.teleports.TeleportChatBox;
 import com.runescape.entity.GameObject;
 import com.runescape.entity.Item;
-import com.runescape.entity.Mob;
-import com.runescape.entity.Npc;
 import com.runescape.entity.Player;
 import com.runescape.entity.Renderable;
+import com.runescape.entity.*;
 import com.runescape.entity.model.IdentityKit;
 import com.runescape.entity.model.Model;
 import com.runescape.io.Buffer;
@@ -86,12 +42,8 @@ import com.runescape.model.EffectTimer;
 import com.runescape.model.content.Keybinding;
 import com.runescape.net.BufferedConnection;
 import com.runescape.net.IsaacCipher;
-import com.runescape.scene.AnimableObject;
-import com.runescape.scene.CollisionMap;
-import com.runescape.scene.MapRegion;
 import com.runescape.scene.Projectile;
-import com.runescape.scene.SceneGraph;
-import com.runescape.scene.SceneObject;
+import com.runescape.scene.*;
 import com.runescape.scene.object.GroundDecoration;
 import com.runescape.scene.object.SpawnedObject;
 import com.runescape.scene.object.WallDecoration;
@@ -102,8 +54,45 @@ import com.runescape.sound.SoundPlayer;
 import com.runescape.sound.Track;
 import com.runescape.util.*;
 import com.runescape.util.zip.BZip2OutputStream;
+import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.*;
+import net.runelite.api.Point;
+import net.runelite.api.clan.ClanRank;
+import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.events.ClientTick;
+import net.runelite.api.events.GameStateChanged;
+import net.runelite.api.hooks.Callbacks;
+import net.runelite.api.hooks.DrawCallbacks;
+import net.runelite.api.vars.AccountType;
+import net.runelite.api.widgets.WidgetInfo;
+import net.runelite.rs.api.*;
+import org.slf4j.Logger;
 
-public class Client extends GameApplet {
+import javax.imageio.ImageIO;
+import java.applet.AppletContext;
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.zip.CRC32;
+import java.util.zip.Deflater;
+import java.util.zip.DeflaterOutputStream;
+
+@Slf4j
+public class Client extends GameApplet implements RSClient {
 
     public static final int TOTAL_ARCHIVES = 9;
     public static final int TITLE_ARCHIVE = 1;
@@ -488,7 +477,7 @@ public class Client extends GameApplet {
     private String reportAbuseInput;
     private boolean menuOpen;
     private int anInt886;
-    private Player[] players;
+    public Player[] players;
     private int playerCount;
     private int[] playerList;
     private int mobsAwaitingUpdateCount;
@@ -906,6 +895,7 @@ public class Client extends GameApplet {
         showTabComponents = screenMode == ScreenMode.FIXED ? true : showTabComponents;
     }
 
+
     public void rebuildFrameSize(ScreenMode screenMode, int width, int height) {
     	screenAreaWidth = (screenMode == ScreenMode.FIXED) ? 512 : width;
         screenAreaHeight = (screenMode == ScreenMode.FIXED) ? 334 : height;
@@ -954,7 +944,7 @@ public class Client extends GameApplet {
             SceneGraph.viewDistance = 10;
             cameraZoom = 600;
         }
-        SceneGraph.setupViewport(500, 800, screenAreaWidth, screenAreaHeight, ai);
+        SceneGraph.buildVisibilityMap(500, 800, screenAreaWidth, screenAreaHeight, ai);
         if (loggedIn) {
             gameScreenImageProducer =
                     new ProducingGraphicsBuffer(screenAreaWidth, screenAreaHeight);
@@ -2213,6 +2203,8 @@ public class Client extends GameApplet {
         
     }
 
+    public MapRegion currentMapRegion;
+
     private void loadRegion() {
         try {
             lastKnownPlane = -1;
@@ -2231,7 +2223,7 @@ public class Client extends GameApplet {
                 }
             }
 
-            MapRegion objectManager = new MapRegion(tileFlags, tileHeights);
+            currentMapRegion = new MapRegion(tileFlags, tileHeights);
             int k2 = terrainData.length;
             packetSender.sendEmptyPacket();
 
@@ -2241,7 +2233,7 @@ public class Client extends GameApplet {
                     int k5 = (mapCoordinates[i3] & 0xff) * 64 - regionBaseY;
                     byte abyte0[] = terrainData[i3];
                     if (abyte0 != null)
-                        objectManager.method180(abyte0, k5, i4, (currentRegionX - 6) * 8, (currentRegionY - 6) * 8,
+                        currentMapRegion.method180(abyte0, k5, i4, (currentRegionX - 6) * 8, (currentRegionY - 6) * 8,
                                 collisionMaps);
                 }
                 for (int j4 = 0; j4 < k2; j4++) {
@@ -2249,7 +2241,7 @@ public class Client extends GameApplet {
                     int k7 = (mapCoordinates[j4] & 0xff) * 64 - regionBaseY;
                     byte abyte2[] = terrainData[j4];
                     if (abyte2 == null && currentRegionY < 800)
-                        objectManager.initiateVertexHeights(k7, 64, 64, l5);
+                        currentMapRegion.initiateVertexHeights(k7, 64, 64, l5);
                 }
                 /*
                  * anInt1097++; if (anInt1097 > 160) { anInt1097 = 0;
@@ -2262,7 +2254,7 @@ public class Client extends GameApplet {
                     if (abyte1 != null) {
                         int l8 = (mapCoordinates[i6] >> 8) * 64 - regionBaseX;
                         int k9 = (mapCoordinates[i6] & 0xff) * 64 - regionBaseY;
-                        objectManager.method190(l8, collisionMaps, k9, scene, abyte1);
+                        currentMapRegion.method190(l8, collisionMaps, k9, scene, abyte1);
                     }
                 }
             } else {
@@ -2279,7 +2271,7 @@ public class Client extends GameApplet {
                                 for (int idx = 0; idx < mapCoordinates.length; idx++) {
                                     if (mapCoordinates[idx] != mapRegion || terrainData[idx] == null)
                                         continue;
-                                    objectManager.loadMapChunk(z, rotation, collisionMaps, x * 8, (xCoord & 7) * 8,
+                                    currentMapRegion.loadMapChunk(z, rotation, collisionMaps, x * 8, (xCoord & 7) * 8,
                                             terrainData[idx], (yCoord & 7) * 8, plane, y * 8);
                                     break;
                                 }
@@ -2292,7 +2284,7 @@ public class Client extends GameApplet {
                     for (int yChunk = 0; yChunk < 13; yChunk++) {
                         int tileBits = constructRegionData[0][xChunk][yChunk];
                         if (tileBits == -1)
-                            objectManager.initiateVertexHeights(yChunk * 8, 8, 8, xChunk * 8);
+                            currentMapRegion.initiateVertexHeights(yChunk * 8, 8, 8, xChunk * 8);
                     }
                 }
 
@@ -2310,7 +2302,7 @@ public class Client extends GameApplet {
                                 for (int idx = 0; idx < mapCoordinates.length; idx++) {
                                     if (mapCoordinates[idx] != mapRegion || objectData[idx] == null)
                                         continue;
-                                    objectManager.readObjectMap(collisionMaps, scene, plane, chunkX * 8,
+                                    currentMapRegion.readObjectMap(collisionMaps, scene, plane, chunkX * 8,
                                             (coordY & 7) * 8, chunkZ, objectData[idx], (coordX & 7) * 8, rotation,
                                             chunkY * 8);
                                     break;
@@ -2322,7 +2314,7 @@ public class Client extends GameApplet {
                 requestMapReconstruct = false;
             }
             packetSender.sendEmptyPacket();
-            objectManager.createRegionScene(collisionMaps, scene);
+            currentMapRegion.createRegionScene(collisionMaps, scene);
             gameScreenImageProducer.initDrawingArea();
             packetSender.sendEmptyPacket();
             int k3 = MapRegion.maximumPlane;
@@ -2412,9 +2404,9 @@ public class Client extends GameApplet {
             int i1 = 24628 + (103 - y) * 512 * 4;
             for (int x = 1; x < 103; x++) {
                 if ((tileFlags[plane][x][y] & 0x18) == 0)
-                    scene.drawTileOnMinimapSprite(pixels, i1, plane, x, y);
+                    scene.drawTileMinimap(pixels, i1, plane, x, y);
                 if (plane < 3 && (tileFlags[plane + 1][x][y] & 8) != 0)
-                    scene.drawTileOnMinimapSprite(pixels, i1, plane + 1, x, y);
+                    scene.drawTileMinimap(pixels, i1, plane + 1, x, y);
                 i1 += 4;
             }
 
@@ -2487,23 +2479,18 @@ public class Client extends GameApplet {
             scene.removeGroundItemTile(plane, i, j);
             return;
         }
-        int highestItemValue = 0xfa0a1f01;
+        int k = 0xfa0a1f01;
         Object obj = null;
         for (Item item = (Item) class19.reverseGetFirst(); item != null; item =
                 (Item) class19.reverseGetNext()) {
             ItemDefinition itemDef = ItemDefinition.lookup(item.ID);
-            int value = itemDef.cost;
-            if (itemDef.stackable) {
-                int count = item.itemCount;
-                if (count < Integer.MAX_VALUE) {
-                    value *= item.itemCount + 1;
-                }
-                value = count;
-            }
+            int l = itemDef.cost;
+            if (itemDef.stackable)
+                l *= item.itemCount + 1;
             // notifyItemSpawn(item, i + baseX, j + baseY);
 
-            if (value > highestItemValue) {
-                highestItemValue = value;
+            if (l > k) {
+                k = l;
                 obj = item;
             }
         }
@@ -2522,10 +2509,11 @@ public class Client extends GameApplet {
         }
 
         int i1 = i + (j << 7) + 0x60000000;
-        scene.addGroundItemTile(i, i1, ((Renderable) (obj1)),
+        scene.addGroundItemTile(obj, i, i1, ((Renderable) (obj1)),
                 getCenterHeight(plane, j * 128 + 64, i * 128 + 64), ((Renderable) (obj2)),
                 ((Renderable) (obj)), plane, j);
     }
+
 
 
     public void drawHoverBox(int xPos, int yPos, String text) {
@@ -4466,6 +4454,8 @@ public class Client extends GameApplet {
     }
     
     void startUp() {
+
+
         drawLoadingText(20, "Starting up");
         if (SignLink.cache_dat != null) {
             for (int i = 0; i < 5; i++)
@@ -5426,7 +5416,8 @@ public class Client extends GameApplet {
     }
 
     private void mainGameProcessor() {
-
+        callbacks.tick();
+        callbacks.post(new ClientTick());
         refreshFrameSize();
         if (getGameComponent().getFocusTraversalKeysEnabled()) {
             getGameComponent().setFocusTraversalKeysEnabled(false);
@@ -7311,7 +7302,7 @@ public class Client extends GameApplet {
                 continue;
             }
             previous = current;
-            if (opcode == 2 & scene.getMask(plane, x, y, current)) {
+            if (opcode == 2) {
                 ObjectDefinition objectDef = ObjectDefinition.lookup(uid);
                 if (objectDef.configs != null)
                     objectDef = objectDef.method580();
@@ -7628,6 +7619,7 @@ public class Client extends GameApplet {
         else
             return this;
     }
+
 
     private void manageTextInputs() {
         do {
@@ -15879,6 +15871,10 @@ public class Client extends GameApplet {
             drawTabArea();
         }
         gameScreenImageProducer.drawGraphics(frameMode == ScreenMode.FIXED ? 4 : 0, super.graphics, frameMode == ScreenMode.FIXED ? 4 : 0);
+        if (Client.processGpuPlugin()) {
+            drawCallbacks.draw(0);
+        }
+
         xCameraPos = l;
         zCameraPos = i1;
         yCameraPos = j1;
@@ -16376,4 +16372,3344 @@ public class Client extends GameApplet {
         INVENTORY,
         BANK;
     }
+
+    /**
+     * Runelite
+     */
+    public DrawCallbacks drawCallbacks;
+    @javax.inject.Inject
+    private Callbacks callbacks;
+    private GameState gameState = GameState.STARTING;
+    private TextureManager textureManager = new TextureManager();
+    private boolean gpu = false;
+
+
+    @Override
+    public Thread getClientThread() {
+        return clientThread;
+    }
+
+    @Override
+    public boolean isClientThread() {
+        return (this.clientThread == Thread.currentThread());
+    }
+
+    @Override
+    public void resizeCanvas() {
+    }
+
+    @Override
+    public boolean isResizeCanvasNextFrame() {
+        return false;
+    }
+
+    @Override
+    public void setResizeCanvasNextFrame(boolean resize) {
+
+    }
+
+    @Override
+    public boolean isReplaceCanvasNextFrame() {
+        return false;
+    }
+
+    @Override
+    public void setReplaceCanvasNextFrame(boolean replace) {
+    }
+
+    @Override
+    public void setMaxCanvasWidth(int width) {
+
+    }
+
+    @Override
+    public void setMaxCanvasHeight(int height) {
+
+    }
+
+    @Override
+    public void setFullRedraw(boolean fullRedraw) {
+
+    }
+
+    @Override
+    public Callbacks getCallbacks() {
+        return callbacks;
+    }
+
+    @Override
+    public DrawCallbacks getDrawCallbacks() {
+        return drawCallbacks;
+    }
+
+    @Override
+    public void setDrawCallbacks(DrawCallbacks drawCallbacks) {
+        this.drawCallbacks = drawCallbacks;
+    }
+
+    @Override
+    public Logger getLogger() {
+        return log;
+    }
+
+    @Override
+    public String getBuildID() {
+        return "1";
+    }
+
+    @Override
+    public List<net.runelite.api.Player> getPlayers() {
+        return Arrays.asList(players);
+    }
+
+    @Override
+    public List<NPC> getNpcs() {
+        List<NPC> npcs = new ArrayList<NPC>(npcCount);
+        for (int i = 0; i < npcCount; ++i)
+        {
+            npcs.add(this.npcs[npcIndices[i]]);
+        }
+        return npcs;
+    }
+
+    @Override
+    public RSNPC[] getCachedNPCs() {
+        return npcs;
+    }
+
+    @Override
+    public RSPlayer[] getCachedPlayers() {
+        return players;
+    }
+
+    @Override
+    public int getLocalInteractingIndex() {
+        return 0;
+    }
+
+    @Override
+    public void setLocalInteractingIndex(int idx) {
+
+    }
+
+    @Override
+    public RSNodeDeque getTilesDeque() {
+        return null;
+    }
+
+    @Override
+    public RSNodeDeque[][][] getGroundItemDeque() {
+        return new RSNodeDeque[0][][];
+    }
+
+    @Override
+    public RSNodeDeque getProjectilesDeque() {
+        return null;
+    }
+
+    @Override
+    public RSNodeDeque getGraphicsObjectDeque() {
+        return null;
+    }
+
+    @Override
+    public int getBoostedSkillLevel(Skill skill) {
+        return 1;
+    }
+
+    @Override
+    public int getRealSkillLevel(Skill skill) {
+        return 1;
+    }
+
+    @Override
+    public int getTotalLevel() {
+        return 0;
+    }
+
+    @Override
+    public MessageNode addChatMessage(ChatMessageType type, String name, String message, String sender) {
+        return null;
+    }
+
+    @Override
+    public MessageNode addChatMessage(ChatMessageType type, String name, String message, String sender,
+                                      boolean postEvent) {
+        return null;
+    }
+
+    @Override
+    public GameState getGameState() {
+        return gameState;
+    }
+
+    @Override
+    public int getRSGameState() {
+        return loadingStage;
+    }
+
+    @Override
+    public void setRSGameState(int gameState) {
+
+    }
+
+    @Override
+    public void setCheckClick(boolean checkClick) {
+        scene.clicked = checkClick;
+    }
+
+    @Override
+    public void setMouseCanvasHoverPositionX(int x) {
+
+    }
+
+    @Override
+    public void setMouseCanvasHoverPositionY(int y) {
+
+    }
+
+    @Override
+    public void setGameState(GameState state) {
+        if(gameState.ordinal() == state.ordinal()) {
+            return;
+        }
+
+        gameState = state;
+        GameStateChanged event = new GameStateChanged();
+        event.setGameState(state);
+        callbacks.post(event);
+
+        switch(state) {
+            case LOADING: //let me check on a git one sec
+                if (processGpuPlugin()) {
+                    //it is a gpu/hd method I think
+                }
+                break;
+            case CONNECTION_LOST:
+                dropClient();
+                break;
+        }
+    }
+
+    @Override
+    public void setGameState(int gameState) {
+        loadingStage = gameState;
+    }
+
+    @Override
+    public void stopNow() {
+    }
+
+    @Override
+    public String getUsername() {
+        return myUsername;
+    }
+
+    @Override
+    public void setUsername(String name) {
+    }
+
+    @Override
+    public void setPassword(String password) {
+    }
+
+    @Override
+    public void setOtp(String otp) {
+
+    }
+
+    @Override
+    public int getCurrentLoginField() {
+        return 0;
+    }
+
+    @Override
+    public int getLoginIndex() {
+        return 0;
+    }
+
+    @Override
+    public AccountType getAccountType() {
+        return AccountType.NORMAL;
+    }
+
+    @Override
+    public Component getCanvas() {
+        return this;
+    }
+
+    @Override
+    public void post(Object canvas) {
+
+    }
+
+    @Override
+    public int getFPS() {
+        return fps;
+    }
+
+    @Override
+    public int getCameraX() {
+        return this.xCameraPos;
+    }
+
+    @Override
+    public int getCameraY() {
+        return this.yCameraPos;
+    }
+
+    @Override
+    public int getCameraZ() {
+        return this.zCameraPos;
+    }
+
+    @Override
+    public int getCameraPitch() {
+        return yCameraCurve;
+    }
+
+    @Override
+    public void setCameraPitch(int cameraPitch) {
+        yCameraCurve = cameraPitch;
+    }
+
+    @Override
+    public int getCameraYaw() {
+        return xCameraCurve;
+    }
+
+    @Override
+    public int getWorld() {
+        return 1;
+    }
+
+    @Override
+    public int getCanvasHeight() {
+        return getGameComponent().getHeight();
+    }
+
+    @Override
+    public int getCanvasWidth() {
+        return getGameComponent().getWidth();
+    }
+
+    @Override
+    public int getViewportHeight() {
+        return screenAreaHeight;
+    }
+
+    @Override
+    public int getViewportWidth() {
+        return screenAreaWidth;
+    }
+
+    @Override
+    public int getViewportXOffset() {
+        return frameMode == ScreenMode.FIXED ? 4 : 0;
+    }
+
+    @Override
+    public int getViewportYOffset() {
+        return frameMode == ScreenMode.FIXED ? 4 : 0;
+    }
+
+    @Override
+    public int getScale() {
+        return Rasterizer3D.fieldOfView;
+    }
+
+    @Override
+    public Point getMouseCanvasPosition() {
+        return new Point(this.mouseX, this.mouseY);
+    }
+
+    @Override
+    public int[][][] getTileHeights() {
+        return tileHeights;
+    }
+
+    @Override
+    public byte[][][] getTileSettings() {
+        return tileFlags;
+    }
+
+    @Override
+    public int getPlane() {
+        return plane;
+    }
+
+    @Override
+    public SceneGraph getScene() {
+        return scene;
+    }
+
+    @Override
+    public RSPlayer getLocalPlayer() {
+        return localPlayer;
+    }
+
+    @Override
+    public int getLocalPlayerIndex() {
+        return localPlayer.index;
+    }
+
+    @Override
+    public int getNpcIndexesCount() {
+        return 0;
+    }
+
+    @Override
+    public int[] getNpcIndices() {
+        return new int[0];
+    }
+
+    @Override
+    public ItemComposition getItemComposition(int id) {
+        return ItemDefinition.lookup(id);
+    }
+
+    @Override
+    public ItemComposition getItemDefinition(int id) {
+        return ItemDefinition.lookup(id);
+    }
+
+    @Override
+    public SpritePixels createItemSprite(int itemId, int quantity, int border, int shadowColor, int stackable,
+                                         boolean noted, int scale) {
+        return null;
+    }
+
+
+    @Override
+    public RSSpritePixels[] getSprites(IndexDataBase source, int archiveId, int fileId) {
+        return null;
+    }
+
+    @Override
+    public RSArchive getIndexSprites() {
+        return null;
+    }
+
+    @Override
+    public RSArchive getIndexScripts() {
+        return null;
+    }
+
+    @Override
+    public RSArchive getIndexConfig() {
+        return null;
+    }
+
+    @Override
+    public RSArchive getMusicTracks() {
+        return null;
+    }
+
+    @Override
+    public int getBaseX() {
+        return regionBaseX;
+    }
+
+    @Override
+    public int getBaseY() {
+        return regionBaseY;
+    }
+
+    @Override
+    public int getMouseCurrentButton() {
+        return 0;
+    }
+
+    @Override
+    public int getSelectedSceneTileX() {
+        return scene.clickedTileX;
+    }
+
+    @Override
+    public void setSelectedSceneTileX(int selectedSceneTileX) {
+        scene.clickedTileX = selectedSceneTileX;
+    }
+
+    @Override
+    public int getSelectedSceneTileY() {
+        return scene.clickedTileY;
+    }
+
+    @Override
+    public void setSelectedSceneTileY(int selectedSceneTileY) {
+        scene.clickedTileY = selectedSceneTileY;
+    }
+
+    @Override
+    public Tile getSelectedSceneTile() {
+        int tileX = scene.hoverX;
+        int tileY = scene.hoverY;
+
+        if (tileX == -1 || tileY == -1)
+        {
+            return null;
+        }
+
+        return getScene().getTiles()[getPlane()][tileX][tileY];
+
+    }
+
+    @Override
+    public boolean isDraggingWidget() {
+        return false;
+    }
+
+    @Override
+    public RSWidget getDraggedWidget() {
+        return null;
+    }
+
+    @Override
+    public RSWidget getDraggedOnWidget() {
+        return null;
+    }
+
+    @Override
+    public void setDraggedOnWidget(net.runelite.api.widgets.Widget widget) {
+    }
+
+    @Override
+    public RSWidget[][] getWidgets() {
+        return new RSWidget[0][];
+    }
+
+    @Override
+    public RSWidget[] getGroup(int groupId) {
+        return new RSWidget[0];
+    }
+
+    @Override
+    public int getTopLevelInterfaceId() {
+        return openInterfaceId;
+    }
+
+    @Override
+    public RSWidget[] getWidgetRoots() {
+        return null;
+    }
+
+    @Override
+    public RSWidget getWidget(WidgetInfo widget) {
+        int groupId = widget.getGroupId();
+        int childId = widget.getChildId();
+
+        return getWidget(groupId, childId);
+    }
+
+    @Override
+    public RSWidget getWidget(int groupId, int childId) {
+        return null;
+    }
+
+    @Override
+    public RSWidget getWidget(int packedID) {
+        return null;
+    }
+
+    @Override
+    public int[] getWidgetPositionsX() {
+        return null;
+    }
+
+    @Override
+    public int[] getWidgetPositionsY() {
+        return null;
+    }
+
+    @Override
+    public boolean isMouseCam() {
+        return false;
+    }
+
+    @Override
+    public int getCamAngleDX() {
+        return anInt1187;
+    }
+
+    @Override
+    public void setCamAngleDX(int angle) {
+        anInt1187 = angle;
+    }
+
+    @Override
+    public int getCamAngleDY() {
+        return anInt1186;
+    }
+
+    @Override
+    public void setCamAngleDY(int angle) {
+        anInt1186 = angle;
+    }
+
+    @Override
+    public RSWidget createWidget() {
+        return null;
+    }
+
+    @Override
+    public void revalidateWidget(net.runelite.api.widgets.Widget w) {
+
+    }
+
+    @Override
+    public void revalidateWidgetScroll(net.runelite.api.widgets.Widget[] group, net.runelite.api.widgets.Widget w, boolean postEvent) {
+
+    }
+
+    @Override
+    public int getEntitiesAtMouseCount() {
+        return 0;
+    }
+
+    @Override
+    public void setEntitiesAtMouseCount(int i) {
+
+    }
+
+    @Override
+    public long[] getEntitiesAtMouse() {
+        return new long[0];
+    }
+
+    @Override
+    public int getViewportMouseX() {
+        return 0;
+    }
+
+    @Override
+    public int getViewportMouseY() {
+        return 0;
+    }
+
+    @Override
+    public int getEnergy() {
+        return 0;
+    }
+
+    @Override
+    public int getWeight() {
+        return 0;
+    }
+
+    @Override
+    public String[] getPlayerOptions() {
+        return null;
+    }
+
+    @Override
+    public boolean[] getPlayerOptionsPriorities() {
+        return null;
+    }
+
+    @Override
+    public int[] getPlayerMenuTypes() {
+        return null;
+    }
+
+    @Override
+    public int getMouseX() {
+        return mouseX;
+    }
+
+    @Override
+    public int getMouseY() {
+        return mouseY;
+    }
+
+    @Override
+    public int getMouseX2() {
+        return scene.clickScreenX;
+    }
+
+    @Override
+    public int getMouseY2() {
+        return scene.clickScreenY;
+    }
+
+    @Override
+    public boolean containsBounds(int var0, int var1, int var2, int var3, int var4, int var5, int var6, int var7) {
+        return scene.inBounds(var0, var1, var2, var3, var4, var5, var6, var7);
+    }
+
+    @Override
+    public boolean isCheckClick() {
+        return SceneGraph.clicked;
+    }
+
+    @Override
+    public RSWorld[] getWorldList() {
+        return null;
+    }
+
+    @Override
+    public MenuEntry createMenuEntry(int idx) {
+        return null;
+    }
+
+    @Override
+    public void addRSChatMessage(int type, String name, String message, String sender) {
+
+    }
+
+    @Override
+    public RSObjectComposition getRSObjectComposition(int objectId) {
+        return null;
+    }
+
+    @Override
+    public RSNPCComposition getRSNpcComposition(int npcId) {
+        return null;
+    }
+
+
+    @Override
+    public MenuEntry createMenuEntry(String option, String target, int identifier, int opcode, int param1, int param2,
+                                     boolean forceLeftClick) {
+        return null;
+    }
+
+    @Override
+    public MenuEntry[] getMenuEntries() {
+        return null;
+    }
+
+    @Override
+    public int getMenuOptionCount() {
+        return 0;
+    }
+
+
+    @Override
+    public void setMenuEntries(MenuEntry[] entries) {
+
+    }
+
+    @Override
+    public void setMenuOptionCount(int count) {
+        this.menuActionRow = count;
+    }
+
+    @Override
+    public String[] getMenuOptions() {
+        return new String[0];
+    }
+
+    @Override
+    public String[] getMenuTargets() {
+        return new String[0];
+    }
+
+    @Override
+    public int[] getMenuIdentifiers() {
+        return new int[0];
+    }
+
+    @Override
+    public int[] getMenuOpcodes() {
+        return new int[0];
+    }
+
+    @Override
+    public int[] getMenuArguments1() {
+        return new int[0];
+    }
+
+    @Override
+    public int[] getMenuArguments2() {
+        return new int[0];
+    }
+
+    @Override
+    public boolean[] getMenuForceLeftClick() {
+        return new boolean[0];
+    }
+
+    @Override
+    public boolean isMenuOpen() {
+        return menuOpen;
+    }
+
+    @Override
+    public int getMenuX() {
+        return 0;
+    }
+
+    @Override
+    public int getMenuY() {
+        return 0;
+    }
+
+    @Override
+    public int getMenuHeight() {
+        return 0;
+    }
+
+    @Override
+    public int getMenuWidth() {
+        return 0;
+    }
+
+    @Override
+    public net.runelite.rs.api.RSFont getFontBold12() {
+        return null;
+    }
+
+    @Override
+    public void rasterizerDrawHorizontalLine(int x, int y, int w, int rgb) {
+
+    }
+
+    @Override
+    public void rasterizerDrawHorizontalLineAlpha(int x, int y, int w, int rgb, int a) {
+
+    }
+
+    @Override
+    public void rasterizerDrawVerticalLine(int x, int y, int h, int rgb) {
+
+    }
+
+    @Override
+    public void rasterizerDrawVerticalLineAlpha(int x, int y, int h, int rgb, int a) {
+
+    }
+
+    @Override
+    public void rasterizerDrawGradient(int x, int y, int w, int h, int rgbTop, int rgbBottom) {
+
+    }
+
+    @Override
+    public void rasterizerDrawGradientAlpha(int x, int y, int w, int h, int rgbTop, int rgbBottom, int alphaTop, int alphaBottom) {
+
+    }
+
+    @Override
+    public void rasterizerFillRectangleAlpha(int x, int y, int w, int h, int rgb, int a) {
+        Rasterizer2D.drawTransparentBox(x,y,w,h,rgb,a);
+    }
+
+    @Override
+    public void rasterizerDrawRectangle(int x, int y, int w, int h, int rgb) {
+
+    }
+
+    @Override
+    public void rasterizerDrawRectangleAlpha(int x, int y, int w, int h, int rgb, int a) {
+
+    }
+
+    @Override
+    public void rasterizerDrawCircle(int x, int y, int r, int rgb) {
+
+    }
+
+    @Override
+    public void rasterizerDrawCircleAlpha(int x, int y, int r, int rgb, int a) {
+
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getHealthBarCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getHealthBarSpriteCache() {
+        return null;
+    }
+
+    @Override
+    public int getMapAngle() {
+        return 0;
+    }
+
+    @Override
+    public void setCameraYawTarget(int cameraYawTarget) {
+
+    }
+
+    @Override
+    public boolean isResized() {
+        return frameMode == ScreenMode.RESIZABLE;
+    }
+
+    @Override
+    public int getRevision() {
+        return 1;
+    }
+
+    @Override
+    public int[] getMapRegions() {
+        return new int[0];
+    }
+
+    @Override
+    public int[][][] getInstanceTemplateChunks() {
+        return constructRegionData;
+    }
+
+    @Override
+    public int[][] getXteaKeys() {
+        return null;
+    }
+
+    @Override
+    public int getCycleCntr() {
+        return 0;
+    }
+
+    @Override
+    public void setChatCycle(int value) {
+
+    }
+
+    @Override
+    public int[] getVarps() {
+        return settings;
+    }
+
+    @Override
+    public RSVarcs getVarcs() {
+        return null;
+    }
+
+    @Override
+    public Map<Integer, Object> getVarcMap() {
+        return null;
+    }
+
+    @Override
+    public int getVar(VarPlayer varPlayer) {
+        return getVarps()[varPlayer.getId()];
+    }
+
+    @Override
+    public int getVar(Varbits varbit) {
+        return getVarps()[varbit.getId()];
+    }
+
+    @Override
+    public int getVar(VarClientInt varClientInt) {
+        return getVarps()[varClientInt.getIndex()];
+    }
+
+    @Override
+    public String getVar(VarClientStr varClientStr) {
+        return null;
+    }
+
+    @Override
+    public int getVarbitValue(int varbitId) {
+        return 0;
+    }
+
+    @Override
+    public int getVarcIntValue(int varcIntId) {
+        return 0;
+    }
+
+    @Override
+    public String getVarcStrValue(int varcStrId) {
+        return null;
+    }
+
+    @Override
+    public void setVar(VarClientStr varClientStr, String value) {
+    }
+
+    @Override
+    public void setVar(VarClientInt varClientStr, int value) {
+    }
+
+    @Override
+    public void setVarbit(Varbits varbit, int value) {
+    }
+
+    @Override
+    public VarbitComposition getVarbit(int id) {
+        return null;
+    }
+
+    @Override
+    public int getVarbitValue(int[] varps, int varbitId) {
+        return 0;
+    }
+
+    @Override
+    public int getVarpValue(int[] varps, int varpId) {
+        return 0;
+    }
+
+    @Override
+    public int getVarpValue(int i) {
+        return 0;
+    }
+
+    @Override
+    public void setVarbitValue(int[] varps, int varbit, int value) {
+    }
+
+    @Override
+    public void queueChangedVarp(int varp) {
+    }
+
+    @Override
+    public RSNodeHashTable getWidgetFlags() {
+        return null;
+    }
+
+    @Override
+    public RSNodeHashTable getComponentTable() {
+        return null;
+    }
+
+    @Override
+    public RSGrandExchangeOffer[] getGrandExchangeOffers() {
+        return null;
+    }
+
+    @Override
+    public boolean isPrayerActive(Prayer prayer) {
+        return false;
+    }
+
+    @Override
+    public int getSkillExperience(Skill skill) {
+        return 1;
+    }
+
+    @Override
+    public long getOverallExperience() {
+        return 1;
+    }
+
+    @Override
+    public void refreshChat() {
+    }
+
+    @Override
+    public Map<Integer, ChatLineBuffer> getChatLineMap() {
+        return null;
+    }
+
+    @Override
+    public RSIterableNodeHashTable getMessages() {
+        return null;
+    }
+
+    @Override
+    public ObjectComposition getObjectDefinition(int objectId) {
+        return ObjectDefinition.lookup(objectId);
+    }
+
+    @Override
+    public NPCComposition getNpcDefinition(int npcId) {
+        return NpcDefinition.lookup(npcId);
+    }
+
+    @Override
+    public StructComposition getStructComposition(int structID) {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getStructCompositionCache() {
+        return null;
+    }
+
+    @Override
+    public RSWorldMapElement[] getMapElementConfigs() {
+        return null;
+    }
+
+    @Override
+    public RSIndexedSprite[] getMapScene() {
+        return null;
+    }
+
+    public Sprite[] minimapDot = new Sprite[7];
+
+
+    @Override
+    public RSSpritePixels[] getMapDots() {
+        return null;
+    }
+
+    @Override
+    public int getGameCycle() {
+        return tick;
+    }
+
+    @Override
+    public RSSpritePixels[] getMapIcons() {
+        return null;
+    }
+
+    @Override
+    public RSIndexedSprite[] getModIcons() {
+        return null;
+    }
+
+    @Override
+    public void setRSModIcons(RSIndexedSprite[] modIcons) {
+
+    }
+
+    @Override
+    public void setModIcons(IndexedSprite[] modIcons) {
+
+    }
+
+    @Override
+    public RSIndexedSprite createIndexedSprite() {
+        return null;
+    }
+
+    @Override
+    public RSSpritePixels createSpritePixels(int[] pixels, int width, int height) {
+        return null;
+    }
+
+    @Override
+    public int getDestinationX() {
+        return 0;
+    }
+
+    @Override
+    public int getDestinationY() {
+        return 0;
+    }
+
+    @Override
+    public RSSoundEffect[] getAudioEffects() {
+        return new RSSoundEffect[0];
+    }
+
+    @Override
+    public int[] getQueuedSoundEffectIDs() {
+        return new int[0];
+    }
+
+    @Override
+    public int[] getSoundLocations() {
+        return new int[0];
+    }
+
+    @Override
+    public int[] getQueuedSoundEffectLoops() {
+        return new int[0];
+    }
+
+    @Override
+    public int[] getQueuedSoundEffectDelays() {
+        return new int[0];
+    }
+
+    @Override
+    public int getQueuedSoundEffectCount() {
+        return 0;
+    }
+
+    @Override
+    public void setQueuedSoundEffectCount(int queuedSoundEffectCount) {
+
+    }
+
+    @Override
+    public void queueSoundEffect(int id, int numLoops, int delay) {
+
+    }
+
+    @Override
+    public LocalPoint getLocalDestinationLocation() {
+        return null;
+    }
+
+    @Override
+    public List<net.runelite.api.Projectile> getProjectiles() {
+        List<net.runelite.api.Projectile> projectileList = new ArrayList<>();
+        for (Projectile projectile = (Projectile) projectiles
+                .reverseGetFirst(); projectile != null; projectile = (Projectile) projectiles.reverseGetNext()) {
+            projectileList.add(projectile);
+        }
+        return projectileList;
+    }
+
+    @Override
+    public List<GraphicsObject> getGraphicsObjects() {
+        List<net.runelite.api.GraphicsObject> list = new ArrayList<>();
+        for (GraphicsObject projectile = (GraphicsObject) incompleteAnimables
+                .reverseGetFirst(); projectile != null; projectile = (GraphicsObject) incompleteAnimables.reverseGetNext()) {
+            list.add(projectile);
+        }
+        return list;
+    }
+
+    @Override
+    public RuneLiteObject createRuneLiteObject() {
+        return null;
+    }
+
+    @Override
+    public net.runelite.api.Model loadModel(int id) {
+        return null;
+    }
+
+    @Override
+    public net.runelite.api.Model loadModel(int id, short[] colorToFind, short[] colorToReplace) {
+        return null;
+    }
+
+    @Override
+    public net.runelite.api.Animation loadAnimation(int id) {
+        return null;
+    }
+
+    @Override
+    public int getMusicVolume() {
+        return 0;
+    }
+
+    @Override
+    public void setMusicVolume(int volume) {
+    }
+
+    @Override
+    public void playSoundEffect(int id) {
+
+    }
+
+    @Override
+    public void playSoundEffect(int id, int x, int y, int range) {
+    }
+
+    @Override
+    public void playSoundEffect(int id, int x, int y, int range, int delay) {
+    }
+
+    @Override
+    public void playSoundEffect(int id, int volume) {
+
+    }
+
+    @Override
+    public RSAbstractRasterProvider getBufferProvider() {
+        return gameScreenImageProducer;
+    }
+
+    @Override
+    public int getMouseIdleTicks() {
+        return 0;
+    }
+
+    @Override
+    public long getMouseLastPressedMillis() {
+        return 0;
+    }
+
+    @Override
+    public int getKeyboardIdleTicks() {
+        return 0;
+    }
+
+    @Override
+    public void changeMemoryMode(boolean lowMemory) {
+        setLowMemory(lowMemory);
+        setSceneLowMemory(lowMemory);
+        setAudioHighMemory(true);
+        setObjectDefinitionLowDetail(lowMemory);
+        if (getGameState() == GameState.LOGGED_IN)
+        {
+            setGameState(1);
+        }
+    }
+
+    public HashMap<Integer, ItemContainer> containers = new HashMap<Integer, ItemContainer>();
+
+    @Override
+    public ItemContainer getItemContainer(InventoryID inventory) {
+        return containers.get(inventory.getId());
+    }
+
+    @Override
+    public ItemContainer getItemContainer(int id) {
+        return containers.get(id);
+    }
+
+    @Override
+    public RSNodeHashTable getItemContainers() {
+        return null;
+    }
+
+    @Override
+    public RSItemComposition getRSItemDefinition(int itemId) {
+        return ItemDefinition.lookup(itemId);
+    }
+
+    @Override
+    public RSSpritePixels createRSItemSprite(int itemId, int quantity, int thickness, int borderColor, int stackable, boolean noted) {
+        return null;
+    }
+
+    @Override
+    public void sendMenuAction(int n2, int n3, int n4, int n5, String string, String string2, int n6, int n7) {
+
+    }
+
+    @Override
+    public void decodeSprite(byte[] data) {
+
+    }
+
+    @Override
+    public int getIndexedSpriteCount() {
+        return 0;
+    }
+
+    @Override
+    public int getIndexedSpriteWidth() {
+        return 0;
+    }
+
+    @Override
+    public int getIndexedSpriteHeight() {
+        return 0;
+    }
+
+    @Override
+    public int[] getIndexedSpriteOffsetXs() {
+        return new int[0];
+    }
+
+    @Override
+    public void setIndexedSpriteOffsetXs(int[] indexedSpriteOffsetXs) {
+
+    }
+
+    @Override
+    public int[] getIndexedSpriteOffsetYs() {
+        return new int[0];
+    }
+
+    @Override
+    public void setIndexedSpriteOffsetYs(int[] indexedSpriteOffsetYs) {
+
+    }
+
+    @Override
+    public int[] getIndexedSpriteWidths() {
+        return new int[0];
+    }
+
+    @Override
+    public void setIndexedSpriteWidths(int[] indexedSpriteWidths) {
+
+    }
+
+    @Override
+    public int[] getIndexedSpriteHeights() {
+        return new int[0];
+    }
+
+    @Override
+    public void setIndexedSpriteHeights(int[] indexedSpriteHeights) {
+
+    }
+
+    @Override
+    public byte[][] getSpritePixels() {
+        return new byte[0][];
+    }
+
+    @Override
+    public void setSpritePixels(byte[][] spritePixels) {
+
+    }
+
+    @Override
+    public int[] getIndexedSpritePalette() {
+        return new int[0];
+    }
+
+    @Override
+    public void setIndexedSpritePalette(int[] indexedSpritePalette) {
+
+    }
+
+    @Override
+    public int getIntStackSize() {
+        return 0;
+    }
+
+    @Override
+    public void setIntStackSize(int stackSize) {
+    }
+
+    @Override
+    public int[] getIntStack() {
+        return null;
+    }
+
+    @Override
+    public int getStringStackSize() {
+        return 0;
+    }
+
+    @Override
+    public void setStringStackSize(int stackSize) {
+    }
+
+    @Override
+    public String[] getStringStack() {
+        return null;
+    }
+
+    @Override
+    public RSFriendSystem getFriendManager() {
+        return null;
+    }
+
+    @Override
+    public RSWidget getScriptActiveWidget() {
+        return null;
+    }
+
+    @Override
+    public RSWidget getScriptDotWidget() {
+        return null;
+    }
+
+    @Override
+    public RSScriptEvent createRSScriptEvent(Object... args) {
+        return null;
+    }
+
+    @Override
+    public void runScriptEvent(RSScriptEvent event) {
+
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getScriptCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getRSStructCompositionCache() {
+        return null;
+    }
+
+    @Override
+    public RSStructComposition getRSStructComposition(int id) {
+        return null;
+    }
+
+    @Override
+    public RSParamComposition getRSParamComposition(int id) {
+        return null;
+    }
+
+    @Override
+    public void setMouseLastPressedMillis(long time) {
+
+    }
+
+    @Override
+    public long getClientMouseLastPressedMillis() {
+        return 0;
+    }
+
+    @Override
+    public void setClientMouseLastPressedMillis(long time) {
+    }
+
+    @Override
+    public int getRootWidgetCount() {
+        return 0;
+    }
+
+    @Override
+    public int getWidgetClickX() {
+        return 0;
+    }
+
+    @Override
+    public int getWidgetClickY() {
+        return 0;
+    }
+
+    @Override
+    public int getStaffModLevel() {
+        return 0;
+    }
+
+    @Override
+    public int getTradeChatMode() {
+        return 0;
+    }
+
+    @Override
+    public int getPublicChatMode() {
+        return 0;
+    }
+
+    @Override
+    public int getClientType() {
+        return 0;
+    }
+
+    @Override
+    public boolean isOnMobile() {
+        return false;
+    }
+
+    @Override
+    public boolean hadFocus() {
+        return false;
+    }
+
+    @Override
+    public int getMouseCrossColor() {
+        return 0;
+    }
+
+    @Override
+    public void setMouseCrossColor(int color) {
+
+    }
+
+    @Override
+    public int getLeftClickOpensMenu() {
+        return 0;
+    }
+
+    @Override
+    public boolean getShowMouseOverText() {
+        return false;
+    }
+
+    @Override
+    public void setShowMouseOverText(boolean showMouseOverText) {
+
+    }
+
+    @Override
+    public int[] getDefaultRotations() {
+        return new int[0];
+    }
+
+    @Override
+    public boolean getShowLoadingMessages() {
+        return false;
+    }
+
+    @Override
+    public void setShowLoadingMessages(boolean showLoadingMessages) {
+
+    }
+
+    @Override
+    public void setStopTimeMs(long time) {
+
+    }
+
+    @Override
+    public void clearLoginScreen(boolean shouldClear) {
+
+    }
+
+    @Override
+    public void setLeftTitleSprite(SpritePixels background) {
+
+    }
+
+    @Override
+    public void setRightTitleSprite(SpritePixels background) {
+
+    }
+
+    @Override
+    public RSBuffer newBuffer(byte[] bytes) {
+        return null;
+    }
+
+    @Override
+    public RSVarbitComposition newVarbitDefinition() {
+        return null;
+    }
+
+    @Override
+    public boolean[] getPressedKeys() {
+        return null;
+    }
+
+    public boolean lowMemoryMusic = false;
+    @Override
+    public void setLowMemory(boolean lowMemory) {
+        this.lowMemory = lowMemory;
+    }
+
+    @Override
+    public void setSceneLowMemory(boolean lowMemory) {
+        MapRegion.lowMem = lowMemory;
+        SceneGraph.lowMem = lowMemory;
+        Rasterizer3D.lowMem = lowMemory;
+
+    }
+
+    @Override
+    public void setAudioHighMemory(boolean highMemory) {
+        lowMemoryMusic = highMemory;
+    }
+
+    @Override
+    public void setObjectDefinitionLowDetail(boolean lowDetail) {
+        ObjectDefinition.lowMemory = lowDetail;
+    }
+
+
+    @Override
+    public boolean isFriended(String name, boolean mustBeLoggedIn) {
+        return false;
+    }
+
+    @Override
+    public RSFriendsChat getFriendsChatManager() {
+        return null;
+    }
+
+    @Override
+    public RSLoginType getLoginType() {
+        return null;
+    }
+
+    @Override
+    public RSUsername createName(String name, RSLoginType type) {
+        return null;
+    }
+
+    @Override
+    public int rs$getVarbit(int varbitId) {
+        return 0;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getVarbitCache() {
+        return null;
+    }
+
+    @Override
+    public FriendContainer getFriendContainer() {
+        return null;
+    }
+
+    @Override
+    public NameableContainer<Ignore> getIgnoreContainer() {
+        return null;
+    }
+
+    @Override
+    public RSClientPreferences getPreferences() {
+        return null;
+    }
+
+    @Override
+    public int getCameraPitchTarget() {
+        return anInt1184;
+    }
+
+    @Override
+    public void setCameraPitchTarget(int pitch) {
+        anInt1184 = pitch;
+    }
+
+    @Override
+    public void setPitchSin(int v) {
+        scene.camUpDownY = v;
+    }
+
+    @Override
+    public void setPitchCos(int v) {
+        scene.camUpDownX = v;
+    }
+
+    @Override
+    public void setYawSin(int v) {
+        scene.camLeftRightY = v;
+    }
+
+    @Override
+    public void setYawCos(int v) {
+        scene.camLeftRightX = v;
+    }
+
+    @Override
+    public void setCameraPitchRelaxerEnabled(boolean enabled) {
+        scene.pitchRelaxEnabled = enabled;
+    }
+
+    @Override
+    public void setInvertYaw(boolean state) {
+
+    }
+
+    @Override
+    public void setInvertPitch(boolean state) {
+
+    }
+
+    @Override
+    public RSWorldMap getRenderOverview() {
+        return null;
+    }
+
+    @Override
+    public boolean isStretchedEnabled() {
+        return frameMode == ScreenMode.RESIZABLE;
+    }
+
+    @Override
+    public void setStretchedEnabled(boolean state) {
+
+    }
+
+    @Override
+    public boolean isStretchedFast() {
+        return false;
+    }
+
+    @Override
+    public void setStretchedFast(boolean state) {
+    }
+
+    @Override
+    public void setStretchedIntegerScaling(boolean state) {
+
+    }
+
+    @Override
+    public void setStretchedKeepAspectRatio(boolean state) {
+
+    }
+
+    @Override
+    public void setScalingFactor(int factor) {
+
+    }
+
+    @Override
+    public double getScalingFactor() {
+        return 0;
+    }
+
+    @Override
+    public void invalidateStretching(boolean resize) {
+    }
+
+    @Override
+    public Dimension getStretchedDimensions() {
+        return new Dimension(frameWidth, frameHeight);
+    }
+
+    @Override
+    public Dimension getRealDimensions() {
+        return new Dimension(frameWidth, frameHeight);
+    }
+
+    @Override
+    public void changeWorld(World world) {
+
+    }
+
+    @Override
+    public RSWorld createWorld() {
+        return null;
+    }
+
+    @Override
+    public void setAnimOffsetX(int animOffsetX) {
+
+    }
+
+    @Override
+    public void setAnimOffsetY(int animOffsetY) {
+
+    }
+
+    @Override
+    public void setAnimOffsetZ(int animOffsetZ) {
+
+    }
+
+    @Override
+    public RSSpritePixels drawInstanceMap(int z) {
+        return null;
+    }
+
+    @Override
+    public void setMinimapReceivesClicks(boolean minimapReceivesClicks) {
+
+    }
+
+    @Override
+    public void runScript(Object... args) {
+
+    }
+
+    @Override
+    public ScriptEvent createScriptEvent(Object... args) {
+        return null;
+    }
+
+    @Override
+    public boolean hasHintArrow() {
+        return false;
+    }
+
+    @Override
+    public HintArrowType getHintArrowType() {
+        return null;
+    }
+
+    @Override
+    public void clearHintArrow() {
+
+    }
+
+    @Override
+    public void setHintArrow(WorldPoint point) {
+
+    }
+
+    @Override
+    public void setHintArrow(net.runelite.api.Player player) {
+
+    }
+
+    @Override
+    public void setHintArrow(NPC npc) {
+
+    }
+
+    @Override
+    public WorldPoint getHintArrowPoint() {
+        return null;
+    }
+
+    @Override
+    public net.runelite.api.Player getHintArrowPlayer() {
+        return null;
+    }
+
+    @Override
+    public NPC getHintArrowNpc() {
+        return null;
+    }
+
+    @Override
+    public boolean isInterpolatePlayerAnimations() {
+        return false;
+    }
+
+    @Override
+    public void setInterpolatePlayerAnimations(boolean interpolate) {
+
+    }
+
+    @Override
+    public boolean isInterpolateNpcAnimations() {
+        return false;
+    }
+
+    @Override
+    public void setInterpolateNpcAnimations(boolean interpolate) {
+
+    }
+
+    @Override
+    public boolean isInterpolateObjectAnimations() {
+        return false;
+    }
+
+    @Override
+    public void setInterpolateObjectAnimations(boolean interpolate) {
+
+    }
+
+    @Override
+    public boolean isInterpolateWidgetAnimations() {
+        return false;
+    }
+
+    @Override
+    public void setInterpolateWidgetAnimations(boolean interpolate) {
+
+    }
+
+    @Override
+    public boolean isInInstancedRegion() {
+        return false; //TODO:
+    }
+
+    @Override
+    public int getItemPressedDuration() {
+        return 0;
+    }
+
+    @Override
+    public void setItemPressedDuration(int duration) {
+
+    }
+
+    @Override
+    public int getFlags() {
+        return 0;
+    }
+
+
+    @Override
+    public void setIsHidingEntities(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setOthersHidden(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setOthersHidden2D(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setFriendsHidden(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setFriendsChatMembersHidden(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setIgnoresHidden(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setLocalPlayerHidden(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setLocalPlayerHidden2D(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setNPCsHidden(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setNPCsHidden2D(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setHideSpecificPlayers(List<String> players)
+    {
+
+    }
+
+
+    @Override
+    public void setHiddenNpcIndices(List<Integer> npcIndices)
+    {
+
+    }
+
+    @Override
+    public List<Integer> getHiddenNpcIndices()
+    {
+        return null;
+    }
+
+    @Override
+    public void setPetsHidden(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setAttackersHidden(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setProjectilesHidden(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setDeadNPCsHidden(boolean state)
+    {
+
+    }
+
+    @Override
+    public void addHiddenNpcName(String npc)
+    {
+
+    }
+
+    @Override
+    public void removeHiddenNpcName(String npc)
+    {
+
+    }
+
+
+    @Override
+    public void setBlacklistDeadNpcs(Set<Integer> blacklist) {
+
+    }
+
+    public boolean addEntityMarker(int x, int y, RSRenderable entity)
+    {
+
+        return false;
+    }
+
+    public boolean shouldDraw(Object entity, boolean drawingUI)
+    {
+
+
+        return true;
+    }
+
+    @Override
+    public RSCollisionMap[] getCollisionMaps() {
+        return collisionMaps;
+    }
+
+    @Override
+    public int getPlayerIndexesCount() {
+        return 0;
+    }
+
+    @Override
+    public int[] getPlayerIndices() {
+        return new int[0];
+    }
+
+    @Override
+    public int[] getBoostedSkillLevels() {
+        return null;
+    }
+
+    @Override
+    public int[] getRealSkillLevels() {
+        return null;
+    }
+
+    @Override
+    public int[] getSkillExperiences() {
+        return null;
+    }
+
+    @Override
+    public int[] getChangedSkills() {
+        return new int[0];
+    }
+
+    @Override
+    public int getChangedSkillsCount() {
+        return 0;
+    }
+
+    @Override
+    public void setChangedSkillsCount(int i) {
+
+    }
+
+    @Override
+    public void queueChangedSkill(Skill skill) {
+    }
+
+    @Override
+    public Map<Integer, SpritePixels> getSpriteOverrides() {
+        return null;
+    }
+
+    @Override
+    public Map<Integer, SpritePixels> getWidgetSpriteOverrides() {
+        return null;
+    }
+
+    @Override
+    public void setCompass(SpritePixels SpritePixels) {
+
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getWidgetSpriteCache() {
+        return null;
+    }
+
+    @Override
+    public int getTickCount() {
+        return 0;
+    }
+
+    @Override
+    public void setTickCount(int tickCount) {
+
+    }
+
+
+    @Override
+    public void setInventoryDragDelay(int delay) {
+
+    }
+
+
+    @Override
+    public boolean isHdMinimapEnabled() {
+        return scene.hdMinimapEnabled;
+    }
+
+    @Override
+    public void setHdMinimapEnabled(boolean enabled) {
+        scene.hdMinimapEnabled = enabled;
+    }
+
+    @Override
+    public EnumSet<WorldType> getWorldType() {
+        return EnumSet.of(WorldType.MEMBERS);
+    }
+
+    @Override
+    public int getOculusOrbState() {
+        return 0;
+    }
+
+    @Override
+    public void setOculusOrbState(int state) {
+
+    }
+
+    @Override
+    public void setOculusOrbNormalSpeed(int speed) {
+
+    }
+
+    @Override
+    public int getOculusOrbFocalPointX() {
+        return 0;
+    }
+
+    @Override
+    public int getOculusOrbFocalPointY() {
+        return 0;
+    }
+
+    @Override
+    public void setOculusOrbFocalPointX(int xPos) {
+
+    }
+
+    @Override
+    public void setOculusOrbFocalPointY(int yPos) {
+
+    }
+
+    @Override
+    public RSTileItem getLastItemDespawn() {
+        return null;
+    }
+
+    @Override
+    public void setLastItemDespawn(RSTileItem lastItemDespawn) {
+
+    }
+
+    @Override
+    public void openWorldHopper() {
+
+    }
+
+    @Override
+    public void hopToWorld(World world) {
+
+    }
+
+    @Override
+    public void setSkyboxColor(int skyboxColor) {
+        scene.skyboxColor = skyboxColor;
+    }
+
+    @Override
+    public int getSkyboxColor() {
+        return scene.skyboxColor;
+    }
+
+    @Override
+    public boolean isGpu() {
+        return gpu;
+    }
+
+    @Override
+    public void setGpu(boolean gpu) {
+        this.gpu = gpu;
+        gameScreenImageProducer = new ProducingGraphicsBuffer(frameWidth, frameHeight);
+    }
+
+    public static boolean processGpuPlugin() {
+        return loggedIn && instance.loadingStage == 2 && instance.getDrawCallbacks() != null;
+    }
+
+    @Override
+    public int get3dZoom() {
+        return cameraZoom;
+    }
+
+    @Override
+    public void set3dZoom(int zoom) {
+        this.cameraZoom = zoom;
+    }
+
+    @Override
+    public int getCenterX() {
+        return getViewportWidth() / 2;
+    }
+
+    @Override
+    public int getCenterY() {
+        return getViewportHeight() / 2;
+    }
+
+    @Override
+    public int getCameraX2() {
+        return SceneGraph.xCameraPos;
+    }
+
+    @Override
+    public int getCameraY2() {
+        return SceneGraph.zCameraPos;
+    }
+
+    @Override
+    public int getCameraZ2() {
+        return SceneGraph.yCameraPos;
+    }
+
+    @Override
+    public RSTextureProvider getTextureProvider() {
+        return textureManager;
+    }
+
+    @Override
+    public int[][] getOccupiedTilesTick() {
+        return new int[0][];
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getObjectDefinitionModelsCache() {
+        return null;
+    }
+
+    @Override
+    public int getCycle() {
+        return scene.cycle;
+    }
+
+    @Override
+    public void setCycle(int cycle) {
+        scene.cycle = cycle;
+    }
+
+    @Override
+    public boolean[][][][] getVisibilityMaps() {
+        return scene.visibilityMap;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getCachedModels2() {
+        return null;
+    }
+
+    @Override
+    public void setRenderArea(boolean[][] renderArea) {
+        scene.renderArea = renderArea;
+    }
+
+    @Override
+    public void setCameraX2(int cameraX2) {
+        scene.xCameraPos = cameraX2;
+    }
+
+    @Override
+    public void setCameraY2(int cameraY2) {
+        scene.zCameraPos = cameraY2;
+    }
+
+    @Override
+    public void setCameraZ2(int cameraZ2) {
+        scene.yCameraPos = cameraZ2;
+    }
+
+    @Override
+    public void setScreenCenterX(int screenCenterX) {
+        scene.screenCenterX = screenCenterX;
+    }
+
+    @Override
+    public void setScreenCenterZ(int screenCenterZ) {
+        scene.screenCenterZ = screenCenterZ;
+    }
+
+    @Override
+    public void setScenePlane(int scenePlane) {
+        scene.currentRenderPlane = scenePlane;
+    }
+
+    @Override
+    public void setMinTileX(int i) {
+        scene.minTileX = i;
+    }
+
+    @Override
+    public void setMinTileZ(int i) {
+        scene.minTileZ = i;
+    }
+
+    @Override
+    public void setMaxTileX(int i) {
+        scene.maxTileX = i;
+    }
+
+    @Override
+    public void setMaxTileZ(int i) {
+        scene.maxTileZ = i;
+    }
+
+    @Override
+    public int getTileUpdateCount() {
+        return scene.tileUpdateCount;
+    }
+
+    @Override
+    public void setTileUpdateCount(int tileUpdateCount) {
+        scene.tileUpdateCount = tileUpdateCount;
+    }
+
+    @Override
+    public boolean getViewportContainsMouse() {
+        return false;
+    }
+
+    @Override
+    public int getRasterizer3D_clipMidX2() {
+        return Rasterizer2D.viewportCenterX;
+    }
+
+    @Override
+    public int getRasterizer3D_clipNegativeMidX() {
+        return -Rasterizer2D.viewportCenterX;
+    }
+
+    @Override
+    public int getRasterizer3D_clipNegativeMidY() {
+        return -Rasterizer2D.viewportCenterY;
+    }
+
+    @Override
+    public int getRasterizer3D_clipMidY2() {
+        return Rasterizer2D.viewportCenterY;
+    }
+
+    @Override
+    public void checkClickbox(net.runelite.api.Model model, int orientation, int pitchSin, int pitchCos, int yawSin,
+                              int yawCos, int x, int y, int z, long hash) {
+
+    }
+
+    @Override
+    public RSWidget getIf1DraggedWidget() {
+        return null;
+    }
+
+    @Override
+    public int getIf1DraggedItemIndex() {
+        return 0;
+    }
+
+    @Override
+    public void setSpellSelected(boolean selected) {
+
+    }
+
+    @Override
+    public RSEnumComposition getRsEnum(int id) {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getItemCompositionCache() {
+        return null;
+    }
+
+    @Override
+    public RSSpritePixels[] getCrossSprites() {
+        return null;
+    }
+
+    @Override
+    public EnumComposition getEnum(int id) {
+        return null;
+    }
+
+    @Override
+    public void draw2010Menu(int alpha) {
+
+    }
+
+    @Override
+    public int[] getGraphicsPixels() {
+        return null;
+    }
+
+    @Override
+    public int getGraphicsPixelsWidth() {
+        return 0;
+    }
+
+    @Override
+    public int getGraphicsPixelsHeight() {
+        return 0;
+    }
+
+    @Override
+    public void rasterizerFillRectangle(int x, int y, int w, int h, int rgb) {
+        Rasterizer2D.drawBox(x,y,w,h,rgb);
+    }
+
+    @Override
+    public int getStartX() {
+        return 0;
+    }
+
+    @Override
+    public int getStartY() {
+        return 0;
+    }
+
+    @Override
+    public int getEndX() {
+        return 0;
+    }
+
+    @Override
+    public int getEndY() {
+        return 0;
+    }
+
+    @Override
+    public void drawOriginalMenu(int alpha) {
+
+    }
+
+    @Override
+    public void resetHealthBarCaches() {
+
+    }
+
+    @Override
+    public boolean getRenderSelf() {
+        return false;
+    }
+
+    @Override
+    public void setRenderSelf(boolean enabled) {
+
+    }
+
+    @Override
+    public void invokeMenuAction(String option, String target, int identifier, int opcode, int param0, int param1) {
+
+    }
+
+    @Override
+    public RSMouseRecorder getMouseRecorder() {
+        return null;
+    }
+
+    @Override
+    public void setPrintMenuActions(boolean b) {
+
+    }
+
+    @Override
+    public String getSelectedSpellName() {
+        return null;
+    }
+
+    @Override
+    public void setSelectedSpellName(String name) {
+
+    }
+
+    @Override
+    public boolean getSpellSelected() {
+        return false;
+    }
+
+    @Override
+    public RSSoundEffect getTrack(RSAbstractArchive indexData, int id, int var0) {
+        return null;
+    }
+
+    @Override
+    public RSRawPcmStream createRawPcmStream(RSRawSound audioNode, int var0, int volume) {
+        return null;
+    }
+
+    @Override
+    public RSPcmStreamMixer getSoundEffectAudioQueue() {
+        return null;
+    }
+
+    @Override
+    public RSArchive getIndexCache4() {
+        return null;
+    }
+
+    @Override
+    public RSDecimator getSoundEffectResampler() {
+        return null;
+    }
+
+    @Override
+    public void setMusicTrackVolume(int volume) {
+
+    }
+
+    @Override
+    public void setViewportWalking(boolean viewportWalking) {
+
+    }
+
+    @Override
+    public void playMusicTrack(int var0, RSAbstractArchive var1, int var2, int var3, int var4, boolean var5) {
+
+    }
+
+    @Override
+    public RSMidiPcmStream getMidiPcmStream() {
+        return null;
+    }
+
+    @Override
+    public int getCurrentTrackGroupId() {
+        return 0;
+    }
+
+    @Override
+    public String getSelectedSpellActionName() {
+        return null;
+    }
+
+    @Override
+    public int getSelectedSpellFlags() {
+        return 0;
+    }
+
+    @Override
+    public void setHideFriendAttackOptions(boolean yes) {
+
+    }
+
+    @Override
+    public void setHideFriendCastOptions(boolean yes) {
+
+    }
+
+    @Override
+    public void setHideClanmateAttackOptions(boolean yes) {
+    }
+
+    @Override
+    public void setHideClanmateCastOptions(boolean yes) {
+
+    }
+
+    @Override
+    public void setUnhiddenCasts(Set<String> casts) {
+
+    }
+
+    @Override
+    public void addFriend(String name) {
+
+    }
+
+    @Override
+    public void removeFriend(String name) {
+
+    }
+
+    @Override
+    public void setModulus(BigInteger modulus) {
+
+    }
+
+    @Override
+    public BigInteger getModulus() {
+        return null;
+    }
+
+    @Override
+    public int getItemCount() {
+        return 0;
+    }
+
+    @Override
+    public void setAllWidgetsAreOpTargetable(boolean value) {
+
+    }
+
+    @Override
+    public void insertMenuItem(String action, String target, int opcode, int identifier, int argument1, int argument2,
+                               boolean forceLeftClick) {
+
+    }
+
+    @Override
+    public void setSelectedItemID(int id) {
+
+    }
+
+    @Override
+    public int getSelectedItemWidget() {
+        return 0;
+    }
+
+    @Override
+    public void setSelectedItemWidget(int widgetID) {
+
+    }
+
+    @Override
+    public int getSelectedItemSlot() {
+        return 0;
+    }
+
+    @Override
+    public void setSelectedItemSlot(int idx) {
+
+    }
+
+    @Override
+    public int getSelectedSpellWidget() {
+        return 0;
+    }
+
+    @Override
+    public int getSelectedSpellChildIndex() {
+        return 0;
+    }
+
+    @Override
+    public void setSelectedSpellWidget(int widgetID) {
+
+    }
+
+    @Override
+    public void setSelectedSpellChildIndex(int index) {
+
+    }
+
+    @Override
+    public void scaleSprite(int[] canvas, int[] pixels, int color, int pixelX, int pixelY, int canvasIdx,
+                            int canvasOffset, int newWidth, int newHeight, int pixelWidth, int pixelHeight, int oldWidth) {
+
+    }
+
+    @Override
+    public void promptCredentials(boolean clearPass) {
+
+    }
+
+    @Override
+    public RSVarpDefinition getVarpDefinition(int id) {
+        return null;
+    }
+
+    @Override
+    public RSTileItem newTileItem() {
+        return null;
+    }
+
+    @Override
+    public RSNodeDeque newNodeDeque() {
+        return null;
+    }
+
+    @Override
+    public void updateItemPile(int localX, int localY) {
+
+    }
+
+    @Override
+    public void setHideDisconnect(boolean dontShow) {
+
+    }
+
+    @Override
+    public void setTempMenuEntry(MenuEntry entry) {
+
+    }
+
+    @Override
+    public void setShowMouseCross(boolean show) {
+
+    }
+
+    @Override
+    public int getDraggedWidgetX() {
+        return 0;
+    }
+
+    @Override
+    public int getDraggedWidgetY() {
+        return 0;
+    }
+
+    @Override
+    public int[] getChangedSkillLevels() {
+        return new int[0];
+    }
+
+    @Override
+    public void setMouseIdleTicks(int cycles) {
+
+    }
+
+    @Override
+    public void setKeyboardIdleTicks(int cycles) {
+
+    }
+
+    @Override
+    public void setGeSearchResultCount(int count) {
+    }
+
+    @Override
+    public void setGeSearchResultIds(short[] ids) {
+
+    }
+
+    @Override
+    public void setGeSearchResultIndex(int index) {
+
+    }
+
+    @Override
+    public void setComplianceValue(String key, boolean value) {
+
+    }
+
+    @Override
+    public boolean getComplianceValue(String key) {
+        return false;
+    }
+
+    @Override
+    public boolean isMirrored() {
+        return false;
+    }
+
+    @Override
+    public void setMirrored(boolean isMirrored) {
+
+    }
+
+    @Override
+    public boolean isComparingAppearance() {
+        return false;
+    }
+
+    @Override
+    public void setComparingAppearance(boolean comparingAppearance) {
+
+    }
+
+    @Override
+    public void setLoginScreen(SpritePixels pixels) {
+
+    }
+
+    @Override
+    public void setShouldRenderLoginScreenFire(boolean val) {
+
+    }
+
+    @Override
+    public boolean shouldRenderLoginScreenFire() {
+        return false;
+    }
+
+    @Override
+    public boolean isKeyPressed(int keycode) {
+        return false;
+    }
+
+    @Override
+    public int getFollowerIndex() {
+        return 0;
+    }
+
+    @Override
+    public int isItemSelected() {
+        return 0;
+    }
+
+    @Override
+    public String getSelectedItemName() {
+        return null;
+    }
+
+    @Override
+    public RSWidget getMessageContinueWidget() {
+        return null;
+    }
+
+    @Override
+    public void setMusicPlayerStatus(int var0) {
+
+    }
+
+    @Override
+    public void setMusicTrackArchive(RSAbstractArchive var0) {
+
+    }
+
+    @Override
+    public void setMusicTrackGroupId(int var0) {
+
+    }
+
+    @Override
+    public void setMusicTrackFileId(int var0) {
+
+    }
+
+    @Override
+    public void setMusicTrackBoolean(boolean var0) {
+
+    }
+
+    @Override
+    public void setPcmSampleLength(int var0) {
+
+    }
+
+    @Override
+    public int[] getChangedVarps() {
+        return new int[0];
+    }
+
+    @Override
+    public int getChangedVarpCount() {
+        return 0;
+    }
+
+    @Override
+    public void setChangedVarpCount(int changedVarpCount) {
+
+    }
+
+    @Override
+    public void setOutdatedScript(String outdatedScript) {
+
+    }
+
+    @Override
+    public List<String> getOutdatedScripts() {
+        return null;
+    }
+
+    @Override
+    public RSFrames getFrames(int frameId) {
+        return null;
+    }
+
+    @Override
+    public RSSpritePixels getMinimapSprite() {
+        return minimapImage;
+    }
+
+    @Override
+    public void setMinimapSprite(SpritePixels spritePixels) {
+
+    }
+
+    @Override
+    public void drawObject(int z, int x, int y, int randomColor1, int randomColor2) {
+
+    }
+
+    @Override
+    public RSScriptEvent createScriptEvent() {
+        return null;
+    }
+
+    @Override
+    public void runScript(RSScriptEvent ev, int ex, int var2) {
+
+    }
+
+    @Override
+    public void setHintArrowTargetType(int value) {
+        this.hintIconDrawType = value;
+    }
+
+    @Override
+    public int getHintArrowTargetType() {
+        return hintIconDrawType;
+    }
+
+    @Override
+    public void setHintArrowX(int value) {
+        this.hintIconX = value;
+    }
+
+    @Override
+    public int getHintArrowX() {
+        return this.hintIconX;
+    }
+
+    @Override
+    public void setHintArrowY(int value) {
+        this.hintIconY = value;
+    }
+
+    @Override
+    public int getHintArrowY() {
+        return this.hintIconY;
+    }
+
+    @Override
+    public void setHintArrowOffsetX(int value) {
+        this.hintIconX += value;
+    }
+
+    @Override
+    public void setHintArrowOffsetY(int value) {
+        this.hintIconY += value;
+    }
+
+    @Override
+    public void setHintArrowNpcTargetIdx(int value) {
+        this.hintIconNpcId = value;
+    }
+
+    @Override
+    public int getHintArrowNpcTargetIdx() {
+        return hintIconNpcId;
+    }
+
+    @Override
+    public void setHintArrowPlayerTargetIdx(int value) {
+        this.hintIconPlayerId = value;
+    }
+
+    @Override
+    public int getHintArrowPlayerTargetIdx() {
+        return hintIconPlayerId;
+    }
+
+    @Override
+    public RSSequenceDefinition getSequenceDefinition(int id) {
+        return null;
+    }
+
+    @Override
+    public RSIntegerNode newIntegerNode(int contents) {
+        return null;
+    }
+
+    @Override
+    public RSObjectNode newObjectNode(Object contents) {
+        return null;
+    }
+
+    @Override
+    public RSIterableNodeHashTable newIterableNodeHashTable(int size) {
+        return null;
+    }
+
+    @Override
+    public RSVarbitComposition getVarbitComposition(int id) {
+        return null;
+    }
+
+    @Override
+    public RSAbstractArchive getSequenceDefinition_skeletonsArchive() {
+        return null;
+    }
+
+    @Override
+    public RSAbstractArchive getSequenceDefinition_archive() {
+        return null;
+    }
+
+    @Override
+    public RSAbstractArchive getSequenceDefinition_animationsArchive() {
+        return null;
+    }
+
+    @Override
+    public RSAbstractArchive getNpcDefinition_archive() {
+        return null;
+    }
+
+    @Override
+    public RSAbstractArchive getObjectDefinition_modelsArchive() {
+        return null;
+    }
+
+    @Override
+    public RSAbstractArchive getObjectDefinition_archive() {
+        return null;
+    }
+
+    @Override
+    public RSAbstractArchive getItemDefinition_archive() {
+        return null;
+    }
+
+    @Override
+    public RSAbstractArchive getKitDefinition_archive() {
+        return null;
+    }
+
+    @Override
+    public RSAbstractArchive getKitDefinition_modelsArchive() {
+        return null;
+    }
+
+    @Override
+    public RSAbstractArchive getSpotAnimationDefinition_archive() {
+        return null;
+    }
+
+    @Override
+    public RSAbstractArchive getSpotAnimationDefinition_modelArchive() {
+        return null;
+    }
+
+    @Override
+    public RSBuffer createBuffer(byte[] initialBytes) {
+        return null;
+    }
+
+    @Override
+    public RSSceneTilePaint createSceneTilePaint(int swColor, int seColor, int neColor, int nwColor, int texture, int rgb, boolean isFlat) {
+        return null;
+    }
+
+    @Override
+    public long[] getCrossWorldMessageIds() {
+        return null;
+    }
+
+    @Override
+    public int getCrossWorldMessageIdsIndex() {
+        return 0;
+    }
+
+    @Override
+    public RSClanChannel[] getCurrentClanChannels() {
+        return new RSClanChannel[0];
+    }
+
+    @Override
+    public RSClanSettings[] getCurrentClanSettingsAry() {
+        return new RSClanSettings[0];
+    }
+
+    @Override
+    public RSClanChannel getClanChannel() {
+        return null;
+    }
+
+    @Override
+    public RSClanChannel getGuestClanChannel() {
+        return null;
+    }
+
+    @Override
+    public RSClanSettings getClanSettings() {
+        return null;
+    }
+
+    @Override
+    public RSClanSettings getGuestClanSettings() {
+        return null;
+    }
+
+    @Override
+    public ClanRank getClanRankFromRs(int rank) {
+        return null;
+    }
+
+    @Override
+    public RSIterableNodeHashTable readStringIntParameters(RSBuffer buffer, RSIterableNodeHashTable table) {
+        return null;
+    }
+
+    @Override
+    public int getRndHue() {
+        return 0;
+    }
+
+    @Override
+    public byte[][][] getTileUnderlays() {
+        return scene.getUnderlayIds();
+    }
+
+    @Override
+    public byte[][][] getTileOverlays() {
+        return scene.getOverlayIds();
+    }
+
+    @Override
+    public byte[][][] getTileShapes() {
+        return scene.getTileShapes();
+    }
+
+    @Override
+    public RSSpotAnimationDefinition getSpotAnimationDefinition(int id) {
+        return null;
+    }
+
+    @Override
+    public RSModelData getModelData(RSAbstractArchive var0, int var1, int var2) {
+        return null;
+    }
+
+    @Override
+    public boolean isCameraLocked() {
+        return false;
+    }
+
+    @Override
+    public boolean getCameraPitchRelaxerEnabled() {
+        return scene.pitchRelaxEnabled;
+    }
+
+    @Override
+    public boolean isUnlockedFps() {
+        return false;
+    }
+
+    @Override
+    public long getUnlockedFpsTarget() {
+        return 0;
+    }
+
+    @Override
+    public void posToCameraAngle(int var0, int var1) {
+
+    }
+
+    @Override
+    public RSClanChannel getClanChannel(int clanId) {
+        return null;
+    }
+
+    @Override
+    public RSClanSettings getClanSettings(int clanId) {
+        return null;
+    }
+
+    @Override
+    public void setUnlockedFps(boolean unlock) {
+    }
+
+    @Override
+    public void setUnlockedFpsTarget(int fps) {
+    }
+
+    @Override
+    public net.runelite.api.Deque<AmbientSoundEffect> getAmbientSoundEffects() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getEnumDefinitionCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getFloorUnderlayDefinitionCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getFloorOverlayDefinitionCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getHitSplatDefinitionCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getHitSplatDefinitionSpritesCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getHitSplatDefinitionDontsCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getInvDefinitionCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getItemDefinitionModelsCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getItemDefinitionSpritesCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getKitDefinitionCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getNpcDefinitionCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getNpcDefinitionModelsCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getObjectDefinitionCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getObjectDefinitionModelDataCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getObjectDefinitionEntitiesCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getParamDefinitionCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getPlayerAppearanceModelsCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getSequenceDefinitionCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getSequenceDefinitionFramesCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getSequenceDefinitionModelsCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getSpotAnimationDefinitionCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getSpotAnimationDefinitionModlesCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getVarcIntCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getVarpDefinitionCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getModelsCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getFontsCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getSpriteMasksCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getSpritesCache() {
+        return null;
+    }
+
+    @Override
+    public RSIterableNodeHashTable createIterableNodeHashTable(int size) {
+        return null;
+    }
+
 }

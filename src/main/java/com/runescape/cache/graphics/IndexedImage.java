@@ -3,8 +3,10 @@ package com.runescape.cache.graphics;
 import com.runescape.cache.FileArchive;
 import com.runescape.draw.Rasterizer2D;
 import com.runescape.io.Buffer;
+import net.runelite.rs.api.RSNode;
+import net.runelite.rs.api.RSTexture;
 
-public final class IndexedImage extends Rasterizer2D {
+public final class IndexedImage extends Rasterizer2D implements RSTexture {
 
     public final int[] palette;
     public byte palettePixels[];
@@ -237,5 +239,61 @@ public final class IndexedImage extends Rasterizer2D {
             destIndex += destStep;
             sourceIndex += sourceStep;
         }
+    }
+
+
+    private float textureU;
+    private float textureV;
+
+    public float getU() {
+        return textureU;
+    }
+    public void setU(float u) {
+        textureU = u;
+    }
+
+    public float getV() {
+        return textureV;
+    }
+    public void setV(float v) {
+        textureV = v;
+    }
+
+    public int[] getPixels() {
+        return palette;
+    }
+
+    public int getAnimationSpeed() {
+        return 2;
+    }
+
+    @Override
+    public boolean isLoaded() {
+        return true;
+    }
+
+    public int getAnimationDirection() {
+        return 1;
+    }
+
+
+    @Override
+    public RSNode getNext() {
+        return null;
+    }
+
+    @Override
+    public long getHash() {
+        return 0;
+    }
+
+    @Override
+    public RSNode getPrevious() {
+        return null;
+    }
+
+    @Override
+    public void onUnlink() {
+
     }
 }

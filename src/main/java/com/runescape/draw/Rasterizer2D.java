@@ -1,6 +1,8 @@
 package com.runescape.draw;
 
+import com.runescape.Client;
 import com.runescape.collection.Cacheable;
+import net.runelite.rs.api.RSRasterizer2D;
 
 import java.awt.*;
 import java.awt.geom.Arc2D;
@@ -9,7 +11,8 @@ import java.awt.geom.Ellipse2D;
 import java.awt.image.*;
 import java.util.Hashtable;
 
-public class Rasterizer2D extends Cacheable {
+public class Rasterizer2D extends Cacheable implements RSRasterizer2D {
+
     private static final ColorModel COLOR_MODEL = new DirectColorModel(32, 0xff0000, 0xff00, 0xff);
     public static int pixels[];
     public static int width;
@@ -23,14 +26,100 @@ public class Rasterizer2D extends Cacheable {
     public static int viewportCenterY;
 
     public static void drawAlpha(int[] pixels, int index, int color, int alpha) {
-        pixels[index] = color;
+        if (!Client.processGpuPlugin()) {
+            try {
+                pixels[index] = color;
+            }catch (Exception e) {}
+            return;
+        }
+        if (alpha <= 0) {
+            return;
+        }
+        int prevColor = pixels[index];
+
+        if ((prevColor & 0xFF000000) == 0 || alpha == 255) {
+            // No transparency, so we can cheat to save CPU resources
+            pixels[index] = (color & 0xFFFFFF) | (alpha << 24);
+            return;
+        }
+
+        if ((prevColor & 0xFF000000) == 0xFF000000) {
+            // When the background is opaque, the result will also be opaque,
+            // so we can simply use the value calculated by Jagex.
+            pixels[index] = color | 0xFF000000;
+            return;
+        }
+
+        int prevAlpha = (prevColor >>> 24) * (255 - alpha) >>> 8;
+        int finalAlpha = alpha + prevAlpha;
+
+        // Scale alphas so (relativeAlpha >>> 8) is approximately equal to (alpha /
+        // finalAlpha).
+        // Avoiding extra divisions increase performance by quite a bit.
+        // And with divisions we get a problems if dividing a number where
+        // the last bit is 1 (as it will become negative).
+        int relativeAlpha1 = (alpha << 8) / finalAlpha;
+        int relativeAlpha2 = (prevAlpha << 8) / finalAlpha;
+
+        // Red and blue are calculated at the same time to save CPU cycles
+        int finalColor = (((color & 0xFF00FF) * relativeAlpha1 + (prevColor & 0xFF00FF) * relativeAlpha2 & 0xFF00FF00) | ((color & 0x00FF00) * relativeAlpha1 + (prevColor & 0x00FF00) * relativeAlpha2 & 0x00FF0000)) >>> 8;
+
+        pixels[index] = finalColor | (finalAlpha << 24);
     }
     public static void drawAlpha(int[] pixels, int index, int value, int color, int alpha) {
-        pixels[index] = value;
+        if (!Client.processGpuPlugin()) {
+            pixels[index] = value;
+            return;
+        }
+
+        if (alpha == 0) {
+            return;
+        }
+
+        int prevColor = pixels[index];
+
+        if ((prevColor & 0xFF000000) == 0 || alpha == 255) {
+            // No transparency, so we can cheat to save CPU resources
+            pixels[index] = (color & 0xFFFFFF) | (alpha << 24);
+            return;
+        }
+
+        if ((prevColor & 0xFF000000) == 0xFF000000) {
+            // When the background is opaque, the result will also be opaque,
+            // so we can simply use the value calculated by Jagex.
+            pixels[index] = value | 0xFF000000;
+            return;
+        }
+
+        int prevAlpha = (prevColor >>> 24) * (255 - alpha) >>> 8;
+        int finalAlpha = alpha + prevAlpha;
+
+        // Scale alphas so (relativeAlpha >>> 8) is approximately equal to (alpha /
+        // finalAlpha).
+        // Avoiding extra divisions increase performance by quite a bit.
+        // And with divisions we get a problems if dividing a number where
+        // the last bit is 1 (as it will become negative).
+        int relativeAlpha1 = (alpha << 8) / finalAlpha;
+        int relativeAlpha2 = (prevAlpha << 8) / finalAlpha;
+
+        // Red and blue are calculated at the same time to save CPU cycles
+        int finalColor = (((color & 0xFF00FF) * relativeAlpha1 + (prevColor & 0xFF00FF) * relativeAlpha2 & 0xFF00FF00) | ((color & 0x00FF00) * relativeAlpha1 + (prevColor & 0x00FF00) * relativeAlpha2 & 0x00FF0000)) >>> 8;
+
+        pixels[index] = finalColor | (finalAlpha << 24);
     }
 
     public static void drawAlpha(byte[] pixels, int index, byte color, int alpha) {
-        pixels[index] = color;
+        if (!Client.processGpuPlugin()) {
+            pixels[index] = color;
+            return;
+        }
+
+        if (alpha <= 0) {
+            return;
+        }
+
+        alpha += (pixels[index] >>> 24) * (255 - alpha) >>> 8;
+        pixels[index] = (byte) (color & 16777215 | alpha << 24);
     }
 
     /**

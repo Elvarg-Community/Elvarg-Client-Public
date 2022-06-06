@@ -28,16 +28,16 @@ public final class MapRegion {
     private final int[] chromas;
     private final int[] anIntArray128;
     private final int[][][] tileHeights;
-    private final byte[][][] overlays;
+    public byte[][][] overlays;
     private final byte[][][] shading;
     private final int[][][] anIntArrayArrayArray135;
-    private final byte[][][] overlayTypes;
+    public byte[][][] overlayTypes;
     private final int[][] tileLighting;
-    private final byte[][][] underlays;
+    public byte[][][] underlays;
     private final int regionSizeX;
     private final int regionSizeY;
-    private final byte[][][] overlayOrientations;
-    private final byte[][][] tileFlags;
+    public byte[][][] overlayOrientations;
+    public byte[][][] tileFlags;
 
     public MapRegion(byte fileFlags[][][], int tileHeights[][][]) {
         maximumPlane = 99;
@@ -518,7 +518,7 @@ public final class MapRegion {
                                         int textureId = overlay_flo.texture;
                                         int j23;
                                         int minimapColor;
-                                        
+
                                         if (textureId >= 0) {
                                             minimapColor = Rasterizer3D.getOverallColour(textureId);
                                             j23 = -1;
@@ -737,7 +737,7 @@ public final class MapRegion {
         if (z < maximumPlane) {
             maximumPlane = z;
         }
-        
+
         ObjectDefinition definition = ObjectDefinition.lookup(id);
 
         boolean flag = rotation == 1 || rotation == 3;

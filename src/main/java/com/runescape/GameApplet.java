@@ -134,7 +134,12 @@ public class GameApplet extends Applet implements Runnable, MouseListener, Mouse
         startRunnable(this, 1);
     }
 
+    public Thread clientThread;
+
     public void run() {
+        this.clientThread = Thread.currentThread();
+        this.clientThread.setName("Client");
+
         getGameComponent().addMouseListener(this);
         getGameComponent().addMouseMotionListener(this);
         getGameComponent().addKeyListener(this);

@@ -7,16 +7,19 @@ import com.runescape.draw.Rasterizer2D;
 import com.runescape.draw.Rasterizer3D;
 import com.runescape.entity.model.Model;
 import com.runescape.io.Buffer;
+import net.runelite.api.IterableHashTable;
+import net.runelite.rs.api.RSItemComposition;
+import net.runelite.rs.api.RSIterableNodeHashTable;
 
 import java.util.HashMap;
 
-public final class ItemDefinition {
+public final class ItemDefinition implements RSItemComposition {
 
     public static ReferenceCache sprites = new ReferenceCache(100);
     public static ReferenceCache models = new ReferenceCache(50);
     public static boolean isMembers = true;
     public static int totalItems;
-    private static ItemDefinition[] cache;
+    public static ItemDefinition[] cache;
     private static int cacheIndex;
     private static Buffer item_data;
     private static int[] streamIndices;
@@ -520,6 +523,86 @@ public final class ItemDefinition {
         stackable = true;
     }
 
+    @Override
+    public String getName() {
+        return null;
+    }
+
+    @Override
+    public void setName(String name) {
+
+    }
+
+    @Override
+    public int getId() {
+        return 0;
+    }
+
+    @Override
+    public int getNote() {
+        return 0;
+    }
+
+    @Override
+    public int getLinkedNoteId() {
+        return 0;
+    }
+
+    @Override
+    public int getPlaceholderId() {
+        return 0;
+    }
+
+    @Override
+    public int getPlaceholderTemplateId() {
+        return 0;
+    }
+
+    @Override
+    public int getPrice() {
+        return 0;
+    }
+
+    @Override
+    public boolean isMembers() {
+        return false;
+    }
+
+    @Override
+    public boolean isTradeable() {
+        return false;
+    }
+
+    @Override
+    public void setTradeable(boolean yes) {
+
+    }
+
+    @Override
+    public int getIsStackable() {
+        return 0;
+    }
+
+    @Override
+    public int getMaleModel() {
+        return 0;
+    }
+
+    @Override
+    public String[] getInventoryActions() {
+        return new String[0];
+    }
+
+    @Override
+    public String[] getGroundActions() {
+        return new String[0];
+    }
+
+    @Override
+    public int getShiftClickActionIndex() {
+        return 0;
+    }
+
     public Model getModel(int stack_size) {
         if (countObj != null && stack_size > 1) {
             int stack_item_id = -1;
@@ -549,6 +632,36 @@ public final class ItemDefinition {
         model.fits_on_single_square = true;
         models.put(model, id);
         return model;
+    }
+
+    @Override
+    public int getInventoryModel() {
+        return 0;
+    }
+
+    @Override
+    public short[] getColorToReplaceWith() {
+        return new short[0];
+    }
+
+    @Override
+    public short[] getTextureToReplaceWith() {
+        return new short[0];
+    }
+
+    @Override
+    public RSIterableNodeHashTable getParams() {
+        return null;
+    }
+
+    @Override
+    public void setParams(IterableHashTable params) {
+
+    }
+
+    @Override
+    public void setParams(RSIterableNodeHashTable params) {
+
     }
 
     public Model getUnshadedModel(int stack_size) {
@@ -732,4 +845,43 @@ public final class ItemDefinition {
         }
     }
 
+    @Override
+    public int getHaPrice() {
+        return 0;
+    }
+
+    @Override
+    public boolean isStackable() {
+        return false;
+    }
+
+    @Override
+    public void setShiftClickActionIndex(int shiftClickActionIndex) {
+
+    }
+
+    @Override
+    public void resetShiftClickActionIndex() {
+
+    }
+
+    @Override
+    public int getIntValue(int paramID) {
+        return 0;
+    }
+
+    @Override
+    public void setValue(int paramID, int value) {
+
+    }
+
+    @Override
+    public String getStringValue(int paramID) {
+        return null;
+    }
+
+    @Override
+    public void setValue(int paramID, String value) {
+
+    }
 }

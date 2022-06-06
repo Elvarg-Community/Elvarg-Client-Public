@@ -7,6 +7,10 @@ import com.runescape.cache.config.VariableBits;
 import com.runescape.collection.ReferenceCache;
 import com.runescape.entity.model.Model;
 import com.runescape.io.Buffer;
+import net.runelite.api.HeadIcon;
+import net.runelite.api.IterableHashTable;
+import net.runelite.rs.api.RSIterableNodeHashTable;
+import net.runelite.rs.api.RSNPCComposition;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,7 +19,7 @@ import java.util.Map;
  * Refactored reference:
  * http://www.rune-server.org/runescape-development/rs2-client/downloads/575183-almost-fully-refactored-317-client.html
  */
-public final class NpcDefinition {
+public final class NpcDefinition implements RSNPCComposition {
 
 	private static final String PETS[][] = { { "318", "Dark Core" }, { "495", "Venenatis Spiderling" },
 			{ "497", "Callisto Cub" }, { "964", "Hellpuppy" }, { "2055", "Chaos Elemental Jr." },
@@ -370,7 +374,7 @@ public final class NpcDefinition {
 		Model empty = Model.EMPTY_MODEL;
 		empty.replace(model, Frame.noAnimationInProgress(frame) & Frame.noAnimationInProgress(j));
 		if (frame != -1 && j != -1)
-			empty.applyAnimationFrames(ai, j, frame);
+			empty.mix(ai, j, frame);
 		else if (frame != -1)
 			empty.applyTransform(frame);
 		if (widthScale != 128 || heightScale != 128)
@@ -421,7 +425,7 @@ public final class NpcDefinition {
 		model_1.replace(model,
 				Frame.noAnimationInProgress(secondaryFrame) & Frame.noAnimationInProgress(primaryFrame));
 		if (secondaryFrame != -1 && primaryFrame != -1)
-			model_1.applyAnimationFrames(interleaveOrder, primaryFrame, secondaryFrame);
+			model_1.mix(interleaveOrder, primaryFrame, secondaryFrame);
 		else if (secondaryFrame != -1)
 			model_1.applyTransform(secondaryFrame);
 		if (widthScale != 128 || heightScale != 128)
@@ -575,4 +579,113 @@ public final class NpcDefinition {
 	}
 
 
+	@Override
+	public HeadIcon getOverheadIcon() {
+		return null;
+	}
+
+	@Override
+	public int getIntValue(int paramID) {
+		return 0;
+	}
+
+	@Override
+	public void setValue(int paramID, int value) {
+
+	}
+
+	@Override
+	public String getStringValue(int paramID) {
+		return null;
+	}
+
+	@Override
+	public void setValue(int paramID, String value) {
+
+	}
+
+	@Override
+	public String getName() {
+		return null;
+	}
+
+	@Override
+	public int[] getModels() {
+		return new int[0];
+	}
+
+	@Override
+	public String[] getActions() {
+		return new String[0];
+	}
+
+	@Override
+	public boolean isClickable() {
+		return false;
+	}
+
+	@Override
+	public boolean isFollower() {
+		return false;
+	}
+
+	@Override
+	public boolean isInteractible() {
+		return false;
+	}
+
+	@Override
+	public boolean isMinimapVisible() {
+		return false;
+	}
+
+	@Override
+	public boolean isVisible() {
+		return false;
+	}
+
+	@Override
+	public int getId() {
+		return 0;
+	}
+
+	@Override
+	public int getCombatLevel() {
+		return 0;
+	}
+
+	@Override
+	public int[] getConfigs() {
+		return new int[0];
+	}
+
+	@Override
+	public RSNPCComposition transform() {
+		return null;
+	}
+
+	@Override
+	public int getSize() {
+		return 0;
+	}
+
+	@Override
+	public int getRsOverheadIcon() {
+		return 0;
+	}
+
+	@Override
+	public RSIterableNodeHashTable getParams() {
+		return null;
+	}
+
+	@Override
+	public void setParams(IterableHashTable params) {
+
+	}
+
+	@Override
+	public void setParams(RSIterableNodeHashTable params) {
+
+	}
 }

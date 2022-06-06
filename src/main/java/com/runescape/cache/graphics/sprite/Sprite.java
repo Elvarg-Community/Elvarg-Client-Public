@@ -21,8 +21,9 @@ import com.runescape.draw.Rasterizer2D;
 import com.runescape.io.Buffer;
 import com.runescape.sign.SignLink;
 import com.runescape.util.FileUtils;
+import net.runelite.rs.api.RSSpritePixels;
 
-public final class Sprite extends Rasterizer2D {
+public final class Sprite extends Rasterizer2D implements RSSpritePixels {
     
     public static Sprite EMPTY_SPRITE = new Sprite();
 
@@ -1179,4 +1180,152 @@ public final class Sprite extends Rasterizer2D {
     public void setDrawOffsetY(int drawOffsetY) {
         this.drawOffsetY = drawOffsetY;
     }
+
+    @Override
+    public void drawAt(int x, int y) {
+        drawSprite(x, y);
+    }
+
+    @Override
+    public int getWidth() {
+        return myWidth;
+    }
+
+    @Override
+    public int getHeight() {
+        return myHeight;
+    }
+
+    @Override
+    public int getMaxWidth() {
+        return maxWidth;
+    }
+
+    @Override
+    public int getMaxHeight() {
+        return maxHeight;
+    }
+
+    @Override
+    public int getOffsetX() {
+        return drawOffsetX;
+    }
+
+    @Override
+    public int getOffsetY() {
+        return drawOffsetY;
+    }
+
+    @Override
+    public void setMaxWidth(int maxWidth) {
+        this.maxWidth = maxWidth;
+    }
+
+    @Override
+    public void setMaxHeight(int maxHeight) {
+        this.maxHeight = maxHeight;
+    }
+
+    @Override
+    public void setOffsetX(int offsetX) {
+        drawOffsetX = offsetX;
+    }
+
+    @Override
+    public void setOffsetY(int offsetY) {
+        drawOffsetY = offsetY;
+    }
+
+    @Override
+    public int[] getPixels() {
+        return myPixels;
+    }
+
+    @Override
+    public void setRaster() {
+        init();
+    }
+
+    @Override
+    public BufferedImage toBufferedImage() {
+        BufferedImage image = new BufferedImage(this.myWidth, this.myHeight, 2);
+        toBufferedImage(image);
+        return image;
+    }
+
+    @Override
+    public void toBufferedImage(BufferedImage img) throws IllegalArgumentException {
+        int width = getWidth();
+        int height = getHeight();
+        int[] pixels = getPixels();
+        int[] palette = new int[pixels.length];
+        for (int pixel = 0; pixel < pixels.length; pixel++) {
+            if (pixels[pixel] != 0) {
+                palette[pixel] = pixels[pixel] | 0xFF000000;
+            }
+        }
+        img.setRGB(0, 0, width, height, palette, 0, width);
+    }
+
+    @Override
+    public BufferedImage toBufferedOutline(Color color)
+    {
+        BufferedImage img = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
+        toBufferedOutline(img, color.getRGB());
+        return img;
+    }
+
+
+    @Override
+    public void toBufferedOutline(BufferedImage img, int color)
+    {
+        int width = getWidth();
+        int height = getHeight();
+
+        if (img.getWidth() != width || img.getHeight() != height)
+        {
+            throw new IllegalArgumentException("Image bounds do not match Sprite");
+        }
+
+        int[] pixels = getPixels();
+        int[] newPixels = new int[width * height];
+        int pixelIndex = 0;
+
+        for (int y = 0; y < height; ++y)
+        {
+            for (int x = 0; x < width; ++x)
+            {
+                int pixel = pixels[pixelIndex];
+                if (pixel == 16777215 || pixel == 0)
+                {
+                    // W
+                    if (x > 0 && pixels[pixelIndex - 1] != 0)
+                    {
+                        pixel = color;
+                    }
+                    // N
+                    else if (y > 0 && pixels[pixelIndex - width] != 0)
+                    {
+                        pixel = color;
+                    }
+                    // E
+                    else if (x < width - 1 && pixels[pixelIndex + 1] != 0)
+                    {
+                        pixel = color;
+                    }
+                    // S
+                    else if (y < height - 1 && pixels[pixelIndex + width] != 0)
+                    {
+                        pixel = color;
+                    }
+                    newPixels[pixelIndex] = pixel;
+                }
+
+                pixelIndex++;
+            }
+        }
+
+        img.setRGB(0, 0, width, height, newPixels, 0, width);
+    }
+
 }
