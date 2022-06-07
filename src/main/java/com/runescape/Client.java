@@ -13515,12 +13515,20 @@ public class Client extends GameApplet implements RSClient {
 
     }
 
+    public boolean newmouseInRegion(int x1, int y1, Sprite drawnSprite) {
+        if (super.mouseX >= x1 && super.mouseX <= x1 + drawnSprite.myWidth && super.mouseY >= y1
+                && super.mouseY <= y1 + drawnSprite.myHeight)
+            return true;
+        return false;
+    }
+
+
     private void processLoginScreenInput() {
 
-        usernameInputHover = mouseInRegion(270, 231, 472, 252);
-        passwordInputHover = mouseInRegion(270, 278, 472, 299);
-        rememberMeHover = mouseInRegion(397, 310, 478, 320);
-        loginHover = mouseInRegion(300, 330, 456, 358);
+        usernameInputHover = newmouseInRegion(270, 231, spriteCache.lookup(635));
+        passwordInputHover = newmouseInRegion(270, 278, spriteCache.lookup(635));
+        rememberMeHover = newmouseInRegion(397, 310, spriteCache.lookup(639));
+        loginHover = newmouseInRegion(300, 330, spriteCache.lookup(637));
         if (super.clickMode3 == 1) {
             if(usernameInputHover) {
                 loginScreenCursorPos = 0;
