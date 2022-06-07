@@ -5693,6 +5693,7 @@ public class Client extends GameApplet implements RSClient {
 
         int objectType = ObjectKeyUtil.getObjectType(object);
         int orientation = ObjectKeyUtil.getObjectOrientation(object);
+
         if (objectType == 10 || objectType == 11 || objectType == 22) {
             ObjectDefinition class46 = ObjectDefinition.lookup(ObjectKeyUtil.getObjectId(object));
             int i2;
@@ -5850,7 +5851,7 @@ public class Client extends GameApplet implements RSClient {
         int button = secondMenuAction[id];
         int action = menuActionTypes[id];
         int clicked = (int)selectedMenuActions[id];
-        long clickedLong = (long)selectedMenuActions[id];
+        long clickedLong = selectedMenuActions[id];
         if (Configuration.PRODUCTION_MODE) {
             System.out.println("First: " + first + " Interface: " + button + " Action: " + action + " Clicked: " + clicked);
         }
@@ -6046,7 +6047,7 @@ public class Client extends GameApplet implements RSClient {
 
         // using item on object
         if (action == 62 && clickObject(clickedLong, button, first)) {
-            packetSender.sendUseItemOnObject(anInt1284, ObjectKeyUtil.getObjectId(clicked), button + regionBaseY, anInt1283, first + regionBaseX, anInt1285);
+            packetSender.sendUseItemOnObject(anInt1284, ObjectKeyUtil.getObjectId(clickedLong), button + regionBaseY, anInt1283, first + regionBaseX, anInt1285);
         }
 
         // using item on ground item
@@ -6237,7 +6238,7 @@ public class Client extends GameApplet implements RSClient {
             clickObject(clickedLong, button, first);
 
             // object option 5
-            packetSender.sendObjectOption5(ObjectKeyUtil.getObjectId(clicked), button + regionBaseY, first + regionBaseX);
+            packetSender.sendObjectOption5(ObjectKeyUtil.getObjectId(clickedLong), button + regionBaseY, first + regionBaseX);
         }
 
         // continue dialogue
@@ -6300,7 +6301,7 @@ public class Client extends GameApplet implements RSClient {
                 }
             }
         }
-        
+
         if (action == 53) {
             packetSender.sendItemContainerOption5(button, first, clicked);
             atInventoryLoopCycle = 0;
@@ -6686,7 +6687,7 @@ public class Client extends GameApplet implements RSClient {
             crossIndex = 0;
             packetSender.sendUseMagicOnGroundItem(button + regionBaseY, clicked, first + regionBaseX, anInt1137);
         }
-        
+
         if (action == 646) {
             // button click
 
@@ -6811,7 +6812,7 @@ public class Client extends GameApplet implements RSClient {
         if (action == 900) {
             clickObject(clickedLong, button, first);
             // object option 2
-            packetSender.sendObjectOption2(ObjectKeyUtil.getObjectId(clicked), button + regionBaseY, first + regionBaseX);
+            packetSender.sendObjectOption2(ObjectKeyUtil.getObjectId(clickedLong), button + regionBaseY, first + regionBaseX);
         }
 
         // Using the "Attack" option on a npc
@@ -6909,7 +6910,7 @@ public class Client extends GameApplet implements RSClient {
                 //outgoing.writeShort(25501);
                 anInt1175 = 0;
             }
-            
+
             packetSender.sendItemContainerOption3(button, clicked, first);
             atInventoryLoopCycle = 0;
             atInventoryInterface = button;
@@ -6948,7 +6949,7 @@ public class Client extends GameApplet implements RSClient {
                 sendMessage("Please close the interface you have open before using this.", 0, "");
             }
         }
-        
+
         if (action == 491) {
             Player player = players[clicked];
 
@@ -6963,7 +6964,7 @@ public class Client extends GameApplet implements RSClient {
                 packetSender.sendUseItemOnPlayer(anInt1284, clicked, anInt1285, anInt1283);
             }
         }
-        
+
         if (action == 639) {
             String text = menuActionText[id];
 
@@ -7037,19 +7038,19 @@ public class Client extends GameApplet implements RSClient {
         if (action == 113) {
             clickObject(clickedLong, button, first);
             // object option 3
-            packetSender.sendObjectOption3(first + regionBaseX, button + regionBaseY, ObjectKeyUtil.getObjectId(clicked));
+            packetSender.sendObjectOption3(first + regionBaseX, button + regionBaseY, ObjectKeyUtil.getObjectId(clickedLong));
         }
 
         // Object option 4
         if (action == 872) {
             clickObject(clickedLong, button, first);
-            packetSender.sendObjectOption4(first + regionBaseX, ObjectKeyUtil.getObjectId(clicked), button + regionBaseY);
+            packetSender.sendObjectOption4(first + regionBaseX, ObjectKeyUtil.getObjectId(clickedLong), button + regionBaseY);
         }
 
         // Object option 1
         if (action == 502) {
             clickObject(clickedLong, button, first);
-            packetSender.sendObjectOption1(first + regionBaseX, ObjectKeyUtil.getObjectId(clicked), button + regionBaseY);
+            packetSender.sendObjectOption1(first + regionBaseX, ObjectKeyUtil.getObjectId(clickedLong), button + regionBaseY);
         }
 
 
@@ -7206,7 +7207,7 @@ public class Client extends GameApplet implements RSClient {
                                 "Examine @cya@" + objectDef.name;
                     }
                     menuActionTypes[menuActionRow] = 1226;
-                    selectedMenuActions[menuActionRow] = objectDef.type << 14;
+                    selectedMenuActions[menuActionRow] = current;
                     firstMenuAction[menuActionRow] = x;
                     secondMenuAction[menuActionRow] = y;
                     menuActionRow++;
@@ -9119,16 +9120,16 @@ public class Client extends GameApplet implements RSClient {
                     String s = menuActionText[j];
                     menuActionText[j] = menuActionText[j + 1];
                     menuActionText[j + 1] = s;
-                    int k = menuActionTypes[j];
+                    long k = menuActionTypes[j];
                     menuActionTypes[j] = menuActionTypes[j + 1];
-                    menuActionTypes[j + 1] = k;
+                    menuActionTypes[j + 1] = (int) k;
                     k = firstMenuAction[j];
                     firstMenuAction[j] = firstMenuAction[j + 1];
-                    firstMenuAction[j + 1] = k;
+                    firstMenuAction[j + 1] = (int) k;
                     k = secondMenuAction[j];
                     secondMenuAction[j] = secondMenuAction[j + 1];
-                    secondMenuAction[j + 1] = k;
-                    k = (int)selectedMenuActions[j];
+                    secondMenuAction[j + 1] = (int) k;
+                    k = selectedMenuActions[j];
                     selectedMenuActions[j] = selectedMenuActions[j + 1];
                     selectedMenuActions[j + 1] = k;
                     flag = false;
