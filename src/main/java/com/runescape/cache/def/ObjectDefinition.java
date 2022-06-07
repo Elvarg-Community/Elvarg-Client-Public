@@ -7,6 +7,9 @@ import com.runescape.cache.config.VariableBits;
 import com.runescape.collection.ReferenceCache;
 import com.runescape.entity.model.Model;
 import com.runescape.io.Buffer;
+import net.runelite.api.IterableHashTable;
+import net.runelite.api.Node;
+import net.runelite.api.ObjectComposition;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -14,7 +17,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class ObjectDefinition {
+public final class ObjectDefinition implements ObjectComposition {
 
     public static final Model[] aModelArray741s = new Model[4];
     private static final int[] OBELISK_IDS = {14829, 14830, 14827, 14828, 14826, 14831};
@@ -277,7 +280,7 @@ public final class ObjectDefinition {
         if (model == null)
             return null;
         if (contouredGround || mergeNormals)
-            model = new Model(contouredGround, mergeNormals, model);
+            model = new Model(contouredGround, mergeNormals, model,type);
         if (contouredGround) {
             int y = (aY + bY + cY + dY) / 4;
             for (int vertex = 0; vertex < model.numVertices; vertex++) {
@@ -289,7 +292,7 @@ public final class ObjectDefinition {
                 model.vertexY[vertex] += j3 - y;
             }
 
-            model.computeSphericalBounds();
+            model.calc_diagonals();
         }
         return model;
     }
@@ -643,4 +646,73 @@ public final class ObjectDefinition {
         }
     }
 
+    @Override
+    public int getId() {
+        return 0;
+    }
+
+    @Override
+    public String getName() {
+        return null;
+    }
+
+    @Override
+    public String[] getActions() {
+        return new String[0];
+    }
+
+    @Override
+    public int getMapSceneId() {
+        return 0;
+    }
+
+    @Override
+    public int getMapIconId() {
+        return 0;
+    }
+
+    @Override
+    public int[] getImpostorIds() {
+        return new int[0];
+    }
+
+    @Override
+    public ObjectComposition getImpostor() {
+        return null;
+    }
+
+    @Override
+    public int getAccessBitMask() {
+        return 0;
+    }
+
+    @Override
+    public IterableHashTable<Node> getParams() {
+        return null;
+    }
+
+    @Override
+    public void setParams(IterableHashTable<Node> params) {
+
+    }
+
+    @Override
+    public int getIntValue(int paramID) {
+        return 0;
+    }
+
+    @Override
+    public void setValue(int paramID, int value) {
+
+    }
+
+    @Override
+    public String getStringValue(int paramID) {
+        return null;
+    }
+
+    @Override
+    public void setValue(int paramID, String value) {
+
+    }
 }

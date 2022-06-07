@@ -1,5 +1,4 @@
 package com.runescape.scene;
-
 import com.runescape.Client;
 import com.runescape.cache.def.FloorDefinition;
 import com.runescape.cache.def.ObjectDefinition;
@@ -12,32 +11,33 @@ import com.runescape.util.ObjectKeyUtil;
 
 public final class MapRegion {
 
-    public static final int BRIDGE_TILE = 2;
-    private static final int COSINE_VERTICES[] = {1, 0, -1, 0};
-    private static final int anIntArray140[] = {16, 32, 64, 128};
-    private static final int SINE_VERTICIES[] = {0, -1, 0, 1};
-    private static final int anIntArray152[] = {1, 2, 4, 8};
-    private static final int BLOCKED_TILE = 1;
-    private static final int FORCE_LOWEST_PLANE = 8;
-    public static int anInt131;
-    public static int maximumPlane = 99;
-    public static boolean lowMem = true;
     private final int[] hues;
     private final int[] saturations;
     private final int[] luminances;
     private final int[] chromas;
     private final int[] anIntArray128;
     private final int[][][] tileHeights;
-    private final byte[][][] overlays;
+    public byte[][][] overlays;
+    public static int anInt131;
     private final byte[][][] shading;
     private final int[][][] anIntArrayArrayArray135;
-    private final byte[][][] overlayTypes;
+    public byte[][][] overlayTypes;
+    private static final int COSINE_VERTICES[] = { 1, 0, -1, 0 };
     private final int[][] tileLighting;
-    private final byte[][][] underlays;
+    private static final int anIntArray140[] = { 16, 32, 64, 128 };
+    public byte[][][] underlays;
+    private static final int SINE_VERTICIES[] = { 0, -1, 0, 1 };
+    public static int maximumPlane = 99;
     private final int regionSizeX;
     private final int regionSizeY;
     private final byte[][][] overlayOrientations;
     private final byte[][][] tileFlags;
+    public static boolean lowMem = false;
+    private static final int anIntArray152[] = { 1, 2, 4, 8 };
+
+    private static final int BLOCKED_TILE = 1;
+    public static final int BRIDGE_TILE = 2;
+    private static final int FORCE_LOWEST_PLANE = 8;
 
     public MapRegion(byte fileFlags[][][], int tileHeights[][][]) {
         maximumPlane = 99;
@@ -64,301 +64,6 @@ public final class MapRegion {
         k = k << 13 ^ k;
         int l = k * (k * k * 15731 + 0xc0ae5) + 0x5208dd0d & 0x7fffffff;
         return l >> 19 & 0xff;
-    }
-
-    private static int calculateVertexHeight(int i, int j) {
-        int mapHeight = (interpolatedNoise(i + 45365, j + 0x16713, 4) - 128) + (interpolatedNoise(i + 10294, j + 37821, 2) - 128 >> 1) + (interpolatedNoise(i, j, 1) - 128 >> 2);
-        mapHeight = (int) ((double) mapHeight * 0.29999999999999999D) + 35;
-        if (mapHeight < 10) {
-            mapHeight = 10;
-        } else if (mapHeight > 60) {
-            mapHeight = 60;
-        }
-        return mapHeight;
-    }
-
-    private static int interpolatedNoise(int x, int y, int frequencyReciprocal) {
-        int l = x / frequencyReciprocal;
-        int i1 = x & frequencyReciprocal - 1;
-        int j1 = y / frequencyReciprocal;
-        int k1 = y & frequencyReciprocal - 1;
-        int l1 = smoothNoise(l, j1);
-        int i2 = smoothNoise(l + 1, j1);
-        int j2 = smoothNoise(l, j1 + 1);
-        int k2 = smoothNoise(l + 1, j1 + 1);
-        int l2 = interpolate(l1, i2, i1, frequencyReciprocal);
-        int i3 = interpolate(j2, k2, i1, frequencyReciprocal);
-        return interpolate(l2, i3, k1, frequencyReciprocal);
-    }
-
-    public static boolean modelReady(int i, int j) {
-        ObjectDefinition class46 = ObjectDefinition.lookup(i);
-        if (j == 11)
-            j = 10;
-        if (j >= 5 && j <= 8)
-            j = 4;
-        return class46.method577(j);
-    }
-
-    private static int interpolate(int a, int b, int angle, int frequencyReciprocal) {
-        int cosine = 0x10000 - Rasterizer3D.COSINE[(angle * 1024) / frequencyReciprocal] >> 1;
-        return (a * (0x10000 - cosine) >> 16) + (b * cosine >> 16);
-    }
-
-    private static int smoothNoise(int x, int y) {
-        int corners = calculateNoise(x - 1, y - 1) + calculateNoise(x + 1, y - 1) + calculateNoise(x - 1, y + 1) + calculateNoise(x + 1, y + 1);
-        int sides = calculateNoise(x - 1, y) + calculateNoise(x + 1, y) + calculateNoise(x, y - 1) + calculateNoise(x, y + 1);
-        int center = calculateNoise(x, y);
-        return corners / 16 + sides / 8 + center / 4;
-    }
-
-    private static int method187(int i, int j) {
-        if (i == -1)
-            return 0xbc614e;
-        j = (j * (i & 0x7f)) / 128;
-        if (j < 2)
-            j = 2;
-        else if (j > 126)
-            j = 126;
-        return (i & 0xff80) + j;
-    }
-
-    public static void placeObject(SceneGraph worldController, int rotation, int regionY, int type, int plane, CollisionMap class11, int ai[][][], int regionX, int j1, int k1) {
-        int l1 = ai[plane][regionX][regionY];
-        int i2 = ai[plane][regionX + 1][regionY];
-        int j2 = ai[plane][regionX + 1][regionY + 1];
-        int k2 = ai[plane][regionX][regionY + 1];
-        int l2 = l1 + i2 + j2 + k2 >> 2;
-        ObjectDefinition definition = ObjectDefinition.lookup(j1);
-        long key = (long) ((long) rotation << 20 | (long) type << 14 | ((long) regionY << 7 | regionX) + 0x40000000);
-        if (!definition.isInteractive)
-            key |= ~0x7fffffffffffffffL;
-
-        if(definition.supportItems == 1) {
-            key |= 0x400000L;
-        }
-        key |= (long) j1 << 32;
-        byte byte1 = (byte) ((rotation << 6) + type);
-        if (type == 22) {
-            Object obj;
-            if (definition.animation == -1 && definition.configs == null)
-                obj = definition.modelAt(22, rotation, l1, i2, j2, k2, -1);
-            else
-                obj = new SceneObject(j1, rotation, 22, i2, j2, l1, k2, definition.animation, true);
-            worldController.addGroundDecoration(k1, l2, regionY, ((Renderable) (obj)), byte1, key, regionX);
-            if (definition.interactType && definition.isInteractive)
-                class11.block(regionX, regionY);
-            return;
-        }
-        if (type == 10 || type == 11) {
-            Object obj1;
-            if (definition.animation == -1 && definition.configs == null)
-                obj1 = definition.modelAt(10, rotation, l1, i2, j2, k2, -1);
-            else
-                obj1 = new SceneObject(j1, rotation, 10, i2, j2, l1, k2, definition.animation, true);
-            if (obj1 != null) {
-                int j5 = 0;
-                if (type == 11)
-                    j5 += 256;
-                int k4;
-                int i5;
-                if (rotation == 1 || rotation == 3) {
-                    k4 = definition.sizeY;
-                    i5 = definition.sizeX;
-                } else {
-                    k4 = definition.sizeX;
-                    i5 = definition.sizeY;
-                }
-                worldController.addTiledObject(key, byte1, l2, i5, ((Renderable) (obj1)), k4, k1, j5, regionY, regionX);
-            }
-            if (definition.interactType)
-                class11.method212(definition.blocksProjectile, definition.sizeX, definition.sizeY, regionX, regionY, rotation);
-            return;
-        }
-        if (type >= 12) {
-            Object obj2;
-            if (definition.animation == -1 && definition.configs == null)
-                obj2 = definition.modelAt(type, rotation, l1, i2, j2, k2, -1);
-            else
-                obj2 = new SceneObject(j1, rotation, type, i2, j2, l1, k2, definition.animation, true);
-            worldController.addTiledObject(key, byte1, l2, 1, ((Renderable) (obj2)), 1, k1, 0, regionY, regionX);
-            if (definition.interactType)
-                class11.method212(definition.blocksProjectile, definition.sizeX, definition.sizeY, regionX, regionY, rotation);
-            return;
-        }
-        if (type == 0) {
-            Object obj3;
-            if (definition.animation == -1 && definition.configs == null)
-                obj3 = definition.modelAt(0, rotation, l1, i2, j2, k2, -1);
-            else
-                obj3 = new SceneObject(j1, rotation, 0, i2, j2, l1, k2, definition.animation, true);
-            worldController.addWallObject(anIntArray152[rotation], ((Renderable) (obj3)), key, regionY, byte1, regionX, null, l2, 0, k1);
-            if (definition.interactType)
-                class11.method211(regionY, rotation, regionX, type, definition.blocksProjectile);
-            return;
-        }
-        if (type == 1) {
-            Object obj4;
-            if (definition.animation == -1 && definition.configs == null)
-                obj4 = definition.modelAt(1, rotation, l1, i2, j2, k2, -1);
-            else
-                obj4 = new SceneObject(j1, rotation, 1, i2, j2, l1, k2, definition.animation, true);
-            worldController.addWallObject(anIntArray140[rotation], ((Renderable) (obj4)), key, regionY, byte1, regionX, null, l2, 0, k1);
-            if (definition.interactType)
-                class11.method211(regionY, rotation, regionX, type, definition.blocksProjectile);
-            return;
-        }
-        if (type == 2) {
-            int j3 = rotation + 1 & 3;
-            Object obj11;
-            Object obj12;
-            if (definition.animation == -1 && definition.configs == null) {
-                obj11 = definition.modelAt(2, 4 + rotation, l1, i2, j2, k2, -1);
-                obj12 = definition.modelAt(2, j3, l1, i2, j2, k2, -1);
-            } else {
-                obj11 = new SceneObject(j1, 4 + rotation, 2, i2, j2, l1, k2, definition.animation, true);
-                obj12 = new SceneObject(j1, j3, 2, i2, j2, l1, k2, definition.animation, true);
-            }
-            worldController.addWallObject(anIntArray152[rotation], ((Renderable) (obj11)), key, regionY, byte1, regionX, ((Renderable) (obj12)), l2, anIntArray152[j3], k1);
-            if (definition.interactType)
-                class11.method211(regionY, rotation, regionX, type, definition.blocksProjectile);
-            return;
-        }
-        if (type == 3) {
-            Object obj5;
-            if (definition.animation == -1 && definition.configs == null)
-                obj5 = definition.modelAt(3, rotation, l1, i2, j2, k2, -1);
-            else
-                obj5 = new SceneObject(j1, rotation, 3, i2, j2, l1, k2, definition.animation, true);
-            worldController.addWallObject(anIntArray140[rotation], ((Renderable) (obj5)), key, regionY, byte1, regionX, null, l2, 0, k1);
-            if (definition.interactType)
-                class11.method211(regionY, rotation, regionX, type, definition.blocksProjectile);
-            return;
-        }
-        if (type == 9) {
-            Object obj6;
-            if (definition.animation == -1 && definition.configs == null)
-                obj6 = definition.modelAt(type, rotation, l1, i2, j2, k2, -1);
-            else
-                obj6 = new SceneObject(j1, rotation, type, i2, j2, l1, k2, definition.animation, true);
-            worldController.addTiledObject(key, byte1, l2, 1, ((Renderable) (obj6)), 1, k1, 0, regionY, regionX);
-            if (definition.interactType)
-                class11.method212(definition.blocksProjectile, definition.sizeX, definition.sizeY, regionX, regionY, rotation);
-            return;
-        }
-        if (definition.contouredGround)
-            if (rotation == 1) {
-                int k3 = k2;
-                k2 = j2;
-                j2 = i2;
-                i2 = l1;
-                l1 = k3;
-            } else if (rotation == 2) {
-                int l3 = k2;
-                k2 = i2;
-                i2 = l3;
-                l3 = j2;
-                j2 = l1;
-                l1 = l3;
-            } else if (rotation == 3) {
-                int i4 = k2;
-                k2 = l1;
-                l1 = i2;
-                i2 = j2;
-                j2 = i4;
-            }
-        if (type == 4) {
-            Object obj7;
-            if (definition.animation == -1 && definition.configs == null)
-                obj7 = definition.modelAt(4, 0, l1, i2, j2, k2, -1);
-            else
-                obj7 = new SceneObject(j1, 0, 4, i2, j2, l1, k2, definition.animation, true);
-            worldController.addWallDecoration(key, regionY, rotation * 512, k1, 0, l2, ((Renderable) (obj7)), regionX, byte1, 0, anIntArray152[rotation]);
-            return;
-        }
-        if (type == 5) {
-            int j4 = 16;
-            long l4 = worldController.getWallObjectUid(k1, regionX, regionY);
-            if (l4 > 0)
-                j4 = ObjectDefinition.lookup(ObjectKeyUtil.getObjectId(l4)).decorDisplacement;
-            Object obj13;
-            if (definition.animation == -1 && definition.configs == null)
-                obj13 = definition.modelAt(4, 0, l1, i2, j2, k2, -1);
-            else
-                obj13 = new SceneObject(j1, 0, 4, i2, j2, l1, k2, definition.animation, true);
-            worldController.addWallDecoration(key, regionY, rotation * 512, k1, COSINE_VERTICES[rotation] * j4, l2, ((Renderable) (obj13)), regionX, byte1, SINE_VERTICIES[rotation] * j4, anIntArray152[rotation]);
-            return;
-        }
-        if (type == 6) {
-            Object obj8;
-            if (definition.animation == -1 && definition.configs == null)
-                obj8 = definition.modelAt(4, 0, l1, i2, j2, k2, -1);
-            else
-                obj8 = new SceneObject(j1, 0, 4, i2, j2, l1, k2, definition.animation, true);
-            worldController.addWallDecoration(key, regionY, rotation, k1, 0, l2, ((Renderable) (obj8)), regionX, byte1, 0, 256);
-            return;
-        }
-        if (type == 7) {
-            Object obj9;
-            if (definition.animation == -1 && definition.configs == null)
-                obj9 = definition.modelAt(4, 0, l1, i2, j2, k2, -1);
-            else
-                obj9 = new SceneObject(j1, 0, 4, i2, j2, l1, k2, definition.animation, true);
-            worldController.addWallDecoration(key, regionY, rotation, k1, 0, l2, ((Renderable) (obj9)), regionX, byte1, 0, 512);
-            return;
-        }
-        if (type == 8) {
-            Object obj10;
-            if (definition.animation == -1 && definition.configs == null)
-                obj10 = definition.modelAt(4, 0, l1, i2, j2, k2, -1);
-            else
-                obj10 = new SceneObject(j1, 0, 4, i2, j2, l1, k2, definition.animation, true);
-            worldController.addWallDecoration(key, regionY, rotation, k1, 0, l2, ((Renderable) (obj10)), regionX, byte1, 0, 768);
-        }
-    }
-
-    public static boolean method189(int i, byte[] is, int i_250_) // xxx bad
-    // method,
-    // decompiled
-    // with JODE
-    {
-        boolean bool = true;
-        Buffer stream = new Buffer(is);
-        int i_252_ = -1;
-        for (; ; ) {
-            int i_253_ = stream.readUSmart();
-            if (i_253_ == 0)
-                break;
-            i_252_ += i_253_;
-            int i_254_ = 0;
-            boolean bool_255_ = false;
-            for (; ; ) {
-                if (bool_255_) {
-                    int i_256_ = stream.readUSmart();
-                    if (i_256_ == 0)
-                        break;
-                    stream.readUnsignedByte();
-                } else {
-                    int i_257_ = stream.readUSmart();
-                    if (i_257_ == 0)
-                        break;
-                    i_254_ += i_257_ - 1;
-                    int i_258_ = i_254_ & 0x3f;
-                    int i_259_ = i_254_ >> 6 & 0x3f;
-                    int i_260_ = stream.readUnsignedByte() >> 2;
-                    int i_261_ = i_259_ + i;
-                    int i_262_ = i_258_ + i_250_;
-                    if (i_261_ > 0 && i_262_ > 0 && i_261_ < 103 && i_262_ < 103) {
-                        ObjectDefinition class46 = ObjectDefinition.lookup(i_252_);
-                        if (i_260_ != 22 || !lowMem || class46.isInteractive || class46.obstructsGround) {
-                            bool &= class46.method579();
-                            bool_255_ = true;
-                        }
-                    }
-                }
-            }
-        }
-        return bool;
     }
 
     public final void createRegionScene(CollisionMap maps[], SceneGraph scene) {
@@ -502,9 +207,10 @@ public final class MapRegion {
                                         if (flag && j19 == k19 && j19 == l19 && j19 == i20)
                                             anIntArrayArrayArray135[z][l6][k17] |= 0x924;
                                     }
+                                    int mapLight = Client.instance.isHdMinimapEnabled() ? 50 : 96;
                                     int i22 = 0;
                                     if (j21 != -1)
-                                        i22 = Rasterizer3D.hslToRgb[method187(k21, 96)];
+                                        i22 = Rasterizer3D.hslToRgb[method187(k21, mapLight)];
                                     if (i19 == 0) {
                                         scene.addTile(z, l6, k17, 0, 0, -1, j19, k19, l19, i20, method187(j21, j20), method187(j21, k20), method187(j21, l20), method187(j21, i21), 0, 0, 0, 0, i22, 0);
                                     } else {
@@ -518,7 +224,10 @@ public final class MapRegion {
                                         int textureId = overlay_flo.texture;
                                         int j23;
                                         int minimapColor;
-                                        
+
+                                        if (textureId > 50) {
+                                            textureId = -1;
+                                        }
                                         if (textureId >= 0) {
                                             minimapColor = Rasterizer3D.getOverallColour(textureId);
                                             j23 = -1;
@@ -526,18 +235,18 @@ public final class MapRegion {
                                             minimapColor = 0;
                                             j23 = -2;
                                             textureId = -1;
-                                        } else if (overlay_flo.rgb == 0x333333) {
-                                            minimapColor = Rasterizer3D.hslToRgb[checkedLight(overlay_flo.hsl16, 96)];
+                                        } else if(overlay_flo.rgb == 0x333333) {
+                                            minimapColor = Rasterizer3D.hslToRgb[checkedLight(overlay_flo.hsl16, mapLight)];
                                             j23 = -2;
                                             textureId = -1;
                                         } else {
                                             j23 = encode(overlay_flo.hue, overlay_flo.saturation, overlay_flo.luminance);
-                                            minimapColor = Rasterizer3D.hslToRgb[checkedLight(overlay_flo.hsl16, 96)];
+                                            minimapColor = Rasterizer3D.hslToRgb[checkedLight(overlay_flo.hsl16, mapLight)];
                                         }
 
                                         if (minimapColor == 0x000000 && overlay_flo.anotherRgb != -1) {
                                             int newMinimapColor = encode(overlay_flo.anotherHue, overlay_flo.anotherSaturation, overlay_flo.anotherLuminance);
-                                            minimapColor = Rasterizer3D.hslToRgb[checkedLight(newMinimapColor, 96)];
+                                            minimapColor = Rasterizer3D.hslToRgb[checkedLight(newMinimapColor, mapLight)];
                                         }
 
                                         scene.addTile(z, l6, k17, k22, byte4, textureId, j19, k19, l19, i20, method187(j21, j20), method187(j21, k20), method187(j21, l20), method187(j21, i21), checkedLight(j23, j20), checkedLight(j23, k20), checkedLight(j23, l20), checkedLight(j23, i21), i22, minimapColor);
@@ -585,16 +294,14 @@ public final class MapRegion {
                                     ;
                                 for (; l5 < regionSizeY && (anIntArrayArrayArray135[i3][i4][l5 + 1] & i2) != 0; l5++)
                                     ;
-                                label0:
-                                for (; i7 > 0; i7--) {
+                                label0: for (; i7 > 0; i7--) {
                                     for (int j10 = k4; j10 <= l5; j10++)
                                         if ((anIntArrayArrayArray135[i7 - 1][i4][j10] & i2) == 0)
                                             break label0;
 
                                 }
 
-                                label1:
-                                for (; k8 < l2; k8++) {
+                                label1: for (; k8 < l2; k8++) {
                                     for (int k10 = k4; k10 <= l5; k10++)
                                         if ((anIntArrayArrayArray135[k8 + 1][i4][k10] & i2) == 0)
                                             break label1;
@@ -624,16 +331,14 @@ public final class MapRegion {
                                     ;
                                 for (; i6 < regionSizeX && (anIntArrayArrayArray135[i3][i6 + 1][k3] & j2) != 0; i6++)
                                     ;
-                                label2:
-                                for (; j7 > 0; j7--) {
+                                label2: for (; j7 > 0; j7--) {
                                     for (int i11 = l4; i11 <= i6; i11++)
                                         if ((anIntArrayArrayArray135[j7 - 1][i11][k3] & j2) == 0)
                                             break label2;
 
                                 }
 
-                                label3:
-                                for (; l8 < l2; l8++) {
+                                label3: for (; l8 < l2; l8++) {
                                     for (int j11 = l4; j11 <= i6; j11++)
                                         if ((anIntArrayArrayArray135[l8 + 1][j11][k3] & j2) == 0)
                                             break label3;
@@ -663,16 +368,14 @@ public final class MapRegion {
                                     ;
                                 for (; i9 < regionSizeY && (anIntArrayArrayArray135[i3][i4][i9 + 1] & k2) != 0; i9++)
                                     ;
-                                label4:
-                                for (; i5 > 0; i5--) {
+                                label4: for (; i5 > 0; i5--) {
                                     for (int l11 = k7; l11 <= i9; l11++)
                                         if ((anIntArrayArrayArray135[i3][i5 - 1][l11] & k2) == 0)
                                             break label4;
 
                                 }
 
-                                label5:
-                                for (; j6 < regionSizeX; j6++) {
+                                label5: for (; j6 < regionSizeX; j6++) {
                                     for (int i12 = k7; i12 <= i9; i12++)
                                         if ((anIntArrayArrayArray135[i3][j6 + 1][i12] & k2) == 0)
                                             break label5;
@@ -700,6 +403,18 @@ public final class MapRegion {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private static int calculateVertexHeight(int i, int j) {
+        int mapHeight = (interpolatedNoise(i + 45365, j + 0x16713, 4) - 128) + (interpolatedNoise(i + 10294, j + 37821, 2) - 128 >> 1) + (interpolatedNoise(i, j, 1) - 128 >> 2);
+        mapHeight = (int) ((double) mapHeight * 0.29999999999999999D) + 35;
+        if (mapHeight < 10) {
+            mapHeight = 10;
+        }
+        else if (mapHeight > 60) {
+            mapHeight = 60;
+        }
+        return mapHeight;
     }
 
     public final void initiateVertexHeights(int yOffset, int yLength, int xLength, int xOffset) {
@@ -737,27 +452,30 @@ public final class MapRegion {
         if (z < maximumPlane) {
             maximumPlane = z;
         }
-        
+        int center = tileHeights[z][x][y];
+        int east = tileHeights[z][x + 1][y];
+        int northEast = tileHeights[z][x + 1][y + 1];
+        int north = tileHeights[z][x][y + 1];
+        int mean = center + east + northEast + north >> 2;
+        int mX = Client.instance.currentRegionX - 6;
+        int mY = Client.instance.currentRegionY - 6;
+        int actualX = mX * 8 + x;
+        int actualY = mY * 8 + y;
+        int actualH = z;
         ObjectDefinition definition = ObjectDefinition.lookup(id);
 
-        boolean flag = rotation == 1 || rotation == 3;
-        int sizeY = flag ? definition.sizeY : definition.sizeX;
-        int sizeX = flag ? definition.sizeX : definition.sizeY;
+        /**
+         * Prevent objects from being drawn below.
+         * It can be any type of object, including walls.
+         */
 
-        flag = 104 >= sizeY + x;
-        int modX = flag ? x + (sizeY >> 1) : x;
-        int modX1 = flag ? x + (sizeY + 1 >> 1) : x + 1;
+        if(actualH == 0) {
+            //EDGEVILLE HOUSE IN FRONT OF BANK WALLS REMOVAL
+            if(actualX >= 3092 && actualX <= 3094 && (actualY == 3514 || actualY == 3513 || actualY == 3506 || actualY == 3505 || actualY == 3507)) {
+                return;
+            }
+        }
 
-        flag = 104 >= sizeX + y;
-        int modY = flag ? (sizeX >> 1) + y : y;
-        int modY1 = flag ? y + (sizeX + 1 >> 1) : y + 1;
-
-        int center = tileHeights[z][modX][modY];
-        int east = tileHeights[z][modX1][modY];
-        int northEast = tileHeights[z][modX1][modY1];
-        int north = tileHeights[z][modX][modY1];
-
-        int mean = center + east + northEast + north >> 2;
 
         long key = (long) ((long) rotation << 20 | (long) type << 14 | ((long) y << 7 | x) + 0x40000000);
         if (!definition.isInteractive)
@@ -1033,12 +751,26 @@ public final class MapRegion {
         }
     }
 
+    private static int interpolatedNoise(int x, int y, int frequencyReciprocal) {
+        int l = x / frequencyReciprocal;
+        int i1 = x & frequencyReciprocal - 1;
+        int j1 = y / frequencyReciprocal;
+        int k1 = y & frequencyReciprocal - 1;
+        int l1 = smoothNoise(l, j1);
+        int i2 = smoothNoise(l + 1, j1);
+        int j2 = smoothNoise(l, j1 + 1);
+        int k2 = smoothNoise(l + 1, j1 + 1);
+        int l2 = interpolate(l1, i2, i1, frequencyReciprocal);
+        int i3 = interpolate(j2, k2, i1, frequencyReciprocal);
+        return interpolate(l2, i3, k1, frequencyReciprocal);
+    }
+
     /**
      * Encodes the hue, saturation, and luminance into a colour value.
      *
-     * @param hue        The hue.
+     * @param hue The hue.
      * @param saturation The saturation.
-     * @param luminance  The luminance.
+     * @param luminance The luminance.
      * @return The colour.
      */
     private int encode(int hue, int saturation, int luminance) {
@@ -1051,6 +783,15 @@ public final class MapRegion {
         if (luminance > 243)
             saturation /= 2;
         return (hue / 4 << 10) + (saturation / 32 << 7) + luminance / 2;
+    }
+
+    public static boolean modelReady(int i, int j) {
+        ObjectDefinition class46 = ObjectDefinition.lookup(i);
+        if (j == 11)
+            j = 10;
+        if (j >= 5 && j <= 8)
+            j = 4;
+        return class46.method577(j);
     }
 
     public final void loadMapChunk(int i, int j, CollisionMap clips[], int l, int i1, byte abyte0[], int j1, int k1, int l1) {
@@ -1169,8 +910,7 @@ public final class MapRegion {
     }
 
     public final void readObjectMap(CollisionMap aclass11[], SceneGraph worldController, int i, int j, int k, int l, byte abyte0[], int i1, int j1, int k1) {
-        label0:
-        {
+        label0: {
             Buffer stream = new Buffer(abyte0);
             int l1 = -1;
             do {
@@ -1209,28 +949,300 @@ public final class MapRegion {
         }
     }
 
+    private static int interpolate(int a, int b, int angle, int frequencyReciprocal) {
+        int cosine = 0x10000 - Rasterizer3D.COSINE[(angle * 1024) / frequencyReciprocal] >> 1;
+        return (a * (0x10000 - cosine) >> 16) + (b * cosine >> 16);
+    }
+
     private int checkedLight(int color, int light) {
-        if (color == -2)
-            return 0xbc614e;
-        if (color == -1) {
-            if (light < 0)
-                light = 0;
-            else if (light > 127)
-                light = 127;
-            light = 127 - light;
-            return light;
+        if (color == -2) {
+            return 12345678;
+        } else if (color == -1) {
+            if (SceneGraph.lowMem) {
+                if (light < 0)
+                    light = 0;
+                else if (light > 127)
+                    light = 127;
+                light = 127 - light;
+                return light;
+            } else {
+                if (light < 2) {
+                    light = 2;
+                } else if (light > 126) {
+                    light = 126;
+                }
+
+                return light;
+            }
+        } else {
+            light = (color & 0x7F) * light / 128;
+            if (light < 2) {
+                light = 2;
+            } else if (light > 126) {
+                light = 126;
+            }
+
+            return (color & 0xFF80) + light;
         }
-        light = (light * (color & 0x7f)) / 128;
-        if (light < 2)
-            light = 2;
-        else if (light > 126)
-            light = 126;
-        return (color & 0xff80) + light;
+    }
+
+    private static int method187(int hslBitmap, int lightIntensity) {
+        if (hslBitmap == -1) {
+            return 12345678;
+        } else {
+            lightIntensity = (hslBitmap & 0x7F) * lightIntensity / 128;
+            if (lightIntensity < 2) {
+                lightIntensity = 2;
+            } else if (lightIntensity > 126) {
+                lightIntensity = 126;
+            }
+
+            return (hslBitmap & 0xFF80) + lightIntensity;
+        }
+    }
+
+    private static int smoothNoise(int x, int y) {
+        int corners = calculateNoise(x - 1, y - 1) + calculateNoise(x + 1, y - 1) + calculateNoise(x - 1, y + 1) + calculateNoise(x + 1, y + 1);
+        int sides = calculateNoise(x - 1, y) + calculateNoise(x + 1, y) + calculateNoise(x, y - 1) + calculateNoise(x, y + 1);
+        int center = calculateNoise(x, y);
+        return corners / 16 + sides / 8 + center / 4;
+    }
+
+    public static void placeObject(SceneGraph worldController, int i, int j, int k, int l, CollisionMap class11, int ai[][][], int i1, int j1, int k1) {
+        int l1 = ai[l][i1][j];
+        int i2 = ai[l][i1 + 1][j];
+        int j2 = ai[l][i1 + 1][j + 1];
+        int k2 = ai[l][i1][j + 1];
+        int l2 = l1 + i2 + j2 + k2 >> 2;
+        ObjectDefinition class46 = ObjectDefinition.lookup(j1);
+        int i3 = i1 + (j << 7) + (j1 << 14) + 0x40000000;
+        if (!class46.isInteractive)
+            i3 += 0x80000000;
+        byte byte1 = (byte) ((i << 6) + k);
+        if (k == 22) {
+            Object obj;
+            if (class46.animation == -1 && class46.configs == null)
+                obj = class46.modelAt(22, i, l1, i2, j2, k2, -1);
+            else
+                obj = new SceneObject(j1, i, 22, i2, j2, l1, k2, class46.animation, true);
+            worldController.addGroundDecoration(k1, l2, j, ((Renderable) (obj)), byte1, i3, i1);
+            if (class46.interactType && class46.isInteractive)
+                class11.block(i1, j);
+            return;
+        }
+        if (k == 10 || k == 11) {
+            Object obj1;
+            if (class46.animation == -1 && class46.configs == null)
+                obj1 = class46.modelAt(10, i, l1, i2, j2, k2, -1);
+            else
+                obj1 = new SceneObject(j1, i, 10, i2, j2, l1, k2, class46.animation, true);
+            if (obj1 != null) {
+                int j5 = 0;
+                if (k == 11)
+                    j5 += 256;
+                int k4;
+                int i5;
+                if (i == 1 || i == 3) {
+                    k4 = class46.sizeY;
+                    i5 = class46.sizeX;
+                } else {
+                    k4 = class46.sizeX;
+                    i5 = class46.sizeY;
+                }
+                worldController.addTiledObject(i3, byte1, l2, i5, ((Renderable) (obj1)), k4, k1, j5, j, i1);
+            }
+            if (class46.interactType)
+                class11.method212(class46.blocksProjectile, class46.sizeX, class46.sizeY, i1, j, i);
+            return;
+        }
+        if (k >= 12) {
+            Object obj2;
+            if (class46.animation == -1 && class46.configs == null)
+                obj2 = class46.modelAt(k, i, l1, i2, j2, k2, -1);
+            else
+                obj2 = new SceneObject(j1, i, k, i2, j2, l1, k2, class46.animation, true);
+            worldController.addTiledObject(i3, byte1, l2, 1, ((Renderable) (obj2)), 1, k1, 0, j, i1);
+            if (class46.interactType)
+                class11.method212(class46.blocksProjectile, class46.sizeX, class46.sizeY, i1, j, i);
+            return;
+        }
+        if (k == 0) {
+            Object obj3;
+            if (class46.animation == -1 && class46.configs == null)
+                obj3 = class46.modelAt(0, i, l1, i2, j2, k2, -1);
+            else
+                obj3 = new SceneObject(j1, i, 0, i2, j2, l1, k2, class46.animation, true);
+            worldController.addWallObject(anIntArray152[i], ((Renderable) (obj3)), i3, j, byte1, i1, null, l2, 0, k1);
+            if (class46.interactType)
+                class11.method211(j, i, i1, k, class46.blocksProjectile);
+            return;
+        }
+        if (k == 1) {
+            Object obj4;
+            if (class46.animation == -1 && class46.configs == null)
+                obj4 = class46.modelAt(1, i, l1, i2, j2, k2, -1);
+            else
+                obj4 = new SceneObject(j1, i, 1, i2, j2, l1, k2, class46.animation, true);
+            worldController.addWallObject(anIntArray140[i], ((Renderable) (obj4)), i3, j, byte1, i1, null, l2, 0, k1);
+            if (class46.interactType)
+                class11.method211(j, i, i1, k, class46.blocksProjectile);
+            return;
+        }
+        if (k == 2) {
+            int j3 = i + 1 & 3;
+            Object obj11;
+            Object obj12;
+            if (class46.animation == -1 && class46.configs == null) {
+                obj11 = class46.modelAt(2, 4 + i, l1, i2, j2, k2, -1);
+                obj12 = class46.modelAt(2, j3, l1, i2, j2, k2, -1);
+            } else {
+                obj11 = new SceneObject(j1, 4 + i, 2, i2, j2, l1, k2, class46.animation, true);
+                obj12 = new SceneObject(j1, j3, 2, i2, j2, l1, k2, class46.animation, true);
+            }
+            worldController.addWallObject(anIntArray152[i], ((Renderable) (obj11)), i3, j, byte1, i1, ((Renderable) (obj12)), l2, anIntArray152[j3], k1);
+            if (class46.interactType)
+                class11.method211(j, i, i1, k, class46.blocksProjectile);
+            return;
+        }
+        if (k == 3) {
+            Object obj5;
+            if (class46.animation == -1 && class46.configs == null)
+                obj5 = class46.modelAt(3, i, l1, i2, j2, k2, -1);
+            else
+                obj5 = new SceneObject(j1, i, 3, i2, j2, l1, k2, class46.animation, true);
+            worldController.addWallObject(anIntArray140[i], ((Renderable) (obj5)), i3, j, byte1, i1, null, l2, 0, k1);
+            if (class46.interactType)
+                class11.method211(j, i, i1, k, class46.blocksProjectile);
+            return;
+        }
+        if (k == 9) {
+            Object obj6;
+            if (class46.animation == -1 && class46.configs == null)
+                obj6 = class46.modelAt(k, i, l1, i2, j2, k2, -1);
+            else
+                obj6 = new SceneObject(j1, i, k, i2, j2, l1, k2, class46.animation, true);
+            worldController.addTiledObject(i3, byte1, l2, 1, ((Renderable) (obj6)), 1, k1, 0, j, i1);
+            if (class46.interactType)
+                class11.method212(class46.blocksProjectile, class46.sizeX, class46.sizeY, i1, j, i);
+            return;
+        }
+        if (class46.contouredGround)
+            if (i == 1) {
+                int k3 = k2;
+                k2 = j2;
+                j2 = i2;
+                i2 = l1;
+                l1 = k3;
+            } else if (i == 2) {
+                int l3 = k2;
+                k2 = i2;
+                i2 = l3;
+                l3 = j2;
+                j2 = l1;
+                l1 = l3;
+            } else if (i == 3) {
+                int i4 = k2;
+                k2 = l1;
+                l1 = i2;
+                i2 = j2;
+                j2 = i4;
+            }
+        if (k == 4) {
+            Object obj7;
+            if (class46.animation == -1 && class46.configs == null)
+                obj7 = class46.modelAt(4, 0, l1, i2, j2, k2, -1);
+            else
+                obj7 = new SceneObject(j1, 0, 4, i2, j2, l1, k2, class46.animation, true);
+            worldController.addWallDecoration(i3, j, i * 512, k1, 0, l2, ((Renderable) (obj7)), i1, byte1, 0, anIntArray152[i]);
+            return;
+        }
+        if (k == 5) {
+            int j4 = 16;
+            long l4 = worldController.getWallObjectUid(k1, i1, j);
+            if (l4 > 0)
+                j4 = ObjectDefinition.lookup(ObjectKeyUtil.getObjectId(l4)).decorDisplacement;
+            Object obj13;
+            if (class46.animation == -1 && class46.configs == null)
+                obj13 = class46.modelAt(4, 0, l1, i2, j2, k2, -1);
+            else
+                obj13 = new SceneObject(j1, 0, 4, i2, j2, l1, k2, class46.animation, true);
+            worldController.addWallDecoration(i3, j, i * 512, k1, COSINE_VERTICES[i] * j4, l2, ((Renderable) (obj13)), i1, byte1, SINE_VERTICIES[i] * j4, anIntArray152[i]);
+            return;
+        }
+        if (k == 6) {
+            Object obj8;
+            if (class46.animation == -1 && class46.configs == null)
+                obj8 = class46.modelAt(4, 0, l1, i2, j2, k2, -1);
+            else
+                obj8 = new SceneObject(j1, 0, 4, i2, j2, l1, k2, class46.animation, true);
+            worldController.addWallDecoration(i3, j, i, k1, 0, l2, ((Renderable) (obj8)), i1, byte1, 0, 256);
+            return;
+        }
+        if (k == 7) {
+            Object obj9;
+            if (class46.animation == -1 && class46.configs == null)
+                obj9 = class46.modelAt(4, 0, l1, i2, j2, k2, -1);
+            else
+                obj9 = new SceneObject(j1, 0, 4, i2, j2, l1, k2, class46.animation, true);
+            worldController.addWallDecoration(i3, j, i, k1, 0, l2, ((Renderable) (obj9)), i1, byte1, 0, 512);
+            return;
+        }
+        if (k == 8) {
+            Object obj10;
+            if (class46.animation == -1 && class46.configs == null)
+                obj10 = class46.modelAt(4, 0, l1, i2, j2, k2, -1);
+            else
+                obj10 = new SceneObject(j1, 0, 4, i2, j2, l1, k2, class46.animation, true);
+            worldController.addWallDecoration(i3, j, i, k1, 0, l2, ((Renderable) (obj10)), i1, byte1, 0, 768);
+        }
+    }
+
+    public static boolean method189(int i, byte[] is, int i_250_) // xxx bad
+    // method,
+    // decompiled
+    // with JODE
+    {
+        boolean bool = true;
+        Buffer stream = new Buffer(is);
+        int i_252_ = -1;
+        for (;;) {
+            int i_253_ = stream.readUSmart();
+            if (i_253_ == 0)
+                break;
+            i_252_ += i_253_;
+            int i_254_ = 0;
+            boolean bool_255_ = false;
+            for (;;) {
+                if (bool_255_) {
+                    int i_256_ = stream.readUSmart();
+                    if (i_256_ == 0)
+                        break;
+                    stream.readUnsignedByte();
+                } else {
+                    int i_257_ = stream.readUSmart();
+                    if (i_257_ == 0)
+                        break;
+                    i_254_ += i_257_ - 1;
+                    int i_258_ = i_254_ & 0x3f;
+                    int i_259_ = i_254_ >> 6 & 0x3f;
+                    int i_260_ = stream.readUnsignedByte() >> 2;
+                    int i_261_ = i_259_ + i;
+                    int i_262_ = i_258_ + i_250_;
+                    if (i_261_ > 0 && i_262_ > 0 && i_261_ < 103 && i_262_ < 103) {
+                        ObjectDefinition class46 = ObjectDefinition.lookup(i_252_);
+                        if (i_260_ != 22 || !lowMem || class46.isInteractive || class46.obstructsGround) {
+                            bool &= class46.method579();
+                            bool_255_ = true;
+                        }
+                    }
+                }
+            }
+        }
+        return bool;
     }
 
     public final void method190(int i, CollisionMap aclass11[], int j, SceneGraph worldController, byte abyte0[]) {
-        label0:
-        {
+        label0: {
             Buffer stream = new Buffer(abyte0);
             int l = -1;
             do {

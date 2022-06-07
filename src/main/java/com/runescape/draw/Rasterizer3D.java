@@ -1,8 +1,9 @@
 package com.runescape.draw;
 
+import com.runescape.Client;
 import com.runescape.cache.FileArchive;
 import com.runescape.cache.graphics.IndexedImage;
-import com.runescape.scene.SceneGraph;
+
 
 public final class Rasterizer3D extends Rasterizer2D {
 
@@ -392,6 +393,9 @@ public final class Rasterizer3D extends Rasterizer2D {
 
 
     public static void drawShadedTriangle(int y1, int y2, int y3, int x1, int x2, int x3, int hsl1, int hsl2, int hsl3) {
+        if (Client.processGpuPlugin() && !renderOnGpu) {
+            return;
+        }
 
         int var9 = x2 - x1;
         int var10 = y2 - y1;
@@ -898,6 +902,10 @@ public final class Rasterizer3D extends Rasterizer2D {
     }
 
     public static void drawGouraudScanline(int var0[], int var1, int var2, int var3, int var4, int var5, int var6, int var7) {
+        if (Client.instance.frameMode == Client.ScreenMode.FIXED
+                && world && var1 <= 259086) { //(512+4)+(334+4)*765
+            var1 += 3064; //4+4*765
+        }
 
         if (textureOutOfDrawingBounds) {
             if (var5 > lastX) {
@@ -1000,6 +1008,9 @@ public final class Rasterizer3D extends Rasterizer2D {
     }
 
     public static void drawFlatTriangle(int y_a, int y_b, int y_c, int x_a, int x_b, int x_c, int k1) {
+        if (Client.processGpuPlugin() && !renderOnGpu) {
+            return;
+        }
 
         int a_to_b = 0;
         if (y_b != y_a) {
@@ -1307,6 +1318,9 @@ public final class Rasterizer3D extends Rasterizer2D {
     }
 
     private static void drawFlatTexturedScanline(int dest[], int dest_off, int loops, int start_x, int end_x) {
+        if (Client.instance.frameMode == Client.ScreenMode.FIXED && world && dest_off <= 259086) {
+            dest_off += 3064; //4+4*765
+        }
 
         int rgb;
         if (textureOutOfDrawingBounds) {
@@ -1348,7 +1362,9 @@ public final class Rasterizer3D extends Rasterizer2D {
     }
 
     public static void drawTexturedTriangle(int var0, int var1, int var2, int var3, int var4, int var5, int var6, int var7, int var8, int var9, int var10, int var11, int var12, int var13, int var14, int var15, int var16, int var17, int var18) {
-
+        if (Client.processGpuPlugin() && !renderOnGpu) {
+            return;
+        }
         int[] texturePixels = getTexturePixels(var18);
         int var21;
         aBoolean1463 = !textureIsTransparant[var18];
@@ -1966,6 +1982,9 @@ public final class Rasterizer3D extends Rasterizer2D {
     }
 
     static void drawTexturedLine(int[] var0, int[] var1, int var2, int var3, int var4, int var5, int var6, int var7, int var8, int var9, int var10, int var11, int var12, int var13, int var14) {
+        if (Client.instance.frameMode == Client.ScreenMode.FIXED && world && var4 <= 259086) {
+            var4 += 3064; //4+4*765
+        }
 
         if(textureOutOfDrawingBounds) {
             if(var6 > Rasterizer2D.lastX) {
@@ -2424,5 +2443,4 @@ public final class Rasterizer3D extends Rasterizer2D {
             COSINE[k] = (int) (65536D * Math.cos((double) k * 0.0030679614999999999D));
         }
     }
-
 }

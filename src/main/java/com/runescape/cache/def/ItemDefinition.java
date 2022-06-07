@@ -7,16 +7,19 @@ import com.runescape.draw.Rasterizer2D;
 import com.runescape.draw.Rasterizer3D;
 import com.runescape.entity.model.Model;
 import com.runescape.io.Buffer;
+import net.runelite.api.IterableHashTable;
+import net.runelite.rs.api.RSItemComposition;
+import net.runelite.rs.api.RSIterableNodeHashTable;
 
 import java.util.HashMap;
 
-public final class ItemDefinition {
+public final class ItemDefinition implements RSItemComposition {
 
     public static ReferenceCache sprites = new ReferenceCache(100);
     public static ReferenceCache models = new ReferenceCache(50);
     public static boolean isMembers = true;
     public static int totalItems;
-    private static ItemDefinition[] cache;
+    public static ItemDefinition[] cache;
     private static int cacheIndex;
     private static Buffer item_data;
     private static int[] streamIndices;
@@ -239,9 +242,10 @@ public final class ItemDefinition {
         int vp_right = Rasterizer2D.bottomX;
         int vp_top = Rasterizer2D.topY;
         int vp_bottom = Rasterizer2D.bottomY;
+        Rasterizer3D.world = false;
         Rasterizer3D.aBoolean1464 = false;
         Rasterizer2D.initDrawingArea(32, 32, enabledSprite.myPixels);
-        Rasterizer2D.drawBox(0, 0, 32, 32, 0);
+        Rasterizer2D.drawItemBox(0, 0, 32, 32, 0);
         Rasterizer3D.useViewport();
         int k3 = itemDef.zoom2d;
         if (outlineColor == -1)
@@ -250,8 +254,10 @@ public final class ItemDefinition {
             k3 = (int) ((double) k3 * 1.04D);
         int l3 = Rasterizer3D.anIntArray1470[itemDef.xan2d] * k3 >> 16;
         int i4 = Rasterizer3D.COSINE[itemDef.xan2d] * k3 >> 16;
+        Rasterizer3D.renderOnGpu = true;
         model.render_2D(itemDef.yan2d, itemDef.zan2d, itemDef.xan2d, itemDef.xOffset2d,
                 l3 + model.modelBaseY / 2 + itemDef.yOffset2d, i4 + itemDef.yOffset2d);
+        Rasterizer3D.renderOnGpu = false;
 
         enabledSprite.outline(1);
         if (outlineColor > 0) {
@@ -280,6 +286,7 @@ public final class ItemDefinition {
         Rasterizer3D.originViewY = centerY;
         Rasterizer3D.scanOffsets = lineOffsets;
         Rasterizer3D.aBoolean1464 = true;
+        Rasterizer3D.world = true;
         if (itemDef.stackable)
             enabledSprite.maxWidth = 33;
         else
@@ -315,15 +322,20 @@ public final class ItemDefinition {
         int vp_right = Rasterizer2D.bottomX;
         int vp_top = Rasterizer2D.topY;
         int vp_bottom = Rasterizer2D.bottomY;
+        Rasterizer3D.world = false;
         Rasterizer3D.aBoolean1464 = false;
         Rasterizer2D.initDrawingArea(90, 90, sprite.myPixels);
-        Rasterizer2D.drawBox(0, 0, 90, 90, 0);
+        Rasterizer2D.drawItemBox(0, 0, 90, 90, 0);
         Rasterizer3D.useViewport();
         int l3 = Rasterizer3D.anIntArray1470[itemDef.xan2d] * zoom >> 15;
         int i4 = Rasterizer3D.COSINE[itemDef.xan2d] * zoom >> 15;
+        Rasterizer3D.renderOnGpu = true;
+
         model.render_2D(itemDef.yan2d, itemDef.zan2d, itemDef.xan2d, itemDef.xOffset2d,
                 l3 + model.modelBaseY / 2 + itemDef.yOffset2d, i4 + itemDef.yOffset2d);
         sprite.outline(1);
+        Rasterizer3D.renderOnGpu = false;
+
         if (outlineColor > 0) {
             sprite.outline(16777215);
         }
@@ -337,6 +349,7 @@ public final class ItemDefinition {
         Rasterizer3D.originViewY = centerY;
         Rasterizer3D.scanOffsets = lineOffsets;
         Rasterizer3D.aBoolean1464 = true;
+        Rasterizer3D.world = true;
         if (itemDef.stackable)
             sprite.maxWidth = 33;
         else
@@ -520,6 +533,86 @@ public final class ItemDefinition {
         stackable = true;
     }
 
+    @Override
+    public String getName() {
+        return null;
+    }
+
+    @Override
+    public void setName(String name) {
+
+    }
+
+    @Override
+    public int getId() {
+        return 0;
+    }
+
+    @Override
+    public int getNote() {
+        return 0;
+    }
+
+    @Override
+    public int getLinkedNoteId() {
+        return 0;
+    }
+
+    @Override
+    public int getPlaceholderId() {
+        return 0;
+    }
+
+    @Override
+    public int getPlaceholderTemplateId() {
+        return 0;
+    }
+
+    @Override
+    public int getPrice() {
+        return 0;
+    }
+
+    @Override
+    public boolean isMembers() {
+        return false;
+    }
+
+    @Override
+    public boolean isTradeable() {
+        return false;
+    }
+
+    @Override
+    public void setTradeable(boolean yes) {
+
+    }
+
+    @Override
+    public int getIsStackable() {
+        return 0;
+    }
+
+    @Override
+    public int getMaleModel() {
+        return 0;
+    }
+
+    @Override
+    public String[] getInventoryActions() {
+        return new String[0];
+    }
+
+    @Override
+    public String[] getGroundActions() {
+        return new String[0];
+    }
+
+    @Override
+    public int getShiftClickActionIndex() {
+        return 0;
+    }
+
     public Model getModel(int stack_size) {
         if (countObj != null && stack_size > 1) {
             int stack_item_id = -1;
@@ -549,6 +642,36 @@ public final class ItemDefinition {
         model.fits_on_single_square = true;
         models.put(model, id);
         return model;
+    }
+
+    @Override
+    public int getInventoryModel() {
+        return 0;
+    }
+
+    @Override
+    public short[] getColorToReplaceWith() {
+        return new short[0];
+    }
+
+    @Override
+    public short[] getTextureToReplaceWith() {
+        return new short[0];
+    }
+
+    @Override
+    public RSIterableNodeHashTable getParams() {
+        return null;
+    }
+
+    @Override
+    public void setParams(IterableHashTable params) {
+
+    }
+
+    @Override
+    public void setParams(RSIterableNodeHashTable params) {
+
     }
 
     public Model getUnshadedModel(int stack_size) {
@@ -732,4 +855,43 @@ public final class ItemDefinition {
         }
     }
 
+    @Override
+    public int getHaPrice() {
+        return 0;
+    }
+
+    @Override
+    public boolean isStackable() {
+        return false;
+    }
+
+    @Override
+    public void setShiftClickActionIndex(int shiftClickActionIndex) {
+
+    }
+
+    @Override
+    public void resetShiftClickActionIndex() {
+
+    }
+
+    @Override
+    public int getIntValue(int paramID) {
+        return 0;
+    }
+
+    @Override
+    public void setValue(int paramID, int value) {
+
+    }
+
+    @Override
+    public String getStringValue(int paramID) {
+        return null;
+    }
+
+    @Override
+    public void setValue(int paramID, String value) {
+
+    }
 }

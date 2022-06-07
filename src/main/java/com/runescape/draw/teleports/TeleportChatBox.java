@@ -27,10 +27,8 @@ public class TeleportChatBox {
 		int chatboxWidth = Client.frameMode == ScreenMode.FIXED ? 501 : 498;
 		int chatboxHeight = 166;
 		boolean click = Client.instance.clickMode3 == 1;
-		Rasterizer2D.drawHorizontalLine(10, 24 + offsetY, chatboxWidth, 0x847963,
-				255);
-		Rasterizer2D.drawHorizontalLine(10, 23 + offsetY, chatboxWidth, 0x847963,
-				255);
+		Rasterizer2D.drawHorizontalLine(10, 24 + offsetY, chatboxWidth, 0x847963);
+		Rasterizer2D.drawHorizontalLine(10, 23 + offsetY, chatboxWidth, 0x847963);
 
 		// Draw and handle close button..
 		int spriteDrawX = (offsetX + 7);
@@ -106,7 +104,7 @@ public class TeleportChatBox {
 
 		if (hoveredIndex >= 0 && hoveredIndex < options.length) {
 			HierarchyOption hierarchyOption = options[hoveredIndex];
-			Rasterizer2D.fillRectangle(5 + (hoveredOptionX > 10 ? hoveredOptionX - 5 : 0), hoveredOptionY + 1,
+			Rasterizer2D.drawTransparentBox(5 + (hoveredOptionX > 10 ? hoveredOptionX - 5 : 0), hoveredOptionY + 1,
 					hierarchyOption.getDimension().width - 6, 13, 0, 50);
 
 			if (click) {
@@ -186,7 +184,7 @@ public class TeleportChatBox {
 				if ((hoveredOptionX + pixelsLength) > 509) {
 					pixelsLength = (509 - hoveredOptionX);
 				}
-				Rasterizer2D.fillRectangle(hoveredOptionX,
+				Rasterizer2D.drawTransparentBox(hoveredOptionX,
 						hoveredOptionY + 1,
 						pixelsLength, 13, 0, 50);
 
@@ -236,7 +234,7 @@ public class TeleportChatBox {
 				selectedHierarchy = null;
 			}
 
-			Rasterizer2D.fillRectangle(29, 10 + offsetY, 108, 11, 0, 50);
+			Rasterizer2D.drawTransparentBox(29, 10 + offsetY, 108, 11, 0, 50);
 		}
 		font.drawBasicString("Teleportation menu"
 				+ (selectedHierarchy != null ? " -> " + selectedHierarchy.getName() : ""),

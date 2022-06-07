@@ -1,45 +1,5 @@
 package com.runescape;
 
-import java.applet.AppletContext;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.Toolkit;
-import java.awt.event.KeyEvent;
-import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.zip.CRC32;
-import java.util.zip.Deflater;
-import java.util.zip.DeflaterOutputStream;
-
-import javax.imageio.ImageIO;
-
 import com.runescape.cache.FileArchive;
 import com.runescape.cache.FileStore;
 import com.runescape.cache.Resource;
@@ -50,11 +10,8 @@ import com.runescape.cache.anim.Graphic;
 import com.runescape.cache.config.VariableBits;
 import com.runescape.cache.config.VariablePlayer;
 import com.runescape.cache.def.*;
-import com.runescape.cache.graphics.DropdownMenu;
-import com.runescape.cache.graphics.GameFont;
-import com.runescape.cache.graphics.IndexedImage;
 import com.runescape.cache.graphics.RSFont;
-import com.runescape.cache.graphics.Slider;
+import com.runescape.cache.graphics.*;
 import com.runescape.cache.graphics.sprite.Sprite;
 import com.runescape.cache.graphics.sprite.SpriteCache;
 import com.runescape.cache.graphics.widget.Bank;
@@ -71,10 +28,9 @@ import com.runescape.draw.skillorbs.SkillOrbs;
 import com.runescape.draw.teleports.TeleportChatBox;
 import com.runescape.entity.GameObject;
 import com.runescape.entity.Item;
-import com.runescape.entity.Mob;
-import com.runescape.entity.Npc;
 import com.runescape.entity.Player;
 import com.runescape.entity.Renderable;
+import com.runescape.entity.*;
 import com.runescape.entity.model.IdentityKit;
 import com.runescape.entity.model.Model;
 import com.runescape.io.Buffer;
@@ -86,12 +42,8 @@ import com.runescape.model.EffectTimer;
 import com.runescape.model.content.Keybinding;
 import com.runescape.net.BufferedConnection;
 import com.runescape.net.IsaacCipher;
-import com.runescape.scene.AnimableObject;
-import com.runescape.scene.CollisionMap;
-import com.runescape.scene.MapRegion;
 import com.runescape.scene.Projectile;
-import com.runescape.scene.SceneGraph;
-import com.runescape.scene.SceneObject;
+import com.runescape.scene.*;
 import com.runescape.scene.object.GroundDecoration;
 import com.runescape.scene.object.SpawnedObject;
 import com.runescape.scene.object.WallDecoration;
@@ -102,8 +54,47 @@ import com.runescape.sound.SoundPlayer;
 import com.runescape.sound.Track;
 import com.runescape.util.*;
 import com.runescape.util.zip.BZip2OutputStream;
+import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.*;
+import net.runelite.api.Point;
+import net.runelite.api.clan.ClanRank;
+import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.events.CanvasSizeChanged;
+import net.runelite.api.events.ClientTick;
+import net.runelite.api.events.GameStateChanged;
+import net.runelite.api.events.ResizeableChanged;
+import net.runelite.api.hooks.Callbacks;
+import net.runelite.api.hooks.DrawCallbacks;
+import net.runelite.api.vars.AccountType;
+import net.runelite.api.widgets.WidgetInfo;
+import net.runelite.rs.api.*;
+import org.slf4j.Logger;
 
-public class Client extends GameApplet {
+import javax.imageio.ImageIO;
+import java.applet.AppletContext;
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.zip.CRC32;
+import java.util.zip.Deflater;
+import java.util.zip.DeflaterOutputStream;
+
+@Slf4j
+public class Client extends GameApplet implements RSClient {
 
     public static final int TOTAL_ARCHIVES = 9;
     public static final int TITLE_ARCHIVE = 1;
@@ -238,14 +229,12 @@ public class Client extends GameApplet {
     private static int anInt1005;
     private static int anInt1051;
     private static int anInt1097;
-    private static ProducingGraphicsBuffer loginBoxImageProducer;
+
     private static int anInt1117;
     private static int anInt1134;
     private static int anInt1142;
     private static int anInt1155;
-    private static ProducingGraphicsBuffer tabImageProducer;
-    private static ProducingGraphicsBuffer gameScreenImageProducer;
-    private static ProducingGraphicsBuffer chatboxImageProducer;
+
     private static int anInt1175;
     private static int[] anIntArray1180;
     private static int[] anIntArray1181;
@@ -432,7 +421,7 @@ public class Client extends GameApplet {
     private String objectMaps = "", floorMaps = "";
     private int poisonType;
     private int specialAttack = 0;
-    private ProducingGraphicsBuffer loginScreenAccessories;
+
     private boolean rememberUsernameHover, rememberPasswordHover, forgottenPasswordHover;
     private boolean rememberUsername = true;
     private boolean rememberPassword = false;
@@ -449,8 +438,7 @@ public class Client extends GameApplet {
             specialHover, expCounterHover, worldHover, autocast;
     @SuppressWarnings("unused")
     private int currentTrackPlaying;
-    private ProducingGraphicsBuffer leftFrame;
-    private ProducingGraphicsBuffer topFrame;
+
     private int ignoreCount;
     private long loadingStartTime;
     private int[][] anIntArrayArray825;
@@ -488,7 +476,7 @@ public class Client extends GameApplet {
     private String reportAbuseInput;
     private boolean menuOpen;
     private int anInt886;
-    private Player[] players;
+    public Player[] players;
     private int playerCount;
     private int[] playerList;
     private int mobsAwaitingUpdateCount;
@@ -613,19 +601,11 @@ public class Client extends GameApplet {
     private int speed;
     private int angle;
     private int systemUpdateTime;
-    private ProducingGraphicsBuffer topLeft1BackgroundTile;
-    private ProducingGraphicsBuffer bottomLeft1BackgroundTile;
-    private ProducingGraphicsBuffer flameLeftBackground;
-    private ProducingGraphicsBuffer flameRightBackground;
-    private ProducingGraphicsBuffer bottomLeft0BackgroundTile;
-    private ProducingGraphicsBuffer bottomRightImageProducer;
-    private ProducingGraphicsBuffer loginMusicImageProducer;
-    private ProducingGraphicsBuffer middleLeft1BackgroundTile;
-    private ProducingGraphicsBuffer aRSImageProducer_1115;
+
     private int membersInt;
     private String aString1121;
     private Sprite compass;
-    private ProducingGraphicsBuffer chatSettingImageProducer;
+
     private int cameraY;
     private int menuActionRow;
     private int spellSelected;
@@ -642,7 +622,7 @@ public class Client extends GameApplet {
     private boolean canMute;
     private boolean requestMapReconstruct;
     private boolean inCutScene;
-    private ProducingGraphicsBuffer minimapImageProducer;
+
     private int daysSinceRecovChange;
     private BufferedConnection socketStream;
     public PacketSender packetSender;
@@ -879,86 +859,64 @@ public class Client extends GameApplet {
         bigY = new int[4000];
     }
 
-    public void frameMode(ScreenMode screenMode) {
-        if (frameMode != screenMode) {
-            frameMode = screenMode;
-            if (screenMode == ScreenMode.FIXED) {
-                frameWidth = 765;
-                frameHeight = 503;
-                cameraZoom = 600;
-                SceneGraph.viewDistance = 9;
-            } else if (screenMode == ScreenMode.RESIZABLE) {
-                frameWidth = 766;
-                frameHeight = 529;
-                cameraZoom = 850;
-                SceneGraph.viewDistance = 10;
-            } else if (screenMode == ScreenMode.FULLSCREEN) {
-                cameraZoom = 600;
-                SceneGraph.viewDistance = 10;
-                frameWidth = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
-                frameHeight = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight();
-            }
-            rebuildFrameSize(screenMode, frameWidth, frameHeight);
-            setBounds();
-        }
-        stackSideStones = screenMode == ScreenMode.FIXED ? false : stackSideStones;
-        showChatComponents = screenMode == ScreenMode.FIXED ? true : showChatComponents;
-        showTabComponents = screenMode == ScreenMode.FIXED ? true : showTabComponents;
-    }
 
-    public void rebuildFrameSize(ScreenMode screenMode, int width, int height) {
-    	screenAreaWidth = (screenMode == ScreenMode.FIXED) ? 512 : width;
-        screenAreaHeight = (screenMode == ScreenMode.FIXED) ? 334 : height;
-        frameWidth = width;
-        frameHeight = height;
-        instance.rebuildFrame(width, height, screenMode == ScreenMode.RESIZABLE, screenMode == ScreenMode.FULLSCREEN);
+    public void refreshFrameSize() {
+        if (frameMode == ScreenMode.RESIZABLE) {
+            if (frameWidth != (appletClient() ? getGameComponent().getWidth()
+                    : gameFrame.getFrameWidth())) {
+                frameWidth = (appletClient() ? getGameComponent().getWidth()
+                        : gameFrame.getFrameWidth());
+                screenAreaWidth = frameWidth;
+                setBounds();
+                getCallbacks().post(CanvasSizeChanged.INSTANCE);
+            }
+            if (frameHeight != (appletClient() ? getGameComponent().getHeight()
+                    : gameFrame.getFrameHeight())) {
+                frameHeight = (appletClient() ? getGameComponent().getHeight()
+                        : gameFrame.getFrameHeight());
+                screenAreaHeight = frameHeight;
+                setBounds();
+                getCallbacks().post(CanvasSizeChanged.INSTANCE);
+            }
+        }
     }
 
     private static void setBounds() {
         Rasterizer3D.reposition(frameWidth, frameHeight);
         fullScreenTextureArray = Rasterizer3D.scanOffsets;
-        Rasterizer3D.reposition(
-                frameMode == ScreenMode.FIXED
-                        ? (chatboxImageProducer != null
-                        ? chatboxImageProducer.canvasWidth : 519)
-                        : frameWidth,
-                frameMode == ScreenMode.FIXED
-                        ? (chatboxImageProducer != null
-                        ? chatboxImageProducer.canvasHeight : 165)
-                        : frameHeight);
         anIntArray1180 = Rasterizer3D.scanOffsets;
-        Rasterizer3D.reposition(
-                frameMode == ScreenMode.FIXED
-                        ? (tabImageProducer != null ? tabImageProducer.canvasWidth
-                        : 249)
-                        : frameWidth,
-                frameMode == ScreenMode.FIXED ? (tabImageProducer != null
-                        ? tabImageProducer.canvasHeight : 335) : frameHeight);
         anIntArray1181 = Rasterizer3D.scanOffsets;
-        Rasterizer3D.reposition(screenAreaWidth, screenAreaHeight);
-        anIntArray1182 = Rasterizer3D.scanOffsets;
-        int ai[] = new int[9];
-        for (int i8 = 0; i8 < 9; i8++) {
-            int k8 = 128 + i8 * 32 + 15;
-            int l8 = 600 + k8 * 3;
-            int i9 = Rasterizer3D.anIntArray1470[k8];
-            ai[i8] = l8 * i9 >> 16;
+        Rasterizer3D.scanOffsets = new int[frameHeight];
+        for (int x = 0; x < frameHeight; x++) {
+            Rasterizer3D.scanOffsets[x] = frameWidth * x;
         }
+        anIntArray1182 = Rasterizer3D.scanOffsets;
+        Rasterizer3D.originViewX = screenAreaWidth / 2;
+        Rasterizer3D.originViewY = screenAreaHeight / 2;
+
+        Rasterizer3D.fieldOfView = screenAreaWidth * screenAreaHeight / 85504 << 1;
+
+        if(!Client.processGpuPlugin()) {
+            int ai[] = new int[9];
+            for (int i8 = 0; i8 < 9; i8++) {
+                int k8 = 128 + i8 * 32 + 15;
+                int l8 = 600 + k8 * 3;
+                int i9 = Rasterizer3D.anIntArray1470[k8];
+                ai[i8] = l8 * i9 >> 16;
+            }
+            SceneGraph.buildVisibilityMap(500, 800, screenAreaWidth, screenAreaHeight, ai);
+        }
+
         if (frameMode == ScreenMode.RESIZABLE && (frameWidth >= 765) && (frameWidth <= 1025)
                 && (frameHeight >= 503) && (frameHeight <= 850)) {
-            SceneGraph.viewDistance = 9;
             cameraZoom = 575;
         } else if (frameMode == ScreenMode.FIXED) {
             cameraZoom = 600;
-        } else if (frameMode == ScreenMode.RESIZABLE || frameMode == ScreenMode.FULLSCREEN) {
-            SceneGraph.viewDistance = 10;
+        } else if (frameMode == ScreenMode.RESIZABLE) {
             cameraZoom = 600;
         }
-        SceneGraph.setupViewport(500, 800, screenAreaWidth, screenAreaHeight, ai);
-        if (loggedIn) {
-            gameScreenImageProducer =
-                    new ProducingGraphicsBuffer(screenAreaWidth, screenAreaHeight);
-        }
+
+        gameScreenImageProducer = new ProducingGraphicsBuffer(frameWidth, frameHeight);
     }
 
     private static String intToKOrMilLongName(int i) {
@@ -1233,6 +1191,51 @@ public class Client extends GameApplet {
             frameMode(ScreenMode.FIXED);
             instance = this;
             initClientFrame(503, 765);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void frameMode(ScreenMode screenMode) {
+        if (frameMode != screenMode) {
+            frameMode = screenMode;
+            if (screenMode == ScreenMode.FIXED) {
+                frameWidth = 765;
+                frameHeight = 503;
+                cameraZoom = 600;
+
+            } else if (screenMode == ScreenMode.RESIZABLE) {
+                frameWidth = 766;
+                frameHeight = 529;
+                cameraZoom = 850;
+
+            } else if (screenMode == ScreenMode.FULLSCREEN) {
+                cameraZoom = 600;
+
+                frameWidth = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
+                frameHeight = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight();
+            }
+            rebuildFrameSize(screenMode, frameWidth, frameHeight);
+            ResizeableChanged resizeableChanged = new ResizeableChanged();
+            resizeableChanged.setResized(Client.instance.isResized());
+            Client.instance.getCallbacks().post(resizeableChanged);
+            setBounds();
+        }
+        showChatComponents = screenMode == ScreenMode.FIXED || showChatComponents;
+        showTabComponents = screenMode == ScreenMode.FIXED || showTabComponents;
+    }
+
+    public static void rebuildFrameSize(ScreenMode screenMode, int screenWidth,
+                                        int screenHeight) {
+        try {
+            screenAreaWidth = (screenMode == ScreenMode.FIXED) ? 512 : screenWidth;
+            screenAreaHeight = (screenMode == ScreenMode.FIXED) ? 334 : screenHeight;
+            frameWidth = screenWidth;
+            frameHeight = screenHeight;
+            instance.refreshFrameSize(screenMode == ScreenMode.FULLSCREEN, screenWidth,
+                    screenHeight, screenMode == ScreenMode.RESIZABLE,
+                    screenMode != ScreenMode.FIXED);
+            setBounds();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1623,21 +1626,6 @@ public class Client extends GameApplet {
         }
     }
 
-    public void refreshFrameSize() {
-        if (frameMode == ScreenMode.RESIZABLE) {
-            if (frameWidth != (appletClient() ? getGameComponent().getWidth() : GameWindow.getInstance().getFrameWidth())) {
-                frameWidth = (appletClient() ? getGameComponent().getWidth() : GameWindow.getInstance().getFrameWidth());
-                screenAreaWidth = frameWidth;
-                setBounds();
-            }
-            if (frameHeight != (appletClient() ? getGameComponent().getHeight() : GameWindow.getInstance().getFrameHeight())) {
-                frameHeight = (appletClient() ? getGameComponent().getHeight() : GameWindow.getInstance().getFrameHeight());
-                screenAreaHeight = frameHeight;
-                setBounds();
-            }
-        }
-    }
-
     public boolean getMousePositions() {
         if (mouseInRegion(frameWidth - (frameWidth <= 1000 ? 240 : 420),
                 frameWidth, frameHeight - (frameWidth <= 1000 ? 90 : 37), frameHeight)) {
@@ -1784,7 +1772,7 @@ public class Client extends GameApplet {
     }
 
     public void drawChannelButtons() {
-        final int yOffset = frameMode == ScreenMode.FIXED ? 0 : frameHeight - 165;
+        int yOffset = frameMode == ScreenMode.FIXED ? 338 : frameHeight - 165;
         spriteCache.draw(49, 0, 143 + yOffset);
         String text[] = {"On", "Friends", "Off", "Hide"};
         int textColor[] = {65280, 0xffff00, 0xff0000, 65535};
@@ -1842,10 +1830,8 @@ public class Client extends GameApplet {
     }
 
     private void drawChatArea() {
-        int yOffset = frameMode == ScreenMode.FIXED ? 0 : frameHeight - 165;
-        if (frameMode == ScreenMode.FIXED) {
-            chatboxImageProducer.initDrawingArea();
-        }
+        int yOffset = frameMode == ScreenMode.FIXED ? 338 : frameHeight - 165;
+
         Rasterizer3D.scanOffsets = anIntArray1180;
         if (chatStateCheck()) {
             showChatComponents = true;
@@ -1854,7 +1840,7 @@ public class Client extends GameApplet {
         if (showChatComponents) {
             if ((changeChatArea && frameMode != ScreenMode.FIXED) && !chatStateCheck()) {
                 Rasterizer2D.drawHorizontalLine(7, 7 + yOffset, 506, 0x575757);
-                Rasterizer2D.fillGradientRectangle(7, 7 + yOffset, 510, 130, 0x00000000, 0x5A000000);
+                Rasterizer2D.drawTransparentGradientBox(7, 7 + yOffset, 510, 130, 0x00000000, 0x5A000000,255);
             } else {
                 spriteCache.draw(20, 0, yOffset);
             }
@@ -2039,7 +2025,7 @@ public class Client extends GameApplet {
                     }
                 }
             }
-            Rasterizer2D.defaultDrawingAreaSize();
+            gameScreenImageProducer.initDrawingArea();
             anInt1211 = j * 14 + 7 + 5;
             if (anInt1211 < 111) {
                 anInt1211 = 111;
@@ -2068,17 +2054,10 @@ public class Client extends GameApplet {
                     xOffset + font.getTextWidth(s + ": "), 133 + yOffset,
                     (changeChatArea && frameMode != ScreenMode.FIXED) ? 0x7FA9FF : 255, shadow);
             Rasterizer2D.drawHorizontalLine(7, 121 + yOffset, 506, (changeChatArea && frameMode != ScreenMode.FIXED) ? 0x575757 : 0x807660);
-            Rasterizer2D.defaultDrawingAreaSize();
+            gameScreenImageProducer.initDrawingArea();
         }
-        if (menuOpen) {
-            drawMenu(0, frameMode == ScreenMode.FIXED ? 338 : 0);
-        } else {
-        	drawHoverMenu(0, frameMode == ScreenMode.FIXED ? 338 : 0);
-        }
-        if (frameMode == ScreenMode.FIXED) {
-            chatboxImageProducer.drawGraphics(338, super.graphics, 0);
-        }
-        gameScreenImageProducer.initDrawingArea();
+
+
         Rasterizer3D.scanOffsets = anIntArray1182;
     }
     
@@ -2213,8 +2192,11 @@ public class Client extends GameApplet {
         
     }
 
+    public MapRegion currentMapRegion;
+
     private void loadRegion() {
         try {
+            setGameState(GameState.LOADING);
             lastKnownPlane = -1;
             incompleteAnimables.clear();
             projectiles.clear();
@@ -2231,7 +2213,7 @@ public class Client extends GameApplet {
                 }
             }
 
-            MapRegion objectManager = new MapRegion(tileFlags, tileHeights);
+            currentMapRegion = new MapRegion(tileFlags, tileHeights);
             int k2 = terrainData.length;
             packetSender.sendEmptyPacket();
 
@@ -2241,7 +2223,7 @@ public class Client extends GameApplet {
                     int k5 = (mapCoordinates[i3] & 0xff) * 64 - regionBaseY;
                     byte abyte0[] = terrainData[i3];
                     if (abyte0 != null)
-                        objectManager.method180(abyte0, k5, i4, (currentRegionX - 6) * 8, (currentRegionY - 6) * 8,
+                        currentMapRegion.method180(abyte0, k5, i4, (currentRegionX - 6) * 8, (currentRegionY - 6) * 8,
                                 collisionMaps);
                 }
                 for (int j4 = 0; j4 < k2; j4++) {
@@ -2249,7 +2231,7 @@ public class Client extends GameApplet {
                     int k7 = (mapCoordinates[j4] & 0xff) * 64 - regionBaseY;
                     byte abyte2[] = terrainData[j4];
                     if (abyte2 == null && currentRegionY < 800)
-                        objectManager.initiateVertexHeights(k7, 64, 64, l5);
+                        currentMapRegion.initiateVertexHeights(k7, 64, 64, l5);
                 }
                 /*
                  * anInt1097++; if (anInt1097 > 160) { anInt1097 = 0;
@@ -2262,7 +2244,7 @@ public class Client extends GameApplet {
                     if (abyte1 != null) {
                         int l8 = (mapCoordinates[i6] >> 8) * 64 - regionBaseX;
                         int k9 = (mapCoordinates[i6] & 0xff) * 64 - regionBaseY;
-                        objectManager.method190(l8, collisionMaps, k9, scene, abyte1);
+                        currentMapRegion.method190(l8, collisionMaps, k9, scene, abyte1);
                     }
                 }
             } else {
@@ -2279,7 +2261,7 @@ public class Client extends GameApplet {
                                 for (int idx = 0; idx < mapCoordinates.length; idx++) {
                                     if (mapCoordinates[idx] != mapRegion || terrainData[idx] == null)
                                         continue;
-                                    objectManager.loadMapChunk(z, rotation, collisionMaps, x * 8, (xCoord & 7) * 8,
+                                    currentMapRegion.loadMapChunk(z, rotation, collisionMaps, x * 8, (xCoord & 7) * 8,
                                             terrainData[idx], (yCoord & 7) * 8, plane, y * 8);
                                     break;
                                 }
@@ -2292,7 +2274,7 @@ public class Client extends GameApplet {
                     for (int yChunk = 0; yChunk < 13; yChunk++) {
                         int tileBits = constructRegionData[0][xChunk][yChunk];
                         if (tileBits == -1)
-                            objectManager.initiateVertexHeights(yChunk * 8, 8, 8, xChunk * 8);
+                            currentMapRegion.initiateVertexHeights(yChunk * 8, 8, 8, xChunk * 8);
                     }
                 }
 
@@ -2310,7 +2292,7 @@ public class Client extends GameApplet {
                                 for (int idx = 0; idx < mapCoordinates.length; idx++) {
                                     if (mapCoordinates[idx] != mapRegion || objectData[idx] == null)
                                         continue;
-                                    objectManager.readObjectMap(collisionMaps, scene, plane, chunkX * 8,
+                                    currentMapRegion.readObjectMap(collisionMaps, scene, plane, chunkX * 8,
                                             (coordY & 7) * 8, chunkZ, objectData[idx], (coordX & 7) * 8, rotation,
                                             chunkY * 8);
                                     break;
@@ -2322,8 +2304,7 @@ public class Client extends GameApplet {
                 requestMapReconstruct = false;
             }
             packetSender.sendEmptyPacket();
-            objectManager.createRegionScene(collisionMaps, scene);
-            gameScreenImageProducer.initDrawingArea();
+            currentMapRegion.createRegionScene(collisionMaps, scene);
             packetSender.sendEmptyPacket();
             int k3 = MapRegion.maximumPlane;
             if (k3 > plane)
@@ -2387,6 +2368,7 @@ public class Client extends GameApplet {
                 }
             }
         }
+        setGameState(GameState.LOGGED_IN);
     }
 
     private void unlinkCaches() {
@@ -2412,9 +2394,9 @@ public class Client extends GameApplet {
             int i1 = 24628 + (103 - y) * 512 * 4;
             for (int x = 1; x < 103; x++) {
                 if ((tileFlags[plane][x][y] & 0x18) == 0)
-                    scene.drawTileOnMinimapSprite(pixels, i1, plane, x, y);
+                    scene.drawTileMinimap(pixels, i1, plane, x, y);
                 if (plane < 3 && (tileFlags[plane + 1][x][y] & 8) != 0)
-                    scene.drawTileOnMinimapSprite(pixels, i1, plane + 1, x, y);
+                    scene.drawTileMinimap(pixels, i1, plane + 1, x, y);
                 i1 += 4;
             }
 
@@ -2487,23 +2469,18 @@ public class Client extends GameApplet {
             scene.removeGroundItemTile(plane, i, j);
             return;
         }
-        int highestItemValue = 0xfa0a1f01;
+        int k = 0xfa0a1f01;
         Object obj = null;
         for (Item item = (Item) class19.reverseGetFirst(); item != null; item =
                 (Item) class19.reverseGetNext()) {
             ItemDefinition itemDef = ItemDefinition.lookup(item.ID);
-            int value = itemDef.cost;
-            if (itemDef.stackable) {
-                int count = item.itemCount;
-                if (count < Integer.MAX_VALUE) {
-                    value *= item.itemCount + 1;
-                }
-                value = count;
-            }
+            int l = itemDef.cost;
+            if (itemDef.stackable)
+                l *= item.itemCount + 1;
             // notifyItemSpawn(item, i + baseX, j + baseY);
 
-            if (value > highestItemValue) {
-                highestItemValue = value;
+            if (l > k) {
+                k = l;
                 obj = item;
             }
         }
@@ -2522,10 +2499,11 @@ public class Client extends GameApplet {
         }
 
         int i1 = i + (j << 7) + 0x60000000;
-        scene.addGroundItemTile(i, i1, ((Renderable) (obj1)),
+        scene.addGroundItemTile(obj, i, i1, ((Renderable) (obj1)),
                 getCenterHeight(plane, j * 128 + 64, i * 128 + 64), ((Renderable) (obj2)),
                 ((Renderable) (obj)), plane, j);
     }
+
 
 
     public void drawHoverBox(int xPos, int yPos, String text) {
@@ -3887,7 +3865,7 @@ public class Client extends GameApplet {
                                 0);
                         boldText.render(0, s, spriteDrawY + 1, (spriteDrawX + 50) - k4);
                         boldText.render(i3, s, spriteDrawY, (spriteDrawX + 50) - k4);
-                        Rasterizer2D.defaultDrawingAreaSize();
+                        gameScreenImageProducer.initDrawingArea();
                     }
                     if (anIntArray981[defaultText] == 5) {
                         int j4 = 150 - anIntArray982[defaultText];
@@ -3900,7 +3878,7 @@ public class Client extends GameApplet {
                                 spriteDrawY - boldText.verticalSpace - 1);
                         boldText.drawText(0, s, spriteDrawY + 1 + l4, spriteDrawX);
                         boldText.drawText(i3, s, spriteDrawY + l4, spriteDrawX);
-                        Rasterizer2D.defaultDrawingAreaSize();
+                        gameScreenImageProducer.initDrawingArea();
                     }
                 } else {
                     boldText.drawText(0, s, spriteDrawY + 1, spriteDrawX);
@@ -3912,8 +3890,8 @@ public class Client extends GameApplet {
     }
 
     public void drawSideIcons() {
-        int xOffset = frameMode == ScreenMode.FIXED ? 0 : frameWidth - 247;
-        int yOffset = frameMode == ScreenMode.FIXED ? 0 : frameHeight - 336;
+        final int xOffset = frameMode == ScreenMode.FIXED ? 516 : frameWidth - 247;
+        final int yOffset = frameMode == ScreenMode.FIXED ? 168 : frameHeight - 336;
         if (frameMode == ScreenMode.FIXED || frameMode != ScreenMode.FIXED && !stackSideStones) {
             for (int i = 0; i < sideIconsTab.length; i++) {
                 if (tabInterfaceIDs[sideIconsTab[i]] != -1) {
@@ -3971,8 +3949,9 @@ public class Client extends GameApplet {
                 redStonesY = {0, 0, 0, 0, 0, 0, 0, 298, 298, 298, 298, 298, 298, 298},
                 redStonesId = {35, 39, 39, 39, 39, 39, 36, 37, 39, 39, 39, 39, 39, 38};
 
-        int xOffset = frameMode == ScreenMode.FIXED ? 0 : frameWidth - 247;
-        int yOffset = frameMode == ScreenMode.FIXED ? 0 : frameHeight - 336;
+        final int xOffset = frameMode == ScreenMode.FIXED ? 516 : frameWidth - 247;
+        final int yOffset = frameMode == ScreenMode.FIXED ? 168 : frameHeight - 336;
+
         if (frameMode == ScreenMode.FIXED || frameMode != ScreenMode.FIXED && !stackSideStones) {
             if (tabInterfaceIDs[tabId] != -1 && tabId != 15) {
                 spriteCache.draw(redStonesId[tabId], redStonesX[tabId] + xOffset,
@@ -4032,14 +4011,12 @@ public class Client extends GameApplet {
     }
 
     private void drawTabArea() {
-		final int xOffset = frameMode == ScreenMode.FIXED ? 0 : frameWidth - 241;
-		final int yOffset = frameMode == ScreenMode.FIXED ? 0 : frameHeight - 336;
-		if (frameMode == ScreenMode.FIXED) {
-			tabImageProducer.initDrawingArea();
-		}
+        final int xOffset = frameMode == ScreenMode.FIXED ? 516 : frameWidth - 241;
+        final int yOffset = frameMode == ScreenMode.FIXED ? 168 : frameHeight - 336;
+
 		Rasterizer3D.scanOffsets = anIntArray1181;
 		if (frameMode == ScreenMode.FIXED) {
-		    spriteCache.draw(21, 0, 0);
+		    spriteCache.draw(21, xOffset, yOffset);
 		} else if (frameMode != ScreenMode.FIXED && !stackSideStones) {
             Rasterizer2D.drawTransparentBox(frameWidth - 217, frameHeight - 304, 195, 270, 0x3E3529, transparentTabArea ? 80 : 256);
             spriteCache.draw(47, xOffset, yOffset);
@@ -4070,8 +4047,8 @@ public class Client extends GameApplet {
 			drawSideIcons();
 		}
 		if (showTabComponents) {
-			int x = frameMode == ScreenMode.FIXED ? 31 : frameWidth - 215;
-			int y = frameMode == ScreenMode.FIXED ? 37 : frameHeight - 299;
+            int x = frameMode == ScreenMode.FIXED ? xOffset + 31 : frameWidth - 215;
+            int y = frameMode == ScreenMode.FIXED ? yOffset + 37 : frameHeight - 299;
 			if (stackSideStones) {
 				x = frameWidth - 197;
 				y = frameWidth >= 1000 ? frameHeight - 303 : frameHeight - 340;
@@ -4087,14 +4064,11 @@ public class Client extends GameApplet {
             }
 		}
 		if (menuOpen) {
-			drawMenu(frameMode == ScreenMode.FIXED ? 516 : 0, frameMode == ScreenMode.FIXED ? 168 : 0);
+			drawMenu(0, 0);
 		} else {
-			drawHoverMenu(frameMode == ScreenMode.FIXED ? 516 : 0, frameMode == ScreenMode.FIXED ? 168 : 0);
+			drawHoverMenu(0,0);
 		}
-		if (frameMode == ScreenMode.FIXED) {
-			tabImageProducer.drawGraphics(168, super.graphics, 516);
-			gameScreenImageProducer.initDrawingArea();
-		}
+
 		Rasterizer3D.scanOffsets = anIntArray1182;
 	}
 
@@ -4387,6 +4361,7 @@ public class Client extends GameApplet {
                 socketStream.close();
         } catch (Exception _ex) {
         }
+        setGameState(GameState.LOGIN_SCREEN);
         firstLoginMessage = secondLoginMessage = "";
         effects_list.clear();
         socketStream = null;
@@ -4466,6 +4441,7 @@ public class Client extends GameApplet {
     }
     
     void startUp() {
+
         drawLoadingText(20, "Starting up");
         if (SignLink.cache_dat != null) {
             for (int i = 0; i < 5; i++)
@@ -4492,8 +4468,7 @@ public class Client extends GameApplet {
             newFancyFont = new RSFont(true, "q8_full", titleArchive);
             gameFont = new GameFont(true, "q8_full", titleArchive);
 
-            drawLogo();
-            loadTitleScreen();
+
             FileArchive configArchive = createArchive(2, "config", "config", 30);
             FileArchive interfaceArchive = createArchive(3, "interface", "interface", 35);
             FileArchive mediaArchive = createArchive(4, "2d graphics", "media", 40);
@@ -4543,6 +4518,8 @@ public class Client extends GameApplet {
             for (int j3 = 0; j3 <= 14; j3++)
                 sideIcons[j3] = new Sprite(mediaArchive, "sideicons", j3);
             compass = new Sprite(mediaArchive, "compass", 0);
+            leftFrame = new Sprite(mediaArchive, "screenframe", 0);
+            topFrame = new Sprite(mediaArchive, "screenframe", 1);
             try {
                 for (int k3 = 0; k3 < 100; k3++)
                     mapScenes[k3] = new IndexedImage(mediaArchive, "mapsence", k3);
@@ -4582,12 +4559,7 @@ public class Client extends GameApplet {
             mapDotClan = new Sprite(mediaArchive, "mapdots", 5);
             scrollBar1 = new Sprite(mediaArchive, "scrollbar", 0);
             scrollBar2 = new Sprite(mediaArchive, "scrollbar", 1);
-            Sprite sprite = new Sprite(mediaArchive, "screenframe", 0);
-            leftFrame = new ProducingGraphicsBuffer(sprite.myWidth, sprite.myHeight);
-            sprite.method346(0, 0);
-            sprite = new Sprite(mediaArchive, "screenframe", 1);
-            topFrame = new ProducingGraphicsBuffer(sprite.myWidth, sprite.myHeight);
-            sprite.method346(0, 0);
+
             int i5 = (int) (Math.random() * 21D) - 10;
             int j5 = (int) (Math.random() * 21D) - 10;
             int k5 = (int) (Math.random() * 21D) - 10;
@@ -5096,12 +5068,6 @@ public class Client extends GameApplet {
             }
 
         }
-        flameLeftSprite = new Sprite(128, 265);
-        flameRightSprite = new Sprite(128, 265);
-
-        System.arraycopy(flameLeftBackground.canvasRaster, 0, flameLeftSprite.myPixels, 0, 33920);
-
-        System.arraycopy(flameRightBackground.canvasRaster, 0, flameRightSprite.myPixels, 0, 33920);
 
         anIntArray851 = new int[256];
 
@@ -5166,10 +5132,10 @@ public class Client extends GameApplet {
 
     private void loadingStages() {
         if (lowMemory && loadingStage == 2 && MapRegion.anInt131 != plane) {
-            gameScreenImageProducer.initDrawingArea();
+
             drawLoadingMessages(1, "Loading - please wait.", null);
-            gameScreenImageProducer.drawGraphics(frameMode == ScreenMode.FIXED ? 4 : 0,
-                    super.graphics, frameMode == ScreenMode.FIXED ? 4 : 0);
+            gameScreenImageProducer.drawGraphics(0,
+                    super.graphics, 0);
             loadingStage = 1;
             loadingStartTime = System.currentTimeMillis();
         }
@@ -5279,65 +5245,6 @@ public class Client extends GameApplet {
             return super.getAppletContext();
     }
 
-    private void drawLogo() {
-        byte sprites[] = titleArchive.readFile("title.dat");
-        Sprite sprite = new Sprite(sprites, this);
-        flameLeftBackground.initDrawingArea();
-        sprite.method346(0, 0);
-        flameRightBackground.initDrawingArea();
-        sprite.method346(-637, 0);
-        topLeft1BackgroundTile.initDrawingArea();
-        sprite.method346(-128, 0);
-        bottomLeft1BackgroundTile.initDrawingArea();
-        sprite.method346(-202, -371);
-        loginBoxImageProducer.initDrawingArea();
-        sprite.method346(-202, -171);
-        loginScreenAccessories.initDrawingArea();
-        sprite.method346(0, -400);
-        bottomLeft0BackgroundTile.initDrawingArea();
-        sprite.method346(0, -265);
-        bottomRightImageProducer.initDrawingArea();
-        sprite.method346(-562, -265);
-        loginMusicImageProducer.initDrawingArea();
-        sprite.method346(-562, -265);
-        middleLeft1BackgroundTile.initDrawingArea();
-        sprite.method346(-128, -171);
-        aRSImageProducer_1115.initDrawingArea();
-        sprite.method346(-562, -171);
-        int ai[] = new int[sprite.myWidth];
-        for (int j = 0; j < sprite.myHeight; j++) {
-            for (int k = 0; k < sprite.myWidth; k++)
-                ai[k] = sprite.myPixels[(sprite.myWidth - k - 1) + sprite.myWidth * j];
-
-            System.arraycopy(ai, 0, sprite.myPixels, sprite.myWidth * j, sprite.myWidth);
-        }
-        flameLeftBackground.initDrawingArea();
-        sprite.method346(382, 0);
-        flameRightBackground.initDrawingArea();
-        sprite.method346(-255, 0);
-        topLeft1BackgroundTile.initDrawingArea();
-        sprite.method346(254, 0);
-        bottomLeft1BackgroundTile.initDrawingArea();
-        sprite.method346(180, -371);
-        loginBoxImageProducer.initDrawingArea();
-        sprite.method346(180, -171);
-        bottomLeft0BackgroundTile.initDrawingArea();
-        sprite.method346(382, -265);
-        bottomRightImageProducer.initDrawingArea();
-        sprite.method346(-180, -265);
-        loginMusicImageProducer.initDrawingArea();
-        sprite.method346(-180, -265);
-        middleLeft1BackgroundTile.initDrawingArea();
-        sprite.method346(254, -171);
-        aRSImageProducer_1115.initDrawingArea();
-        sprite.method346(-180, -171);
-        sprite = new Sprite(titleArchive, "logo", 0);
-        topLeft1BackgroundTile.initDrawingArea();
-        sprite.drawSprite(382 - sprite.myWidth / 2 - 128, 18);
-        sprite = null;
-        System.gc();
-    }
-
     private void calcFlamesPosition() {
         char c = '\u0100';
         for (int j = 10; j < 117; j++) {
@@ -5426,7 +5333,8 @@ public class Client extends GameApplet {
     }
 
     private void mainGameProcessor() {
-
+        callbacks.tick();
+        callbacks.post(new ClientTick());
         refreshFrameSize();
         if (getGameComponent().getFocusTraversalKeysEnabled()) {
             getGameComponent().setFocusTraversalKeysEnabled(false);
@@ -5742,81 +5650,14 @@ public class Client extends GameApplet {
 
     }
 
-    private void setupLoginScreen() {
-        if (topLeft1BackgroundTile != null)
-            return;
-        super.fullGameScreen = null;
-        chatboxImageProducer = null;
-        minimapImageProducer = null;
-        tabImageProducer = null;
-        gameScreenImageProducer = null;
-        chatSettingImageProducer = null;
-        Rasterizer2D.clear();
-        flameLeftBackground = new ProducingGraphicsBuffer(128, 265);
-        Rasterizer2D.clear();
-        flameRightBackground = new ProducingGraphicsBuffer(128, 265);
-        Rasterizer2D.clear();
-        topLeft1BackgroundTile = new ProducingGraphicsBuffer(509, 171);
-        Rasterizer2D.clear();
-        bottomLeft1BackgroundTile = new ProducingGraphicsBuffer(360, 132);
-        Rasterizer2D.clear();
-        loginBoxImageProducer = new ProducingGraphicsBuffer(360, 200);
-        Rasterizer2D.clear();
-        loginScreenAccessories = new ProducingGraphicsBuffer(300, 800);
-        Rasterizer2D.clear();
-        bottomLeft0BackgroundTile = new ProducingGraphicsBuffer(202, 238);
-        Rasterizer2D.clear();
-        bottomRightImageProducer = new ProducingGraphicsBuffer(203, 238);
-        Rasterizer2D.clear();
-        loginMusicImageProducer = new ProducingGraphicsBuffer(203, 238);
-        Rasterizer2D.clear();
-        middleLeft1BackgroundTile = new ProducingGraphicsBuffer(74, 94);
-        Rasterizer2D.clear();
-        aRSImageProducer_1115 = new ProducingGraphicsBuffer(75, 94);
-        Rasterizer2D.clear();
-        if (titleArchive != null) {
-            drawLogo();
-            loadTitleScreen();
-        }
-        welcomeScreenRaised = true;
+
+
+    public static ProducingGraphicsBuffer gameScreenImageProducer;
+
+    public int getPixelAmt(int current, int pixels) {
+        return (int) (pixels * .01 * current);
     }
 
-    public void drawLoadingText(int i, String s) {
-        anInt1079 = i;
-        aString1049 = s;
-        setupLoginScreen();
-        if (titleArchive == null) {
-            super.drawLoadingText(i, s);
-            return;
-        }
-        loginBoxImageProducer.initDrawingArea();
-        char c = '\u0168';
-        char c1 = '\310';
-        byte byte1 = 20;
-        boldText.drawText(0xffffff, Configuration.CLIENT_NAME + " is loading - please wait...",
-                c1 / 2 - 26 - byte1, c / 2);
-        int j = c1 / 2 - 18 - byte1;
-        Rasterizer2D.drawBoxOutline(c / 2 - 152, j, 304, 34, 0x8c1111);
-        Rasterizer2D.drawBoxOutline(c / 2 - 151, j + 1, 302, 32, 0);
-        Rasterizer2D.drawBox(c / 2 - 150, j + 2, i * 3, 30, 0x8c1111);
-        Rasterizer2D.drawBox((c / 2 - 150) + i * 3, j + 2, 300 - i * 3, 30, 0);
-        boldText.drawText(0xffffff, s, (c1 / 2 + 5) - byte1, c / 2);
-        loginBoxImageProducer.drawGraphics(171, super.graphics, 202);
-        if (welcomeScreenRaised) {
-            welcomeScreenRaised = false;
-            if (!aBoolean831) {
-                flameLeftBackground.drawGraphics(0, super.graphics, 0);
-                flameRightBackground.drawGraphics(0, super.graphics, 637);
-            }
-            topLeft1BackgroundTile.drawGraphics(0, super.graphics, 128);
-            bottomLeft1BackgroundTile.drawGraphics(371, super.graphics, 202);
-            bottomLeft0BackgroundTile.drawGraphics(265, super.graphics, 0);
-            bottomRightImageProducer.drawGraphics(265, super.graphics, 562);
-            loginMusicImageProducer.drawGraphics(265, super.graphics, 562);
-            middleLeft1BackgroundTile.drawGraphics(171, super.graphics, 128);
-            aRSImageProducer_1115.drawGraphics(171, super.graphics, 562);
-        }
-    }
 
     private void method65(int i, int j, int k, int l, Widget class9, int i1, boolean flag,
                           int j1) {
@@ -5957,6 +5798,7 @@ public class Client extends GameApplet {
     }
 
     private void dropClient() {
+        setGameState(GameState.CONNECTION_LOST);
         if (anInt1011 > 0) {
             resetLogout();
             return;
@@ -5967,8 +5809,7 @@ public class Client extends GameApplet {
         regularText.drawText(0xffffff, "Connection lost.", 18, 119);
         regularText.drawText(0, "Please wait - attempting to reestablish.", 34, 117);
         regularText.drawText(0xffffff, "Please wait - attempting to reestablish.", 34, 116);
-        gameScreenImageProducer.drawGraphics(frameMode == ScreenMode.FIXED ? 4 : 0,
-                super.graphics, frameMode == ScreenMode.FIXED ? 4 : 0);
+        gameScreenImageProducer.drawGraphics(0, super.graphics, 0);
         minimapState = 0;
         destinationX = 0;
         BufferedConnection rsSocket = socketStream;
@@ -7281,11 +7122,7 @@ public class Client extends GameApplet {
     }
 
     public void run() {
-        if (drawFlames) {
-            drawFlames();
-        } else {
-            super.run();
-        }
+        super.run();
     }
 
     private void createMenu() {
@@ -7311,7 +7148,7 @@ public class Client extends GameApplet {
                 continue;
             }
             previous = current;
-            if (opcode == 2 & scene.getMask(plane, x, y, current)) {
+            if (opcode == 2) {
                 ObjectDefinition objectDef = ObjectDefinition.lookup(uid);
                 if (objectDef.configs != null)
                     objectDef = objectDef.method580();
@@ -7539,13 +7376,7 @@ public class Client extends GameApplet {
         bigX = null;
         bigY = null;
         aByteArray912 = null;
-        tabImageProducer = null;
-        leftFrame = null;
-        topFrame = null;
-        minimapImageProducer = null;
         gameScreenImageProducer = null;
-        chatboxImageProducer = null;
-        chatSettingImageProducer = null;
 		/* Null pointers for custom sprites */
         mapBack = null;
         sideIcons = null;
@@ -7587,17 +7418,6 @@ public class Client extends GameApplet {
         friendsList = null;
         friendsListAsLongs = null;
         friendsNodeIDs = null;
-        flameLeftBackground = null;
-        flameRightBackground = null;
-        topLeft1BackgroundTile = null;
-        bottomLeft1BackgroundTile = null;
-        loginBoxImageProducer = null;
-        loginScreenAccessories = null;
-        bottomLeft0BackgroundTile = null;
-        bottomRightImageProducer = null;
-        loginMusicImageProducer = null;
-        middleLeft1BackgroundTile = null;
-        aRSImageProducer_1115 = null;
         multiOverlay = null;
         nullLoader();
         ObjectDefinition.clear();
@@ -7628,6 +7448,7 @@ public class Client extends GameApplet {
         else
             return this;
     }
+
 
     private void manageTextInputs() {
         do {
@@ -9066,35 +8887,6 @@ public class Client extends GameApplet {
         }
     }
 
-    private void setupGameplayScreen() {
-        if (chatboxImageProducer != null) {
-            return;
-        }
-
-        nullLoader();
-        super.fullGameScreen = null;
-        topLeft1BackgroundTile = null;
-        bottomLeft1BackgroundTile = null;
-        loginBoxImageProducer = null;
-        loginScreenAccessories = null;
-        flameLeftBackground = null;
-        flameRightBackground = null;
-        bottomLeft0BackgroundTile = null;
-        bottomRightImageProducer = null;
-        loginMusicImageProducer = null;
-        middleLeft1BackgroundTile = null;
-        aRSImageProducer_1115 = null;
-        chatboxImageProducer = new ProducingGraphicsBuffer(519, 165);// chatback
-        minimapImageProducer = new ProducingGraphicsBuffer(249, 168);// mapback
-        Rasterizer2D.clear();
-        spriteCache.draw(19, 0, 0);
-        tabImageProducer = new ProducingGraphicsBuffer(249, 335);// inventory
-        gameScreenImageProducer = new ProducingGraphicsBuffer(512, 334);// gamescreen
-        Rasterizer2D.clear();
-        chatSettingImageProducer = new ProducingGraphicsBuffer(249, 45);
-        welcomeScreenRaised = true;
-    }
-
     private void refreshMinimap(Sprite sprite, int j, int k) {
         int l = k * k + j * j;
         if (l > 4225 && l < 0x15f90) {
@@ -9373,8 +9165,11 @@ public class Client extends GameApplet {
             if (!reconnecting) {
                 firstLoginMessage = "";
                 secondLoginMessage = "Connecting to server...";
-                drawLoginScreen(true);
+                drawLoginScreen();
             }
+
+            setGameState(GameState.LOGGING_IN);
+
 
             socketStream = new BufferedConnection(this,
                     openSocket(Configuration.SERVER_PORT + portOffset));
@@ -9638,7 +9433,7 @@ public class Client extends GameApplet {
                     firstLoginMessage = "You have only just left another world";
                     secondLoginMessage =
                             "Your profile will be transferred in: " + k1 + " seconds";
-                    drawLoginScreen(true);
+                    drawLoginScreen();
                     try {
                         Thread.sleep(1000L);
                     } catch (Exception _ex) {
@@ -9685,6 +9480,16 @@ public class Client extends GameApplet {
         }
         secondLoginMessage = "Error connecting to server.";
     }
+
+    private void setupGameplayScreen() {
+        nullLoader();
+        Rasterizer2D.clear();
+        spriteCache.lookup(19).drawSprite(0, 0);
+        gameScreenImageProducer = new ProducingGraphicsBuffer(frameWidth, frameHeight);// gamescreen
+        Rasterizer2D.clear();
+        welcomeScreenRaised = true;
+    }
+
 
     private void clearRegionalSpawns() {
         for (int plane = 0; plane < 4; plane++) {
@@ -10581,11 +10386,9 @@ public class Client extends GameApplet {
                 if (!menuOpen) {
                     processRightClick();
                     drawTooltip();
-                    drawHoverMenu(frameMode == ScreenMode.FIXED ? 4 : 0,
-                            frameMode == ScreenMode.FIXED ? 4 : 0);
+                    drawHoverMenu(0, 0);
                 } else {
-                    drawMenu(frameMode == ScreenMode.FIXED ? 4 : 0,
-                            frameMode == ScreenMode.FIXED ? 4 : 0);
+                    drawMenu(0, 0);
                 }
             }
             drawCount++;
@@ -10598,20 +10401,10 @@ public class Client extends GameApplet {
         }
         if (welcomeScreenRaised) {
             welcomeScreenRaised = false;
-            if (frameMode == ScreenMode.FIXED) {
-                topFrame.drawGraphics(0, super.graphics, 0);
-                leftFrame.drawGraphics(4, super.graphics, 0);
-            }
+
             updateChatbox = true;
             tabAreaAltered = true;
-            if (loadingStage != 2) {
-                if (frameMode == ScreenMode.FIXED) {
-                    gameScreenImageProducer.drawGraphics(
-                            frameMode == ScreenMode.FIXED ? 4 : 0, super.graphics,
-                            frameMode == ScreenMode.FIXED ? 4 : 0);
-                    minimapImageProducer.drawGraphics(0, super.graphics, 516);
-                }
-            }
+
         }
         if (overlayInterfaceId != -1) {
             try {
@@ -10670,10 +10463,7 @@ public class Client extends GameApplet {
         if (loadingStage == 2)
             moveCameraWithPlayer();
         if (loadingStage == 2) {
-            if (frameMode == ScreenMode.FIXED) {
-                drawMinimap();
-                minimapImageProducer.drawGraphics(0, super.graphics, 516);
-            }
+
         }
         if (flashingSidebarId != -1)
             tabAreaAltered = true;
@@ -10685,8 +10475,7 @@ public class Client extends GameApplet {
 				outgoing.writeByte(tabId);*/
             }
             tabAreaAltered = false;
-            chatSettingImageProducer.initDrawingArea();
-            gameScreenImageProducer.initDrawingArea();
+
         }
         tickDelta = 0;
     }
@@ -11047,24 +10836,17 @@ public class Client extends GameApplet {
                         text = "Please wait...";
                         colour = childInterface.textColor;
                     }
-                    if (Rasterizer2D.width == 519) {
-                        if (colour == 0xffff00)
+
+                    if ((backDialogueId != -1 || dialogueId != -1
+                            || childInterface.defaultText
+                            .contains("Click here to continue"))
+                            && (rsInterface.id == backDialogueId
+                            || rsInterface.id == dialogueId)) {
+                        if (colour == 0xffff00) {
                             colour = 255;
-                        if (colour == 49152)
+                        }
+                        if (colour == 49152) {
                             colour = 0xffffff;
-                    }
-                    if (frameMode != ScreenMode.FIXED) {
-                        if ((backDialogueId != -1 || dialogueId != -1
-                                || childInterface.defaultText
-                                .contains("Click here to continue"))
-                                && (rsInterface.id == backDialogueId
-                                || rsInterface.id == dialogueId)) {
-                            if (colour == 0xffff00) {
-                                colour = 255;
-                            }
-                            if (colour == 49152) {
-                                colour = 0xffffff;
-                            }
                         }
                     }
                     if ((childInterface.parent == 1151) || (childInterface.parent == 12855)) {
@@ -11258,6 +11040,7 @@ public class Client extends GameApplet {
                     if (autocast && childInterface.id == autoCastId)
                         spriteCache.draw(43, _x - 2, currentY - 1);
                 } else if (childInterface.type == Widget.TYPE_MODEL) {
+                    Rasterizer3D.renderOnGpu = true;
                     int centreX = Rasterizer3D.originViewX;
                     int centreY = Rasterizer3D.originViewY;
                     Rasterizer3D.originViewX = _x + childInterface.width / 2;
@@ -11282,11 +11065,14 @@ public class Client extends GameApplet {
                     }
                     try {
                         if (model != null)
+                            Rasterizer3D.world = false;
                             model.render_2D(childInterface.modelRotation2, 0, childInterface.modelRotation1, 0, sine, cosine);
+                        Rasterizer3D.world = true;
                     } catch (ArithmeticException e) {
                     }
                     Rasterizer3D.originViewX = centreX;
                     Rasterizer3D.originViewY = centreY;
+                    Rasterizer3D.renderOnGpu = false;
                 } else if (childInterface.type == Widget.TYPE_ITEM_LIST) {
                     GameFont font = childInterface.textDrawingAreas;
                     int slot = 0;
@@ -12052,9 +11838,11 @@ public class Client extends GameApplet {
             return;
         }
         if (!loggedIn)
-            drawLoginScreen(false);
+            drawLoginScreen();
         else
             drawGameScreen();
+
+        gameScreenImageProducer.drawGraphics(0, super.graphics, 0);
         anInt1213 = 0;
     }
 
@@ -12146,11 +11934,9 @@ public class Client extends GameApplet {
         if (!menuOpen) {
             processRightClick();
             drawTooltip();
-            drawHoverMenu(frameMode == ScreenMode.FIXED ? 4 : 0,
-                    frameMode == ScreenMode.FIXED ? 4 : 0);
+            drawHoverMenu(0, 0);
         } else if (menuScreenArea == 0) {
-            drawMenu(frameMode == ScreenMode.FIXED ? 4 : 0,
-                    frameMode == ScreenMode.FIXED ? 4 : 0);
+            drawMenu(0,0);
         }
 
         // Multi sign
@@ -12825,7 +12611,7 @@ public class Client extends GameApplet {
 		}
 		drawX -= x;
 		drawY -= y;
-		Rasterizer2D.fillRectangle(drawX, drawY, width, height, 0x534B40, 250);
+		Rasterizer2D.drawTransparentBox(drawX, drawY, width, height, 0x534B40, 250);
 		Rasterizer2D.drawBoxOutline(drawX, drawY, width, height, 0x383023);
 		int textY = drawY + font.verticalSpace + 4;
 		font.drawTextWithPotentialShadow(true, drawX + 3, 0xffffff, text, textY);
@@ -12856,6 +12642,8 @@ public class Client extends GameApplet {
         if (l > 6400) {
             return;
         }
+        int xOffset = frameMode == ScreenMode.FIXED ? 516 : 0;
+        int yOffset = frameMode == ScreenMode.FIXED ? 0 : 0;
         int sineAngle = Model.SINE[angle];
         int cosineAngle = Model.COSINE[angle];
         sineAngle = (sineAngle * 256) / (minimapZoom + 256);
@@ -12863,23 +12651,23 @@ public class Client extends GameApplet {
         int spriteOffsetX = y * sineAngle + x * cosineAngle >> 16;
         int spriteOffsetY = y * cosineAngle - x * sineAngle >> 16;
         if (frameMode == ScreenMode.FIXED) {
-            sprite.drawSprite(((94 + spriteOffsetX) - sprite.maxWidth / 2) + 4 + 30,
-                    83 - spriteOffsetY - sprite.maxHeight / 2 - 4 + 5);
+            sprite.drawSprite(xOffset + ((94 + spriteOffsetX) - sprite.maxWidth / 2) + 4 + 30,
+                    yOffset+ 83 - spriteOffsetY - sprite.maxHeight / 2 - 4 + 5);
         } else {
             sprite.drawSprite(
-                    ((77 + spriteOffsetX) - sprite.maxWidth / 2) + 4 + 5
+                    xOffset+ ((77 + spriteOffsetX) - sprite.maxWidth / 2) + 4 + 5
                             + (frameWidth - 167),
-                    85 - spriteOffsetY - sprite.maxHeight / 2);
+                    yOffset+ 85 - spriteOffsetY - sprite.maxHeight / 2);
         }
     }
 
     private void drawMinimap() {
-        if (frameMode == ScreenMode.FIXED) {
-            minimapImageProducer.initDrawingArea();
-        }
+        int xOffset = frameMode == ScreenMode.FIXED ? 516 : 0;
+
+
         if (minimapState == 2) {
             if (frameMode == ScreenMode.FIXED) {
-                spriteCache.draw(19, 0, 0);
+                spriteCache.draw(19, xOffset, 0);
             } else {
                 spriteCache.draw(44, frameWidth - 181, 0);
                 spriteCache.draw(45, frameWidth - 158, 7);
@@ -12895,22 +12683,16 @@ public class Client extends GameApplet {
             loadAllOrbs();
             compass.rotate(33, cameraHorizontal, anIntArray1057, 256, anIntArray968,
                     (frameMode == ScreenMode.FIXED ? 25 : 24), 4,
-                    (frameMode == ScreenMode.FIXED ? 29 : frameWidth - 176), 33, 25);
-            if (menuOpen) {
-                drawMenu(frameMode == ScreenMode.FIXED ? 516 : 0, 0);
-            } else {
-            	drawHoverMenu(frameMode == ScreenMode.FIXED ? 516 : 0, 0);
-            }
-            if (frameMode == ScreenMode.FIXED) {
-                minimapImageProducer.initDrawingArea();
-            }
+                    (frameMode == ScreenMode.FIXED ? xOffset + 29 : frameWidth - 176), 33, 25);
+
+
             return;
         }
         int angle = cameraHorizontal + minimapRotation & 0x7ff;
         int centreX = 48 + localPlayer.x / 32;
         int centreY = 464 - localPlayer.y / 32;
         minimapImage.rotate(151, angle, minimapLineWidth, 256 + minimapZoom, minimapLeft, centreY, (frameMode == ScreenMode.FIXED ? 9 : 7),
-                (frameMode == ScreenMode.FIXED ? 54 : frameWidth - 158), 146, centreX);
+                (frameMode == ScreenMode.FIXED ? xOffset + 54 : frameWidth - 158), 146, centreX);
         for (int icon = 0; icon < anInt1071; icon++) {
             int mapX = (minimapHintX[icon] * 4 + 2) - localPlayer.x / 32;
             int mapY = (minimapHintY[icon] * 4 + 2) - localPlayer.y / 32;
@@ -13008,16 +12790,16 @@ public class Client extends GameApplet {
             int mapY = (destinationY * 4 + 2) - localPlayer.y / 32;
             markMinimap(mapFlag, mapX, mapY);
         }
-        Rasterizer2D.drawBox((frameMode == ScreenMode.FIXED ? 127 : frameWidth - 88), (frameMode == ScreenMode.FIXED ? 83 : 80), 3, 3,
+        Rasterizer2D.drawBox((frameMode == ScreenMode.FIXED ? xOffset + 127 : frameWidth - 88), (frameMode == ScreenMode.FIXED ? 83 : 80), 3, 3,
                 0xffffff);
         if (frameMode == ScreenMode.FIXED) {
-            spriteCache.draw(19, 0, 0);
+            spriteCache.draw(19, xOffset, 0);
         } else {
             spriteCache.draw(44, frameWidth - 181, 0);
         }
         compass.rotate(33, cameraHorizontal, anIntArray1057, 256, anIntArray968,
                 (frameMode == ScreenMode.FIXED ? 25 : 24), 4,
-                (frameMode == ScreenMode.FIXED ? 29 : frameWidth - 176), 33, 25);
+                (frameMode == ScreenMode.FIXED ? xOffset + 29 : frameWidth - 176), 33, 25);
         if (frameMode != ScreenMode.FIXED && stackSideStones) {
             if (super.mouseX >= frameWidth - 26 && super.mouseX <= frameWidth - 1
                     && super.mouseY >= 2 && super.mouseY <= 24 || tabId == 10) {
@@ -13027,21 +12809,14 @@ public class Client extends GameApplet {
             }
         }
         loadAllOrbs();
-        if (menuOpen) {
-            drawMenu(frameMode == ScreenMode.FIXED ? 516 : 0, 0);
-        } else {
-        	drawHoverMenu(frameMode == ScreenMode.FIXED ? 516 : 0, 0);
-        }
-        if (frameMode == ScreenMode.FIXED) {
-            gameScreenImageProducer.initDrawingArea();
-        }
+
     }
 
     private void loadAllOrbs() {
 
         boolean fixed = frameMode == ScreenMode.FIXED;
         boolean specOrb = Configuration.enableSpecOrb;
-        int xOffset = fixed ? 0 : frameWidth - 217;
+        int xOffset = fixed ? 516 : frameWidth - 217;
 
         if (specOrb) {
             loadSpecialOrb(xOffset);
@@ -13056,11 +12831,11 @@ public class Client extends GameApplet {
         loadRunOrb(specOrb ? xOffset : xOffset + 13, specOrb ? 0 : 15);
 
 		/* World map */
-        spriteCache.draw(worldHover ? 52 : 51, fixed ? 196 : frameWidth - 34, fixed ? 126 : 139);
+        spriteCache.draw(worldHover ? 52 : 51, fixed ? xOffset + 196 : frameWidth - 34, fixed ? 126 : 139);
 		/* Xp counter */
         int offSprite = Configuration.expCounterOpen ? 53 : 22;
         int onSprite = Configuration.expCounterOpen ? 54 : 23;
-        spriteCache.draw(expCounterHover ? onSprite : offSprite, fixed ? 0 : frameWidth - 216, 21);
+        spriteCache.draw(expCounterHover ? onSprite : offSprite, fixed ? xOffset : frameWidth - 216, 21);
     }
 
     private void loadHpOrb(int xOffset) {
@@ -13168,46 +12943,11 @@ public class Client extends GameApplet {
         l = i1 * j1 + l * k1 >> 16;
         i1 = j2;
         if (l >= 50) {
-            spriteDrawX = Rasterizer3D.originViewX + (i << SceneGraph.viewDistance) / l;
-            spriteDrawY = Rasterizer3D.originViewY + (i1 << SceneGraph.viewDistance) / l;
+            spriteDrawX = Rasterizer3D.originViewX * Rasterizer3D.fieldOfView / l;
+            spriteDrawY = Rasterizer3D.originViewY * Rasterizer3D.fieldOfView / l;
         } else {
             spriteDrawX = -1;
             spriteDrawY = -1;
-        }
-    }
-
-    public void projectParticle(int i, int j, int l) {
-
-        if (i < 128 || l < 128 || i > 13056 || l > 13056) {
-            particleDrawX = -1;
-            particleDrawY = -1;
-            return;
-        }
-        int i1 = getCenterHeight(plane, l, i) - j;
-        i -= xCameraPos;
-        i1 -= zCameraPos;
-        l -= yCameraPos;
-
-        int j1 = Model.SINE[yCameraCurve];
-        int k1 = Model.COSINE[yCameraCurve];
-        int l1 = Model.SINE[xCameraCurve];
-        int i2 = Model.COSINE[xCameraCurve];
-        int j2 = l * l1 + i * i2 >> 16;
-        l = l * i2 - i * l1 >> 16;
-        i = j2;
-        j2 = i1 * k1 - l * j1 >> 16;
-        l = i1 * j1 + l * k1 >> 16;
-        i1 = j2;
-        if (l >= 50) {
-            particleDrawX = Rasterizer3D.originViewX + (i << SceneGraph.viewDistance) / l;
-            particleDrawY = Rasterizer3D.originViewY + (i1 << SceneGraph.viewDistance) / l;
-            //particleDrawZ = Rasterizer3D.originViewY + (((i1) << SceneGraph.viewDistance) / l) * Rasterizer3D.originViewY +((i) << SceneGraph.viewDistance) / l;
-            //particleDrawZ = l;
-            particleDrawZ = Rasterizer3D.originViewY + ((i) << SceneGraph.viewDistance) / l; // TODO
-
-        } else {
-            particleDrawX = -1;
-            particleDrawY = -1;
         }
     }
 
@@ -13309,94 +13049,7 @@ public class Client extends GameApplet {
     }
 
     private void doFlamesDrawing() {
-        char c = '\u0100';
-        if (anInt1040 > 0) {
-            for (int i = 0; i < 256; i++)
-                if (anInt1040 > 768)
-                    anIntArray850[i] = method83(anIntArray851[i], anIntArray852[i],
-                            1024 - anInt1040);
-                else if (anInt1040 > 256)
-                    anIntArray850[i] = anIntArray852[i];
-                else
-                    anIntArray850[i] = method83(anIntArray852[i], anIntArray851[i],
-                            256 - anInt1040);
 
-        } else if (anInt1041 > 0) {
-            for (int j = 0; j < 256; j++)
-                if (anInt1041 > 768)
-                    anIntArray850[j] = method83(anIntArray851[j], anIntArray853[j],
-                            1024 - anInt1041);
-                else if (anInt1041 > 256)
-                    anIntArray850[j] = anIntArray853[j];
-                else
-                    anIntArray850[j] = method83(anIntArray853[j], anIntArray851[j],
-                            256 - anInt1041);
-
-        } else {
-            System.arraycopy(anIntArray851, 0, anIntArray850, 0, 256);
-
-        }
-        System.arraycopy(flameLeftSprite.myPixels, 0,
-                flameLeftBackground.canvasRaster, 0, 33920);
-
-        int i1 = 0;
-        int j1 = 1152;
-        for (int k1 = 1; k1 < c - 1; k1++) {
-            int l1 = (anIntArray969[k1] * (c - k1)) / c;
-            int j2 = 22 + l1;
-            if (j2 < 0)
-                j2 = 0;
-            i1 += j2;
-            for (int l2 = j2; l2 < 128; l2++) {
-                int j3 = anIntArray828[i1++];
-                if (j3 != 0) {
-                    int l3 = j3;
-                    int j4 = 256 - j3;
-                    j3 = anIntArray850[j3];
-                    int l4 = flameLeftBackground.canvasRaster[j1];
-                    flameLeftBackground.canvasRaster[j1++] =
-                            ((j3 & 0xff00ff) * l3 + (l4 & 0xff00ff) * j4 & 0xff00ff00)
-                                    + ((j3 & 0xff00) * l3 + (l4 & 0xff00) * j4
-                                    & 0xff0000) >> 8;
-                } else {
-                    j1++;
-                }
-            }
-
-            j1 += j2;
-        }
-
-        flameLeftBackground.drawGraphics(0, super.graphics, 0);
-        System.arraycopy(flameRightSprite.myPixels, 0,
-                flameRightBackground.canvasRaster, 0, 33920);
-
-        i1 = 0;
-        j1 = 1176;
-        for (int k2 = 1; k2 < c - 1; k2++) {
-            int i3 = (anIntArray969[k2] * (c - k2)) / c;
-            int k3 = 103 - i3;
-            j1 += i3;
-            for (int i4 = 0; i4 < k3; i4++) {
-                int k4 = anIntArray828[i1++];
-                if (k4 != 0) {
-                    int i5 = k4;
-                    int j5 = 256 - k4;
-                    k4 = anIntArray850[k4];
-                    int k5 = flameRightBackground.canvasRaster[j1];
-                    flameRightBackground.canvasRaster[j1++] =
-                            ((k4 & 0xff00ff) * i5 + (k5 & 0xff00ff) * j5 & 0xff00ff00)
-                                    + ((k4 & 0xff00) * i5 + (k5 & 0xff00) * j5
-                                    & 0xff0000) >> 8;
-                } else {
-                    j1++;
-                }
-            }
-
-            i1 += 128 - k3;
-            j1 += 128 - k3 - i3;
-        }
-
-        flameRightBackground.drawGraphics(0, super.graphics, 637);
     }
 
     private void updateOtherPlayerMovement(Buffer stream) {
@@ -13461,161 +13114,71 @@ public class Client extends GameApplet {
         }
     }
 
-    private void loginScreenAccessories() {
-		/*
-		 * World-selection
-		 */
-        setupLoginScreen();
 
-        loginScreenAccessories.drawGraphics(400, super.graphics, 0);
-        loginScreenAccessories.initDrawingArea();
-        spriteCache.draw(57, 6, 63);
 
-        boldText.method382(0xffffff, 55, "World 1", 78, true);
-        smallText.method382(0xffffff, 55, "Main world", 92, true);
+    private boolean registeringAccount;
+    private boolean usernameInputHover, passwordInputHover, rememberMeHover, loginHover;
+    private boolean rememberMe = true;
 
-        loginMusicImageProducer.drawGraphics(265, super.graphics, 562);
-        loginMusicImageProducer.initDrawingArea();
-        if (Configuration.enableMusic) {
-            spriteCache.draw(58, 158, 196);
+    private void drawLoginScreen() {
+        setGameState(GameState.LOGIN_SCREEN);
+        resetAllImageProducers();
+        //Draw bg
+        spriteCache.lookup(339).drawAdvancedSprite(0, 0);
+
+        //newBoldFont.drawBasicString("MouseX: "+super.mouseX+", MouseY: "+super.mouseY, 20, 200);
+
+        if(registeringAccount) {
+
         } else {
-            spriteCache.draw(59, 158, 196);
-            stopMidi();
-        }
 
-    }
+            //Hovers
 
-    public void drawMusicSprites() {
 
-        int musicState = 0;
-        bottomRightImageProducer.initDrawingArea();
-        switch (musicState) {
-            case 0:
-                spriteCache.draw(58, 158, 196);
-                break;
+            //Draw login box
+            spriteCache.lookup(644).drawAdvancedSprite(0, 0);
 
-            case 1:
-                spriteCache.draw(59, 158, 196);
-                break;
-        }
-    }
+            //Draw username text box
+            spriteCache.lookup(usernameInputHover ? 636 : 635).drawAdvancedSprite(270, 215);
+            //Username
+            newBoldFont.drawBasicString(myUsername, 278, 248, 0xD3D3D3);
+            if((loginScreenCursorPos == 0) & (tick % 40 < 20)) {
+                newBoldFont.drawBasicString(myUsername + "|", 278, 248, 0xD3D3D3);
+            }
 
-    private void drawLoginScreen(boolean flag) {
-        setupLoginScreen();
-        loginBoxImageProducer.initDrawingArea();
-        titleBoxIndexedImage.draw(0, 0);
-        char c = '\u0168';
-        char c1 = '\310';
-        if (Configuration.enableMusic && !lowMemory) {
-            playSong(SoundConstants.SCAPE_RUNE);
-        }
-        if (loginScreenState == 0) {
-            int i = c1 / 2 + 80;
-            //smallText.method382(0x75a9a9, c / 2, resourceProvider.loadingMessage, i, true);
-            i = c1 / 2 - 20;
-            boldText.method382(0xffff00, c / 2, "Welcome to " + Configuration.CLIENT_NAME, i, true);
-            i += 30;
-            int l = c / 2 - 80;
-            int k1 = c1 / 2 + 20;
-            titleButtonIndexedImage.draw(l - 73, k1 - 20);
-            boldText.method382(0xffffff, l, "New User", k1 + 5, true);
-            l = c / 2 + 80;
-            titleButtonIndexedImage.draw(l - 73, k1 - 20);
-            boldText.method382(0xffffff, l, "Existing User", k1 + 5, true);
-        }
-        if (loginScreenState == 2) {
-            int j = c1 / 2 - 45;
-            if (firstLoginMessage.length() > 0) {
-                boldText.method382(0xffff00, c / 2, firstLoginMessage, j - 15, true);
-                boldText.method382(0xffff00, c / 2, secondLoginMessage, j, true);
-                j += 25;
+            //Draw password text box
+            spriteCache.lookup(passwordInputHover ? 636 : 635).drawAdvancedSprite(272, 260);
+            //password
+            String password = StringUtils.passwordAsterisks(myPassword);
+            newBoldFont.drawBasicString(password, 278, 295, 0xD3D3D3);
+            if((loginScreenCursorPos == 1) & (tick % 40 < 20)) {
+                newBoldFont.drawBasicString(password + "|", 278, 295, 0xD3D3D3);
+            }
+
+            //Remember me button
+            if(rememberMe) {
+                spriteCache.lookup(rememberMeHover ? 640 : 641).drawAdvancedSprite(397, 300);
             } else {
-                boldText.method382(0xffff00, c / 2, secondLoginMessage, j - 7, true);
-                j += 25;
+                spriteCache.lookup(rememberMeHover ? 639 : 642).drawAdvancedSprite(397, 300);
             }
 
-            boldText.drawTextWithPotentialShadow(true, c / 2 - 90, 0xffffff, "Login: " + myUsername
-                            + ((loginScreenCursorPos == 0) & (tick % 40 < 20)
-                            ? "@yel@|" : ""),
-                    j);
-            j += 15;
-            boldText.drawTextWithPotentialShadow(true, c / 2 - 90, 0xffffff,
-                    "Password: " + StringUtils.passwordAsterisks(myPassword)
-                            + ((loginScreenCursorPos == 1) & (tick % 40 < 20)
-                            ? "@yel@|" : ""),
-                    j);
-            j += 15;
+            //Login button
+            spriteCache.lookup(loginHover ? 637 : 638).drawAdvancedSprite(300, 330);
 
-            // Remember me
-            rememberUsernameHover = mouseInRegion(269, 284, 279, 292);
-            if (rememberUsername) {
-                spriteCache.draw(rememberUsernameHover ? 346 : 348, 67, 108, true);
-            } else {
-                spriteCache.draw(rememberUsernameHover ? 345 : 347, 67, 108, true);
+            //Draw errors
+            int errorY = 380;
+            if(firstLoginMessage.length() > 0) {
+                newFancyFont.drawBasicString(firstLoginMessage, 267, errorY, 0xffff00);
+                errorY += 22;
             }
-            smallText.method382(0xffff00, 136, "Remember username", 120, true);
-
-            // Hide username
-            rememberPasswordHover = mouseInRegion(410, 425, 279, 292);
-            if (rememberPassword) {
-                spriteCache.draw(rememberPasswordHover ? 346 : 348, 208, 108, true);
-            } else {
-                spriteCache.draw(rememberPasswordHover ? 345 : 347, 208, 108, true);
-            }
-            smallText.method382(0xffff00, 276, "Remember password", 120, true);
-
-            forgottenPasswordHover = mouseInRegion(288, 471, 346, 357);
-            smallText.method382(0xffff00, 178, "Forgotten your password? @whi@Click here.", 186, true);
-
-            if (!flag) {
-                int i1 = c / 2 - 80;
-                int l1 = c1 / 2 + 50;
-                titleButtonIndexedImage.draw(i1 - 73, l1 - 20);
-                boldText.method382(0xffffff, i1, "Login", l1 + 5, true);
-                i1 = c / 2 + 80;
-                titleButtonIndexedImage.draw(i1 - 73, l1 - 20);
-                boldText.method382(0xffffff, i1, "Cancel", l1 + 5, true);
+            if(secondLoginMessage.length() > 0) {
+                newFancyFont.drawBasicString(secondLoginMessage, 267, errorY, 0xffff00);
             }
         }
-        loginBoxImageProducer.drawGraphics(171, super.graphics, 202);
-        if (welcomeScreenRaised) {
-            welcomeScreenRaised = false;
-            topLeft1BackgroundTile.drawGraphics(0, super.graphics, 128);
-            bottomLeft1BackgroundTile.drawGraphics(371, super.graphics, 202);
-            bottomLeft0BackgroundTile.drawGraphics(265, super.graphics, 0);
-            bottomRightImageProducer.drawGraphics(265, super.graphics, 562);
-            middleLeft1BackgroundTile.drawGraphics(171, super.graphics, 128);
-            aRSImageProducer_1115.drawGraphics(171, super.graphics, 562);
-        }
-        loginScreenAccessories();
     }
 
     private void drawFlames() {
-        drawingFlames = true;
-        try {
-            long l = System.currentTimeMillis();
-            int i = 0;
-            int j = 20;
-            while (aBoolean831) {
-                calcFlamesPosition();
-                doFlamesDrawing();
-                if (++i > 10) {
-                    long l1 = System.currentTimeMillis();
-                    int k = (int) (l1 - l) / 10 - j;
-                    j = 40 - k;
-                    if (j < 5)
-                        j = 5;
-                    i = 0;
-                    l = l1;
-                }
-                try {
-                    Thread.sleep(j);
-                } catch (Exception _ex) {
-                }
-            }
-        } catch (Exception _ex) {
-        }
-        drawingFlames = false;
+
     }
 
     public void raiseWelcomeScreen() {
@@ -13953,113 +13516,64 @@ public class Client extends GameApplet {
     }
 
     private void processLoginScreenInput() {
-        if (loading)
-            return;
-        if (loginScreenState == 0) {
-            if (super.clickMode3 == 1 && super.saveClickX >= 722 && super.saveClickX <= 751 && super.saveClickY >= 463 && super.saveClickY <= 493) {
-                Configuration.enableMusic = !Configuration.enableMusic;
-            }
 
-            int i = super.myWidth / 2;
-            int l = super.myHeight / 2;
-            if (super.clickMode3 == 1) {
-                if (mouseInRegion(394, 530, 275, 307)) {
-                    firstLoginMessage = "";
-                    secondLoginMessage = "Enter your username & password.";
-                    loginScreenState = 2;
-                    if (myUsername.length() == 0) {
-                        loginScreenCursorPos = 0;
-                    }
-                } else if (mouseInRegion(229, 375, 271, 312)) {
-                    MiscUtils.launchURL("www.aqp.io");
-                }
-            }
-        } else if (loginScreenState == 2) {
-
-            if (super.clickMode3 == 1) {
-                if (super.saveClickX >= 722 && super.saveClickX <= 753 && super.saveClickY >= 463 && super.saveClickY <= 493) {
-                    Configuration.enableMusic = !Configuration.enableMusic;
-                    savePlayerData();
-                } else if (rememberUsernameHover) {
-                    rememberUsername = !rememberUsername;
-                    savePlayerData();
-                } else if (rememberPasswordHover) {
-                    rememberPassword = !rememberPassword;
-                    savePlayerData();
-                } else if (forgottenPasswordHover) {
-                    MiscUtils.launchURL("www.aqp.io");
-                }
-            }
-            int j = super.myHeight / 2 - 45;
-            j += 25;
-            j += 25;
-
-            if (super.clickMode3 == 1 && super.saveClickY >= 239 && super.saveClickY < 252)
+        usernameInputHover = mouseInRegion(270, 231, 472, 252);
+        passwordInputHover = mouseInRegion(270, 278, 472, 299);
+        rememberMeHover = mouseInRegion(397, 310, 478, 320);
+        loginHover = mouseInRegion(300, 330, 456, 358);
+        if (super.clickMode3 == 1) {
+            if(usernameInputHover) {
                 loginScreenCursorPos = 0;
-            j += 15;
-            if (super.clickMode3 == 1 && super.saveClickY >= 257 && super.saveClickY < 266)
+            } else if(passwordInputHover) {
                 loginScreenCursorPos = 1;
-            j += 15;
-            int i1 = super.myWidth;
-            int k1 = super.myHeight;
-            k1 += 20;
-
-            // login
-            if (super.clickMode3 == 1 && mouseInRegion(235, 370, 305, 339)) {
-                loginFailures = 0;
-                login(myUsername, myPassword, false);
+            } else if(rememberMeHover) {
+                rememberMe = !rememberMe;
                 savePlayerData();
-                if (loggedIn)
-                    return;
+            } else if(loginHover) {
+                login(myUsername, myPassword, false);
             }
-
-            i1 = super.myWidth / 2 + 80;
-
-            // cancel
-            if (super.clickMode3 == 1 && mouseInRegion(394, 530, 305, 339)) {
-                loginScreenState = 0;
-            }
-            do {
-                int l1 = readChar(-796);
-                if (l1 == -1)
-                    break;
-                boolean flag1 = false;
-                for (int i2 = 0; i2 < validUserPassChars.length(); i2++) {
-                    if (l1 != validUserPassChars.charAt(i2))
-                        continue;
-                    flag1 = true;
-                    break;
-                }
-
-                if (loginScreenCursorPos == 0) {
-                    if (l1 == 8 && myUsername.length() > 0)
-                        myUsername = myUsername.substring(0, myUsername.length() - 1);
-                    if (l1 == 9 || l1 == 10 || l1 == 13)
-                        loginScreenCursorPos = 1;
-                    if (flag1)
-                        myUsername += (char) l1;
-                    if (myUsername.length() > 12)
-                        myUsername = myUsername.substring(0, 12);
-                    if (myUsername.length() > 0) {
-                        myUsername = StringUtils.formatText(StringUtils.capitalize(myUsername));
-                    }
-                } else if (loginScreenCursorPos == 1) {
-                    if (l1 == 8 && myPassword.length() > 0)
-                        myPassword = myPassword.substring(0, myPassword.length() - 1);
-                    if (l1 == 9) {
-                        loginScreenCursorPos = 0;
-                    } else if (l1 == 10 || l1 == 13) {
-                        login(myUsername, myPassword, false);
-                        return;
-                    }
-                    if (flag1)
-                        myPassword += (char) l1;
-                    if (myPassword.length() > 15)
-                        myPassword = myPassword.substring(0, 15);
-                }
-            } while (true);
-            return;
         }
+
+        do {
+            int l1 = readChar(-796);
+            if (l1 == -1)
+                break;
+            boolean flag1 = false;
+            for (int i2 = 0; i2 < validUserPassChars.length(); i2++) {
+                if (l1 != validUserPassChars.charAt(i2))
+                    continue;
+                flag1 = true;
+                break;
+            }
+
+            if (loginScreenCursorPos == 0) {
+                if (l1 == 8 && myUsername.length() > 0)
+                    myUsername = myUsername.substring(0, myUsername.length() - 1);
+                if (l1 == 9 || l1 == 10 || l1 == 13)
+                    loginScreenCursorPos = 1;
+                if (flag1)
+                    myUsername += (char) l1;
+                if (myUsername.length() > 12)
+                    myUsername = myUsername.substring(0, 12);
+                if(myUsername.length() > 0) {
+                    myUsername = StringUtils.formatText(StringUtils.capitalize(myUsername));
+                }
+            } else if (loginScreenCursorPos == 1) {
+                if (l1 == 8 && myPassword.length() > 0)
+                    myPassword = myPassword.substring(0, myPassword.length() - 1);
+                if(l1 == 9) {
+                    loginScreenCursorPos = 0;
+                } else if (l1 == 10 || l1 == 13) {
+                    login(myUsername, myPassword, false);
+                    return;
+                }
+                if (flag1)
+                    myPassword += (char) l1;
+                if (myPassword.length() > 15)
+                    myPassword = myPassword.substring(0, 15);
+            }
+        } while (true);
+        return;
     }
 
     private void removeObject(int y, int z, int k, int l, int x, int group, int previousId) {
@@ -14701,6 +14215,7 @@ public class Client extends GameApplet {
             }
 
             if (opcode == PacketConstants.SEND_MAP_REGION || opcode == PacketConstants.SEND_REGION_MAP_REGION) {
+                setGameState(GameState.LOADING);
                 int regionX = currentRegionX;
                 int regionY = currentRegionY;
                 if (opcode == PacketConstants.SEND_MAP_REGION) {
@@ -14740,10 +14255,9 @@ public class Client extends GameApplet {
                     inTutorialIsland = true;
                 loadingStage = 1;
                 loadingStartTime = System.currentTimeMillis();
-                gameScreenImageProducer.initDrawingArea();
+
                 drawLoadingMessages(1, "Loading - please wait.", null);
-                gameScreenImageProducer.drawGraphics(frameMode == ScreenMode.FIXED ? 4 : 0, super.graphics,
-                        frameMode == ScreenMode.FIXED ? 4 : 0);
+                gameScreenImageProducer.drawGraphics(0, super.graphics, 0);
                 if (opcode == 73) {
                     int regionCount = 0;
                     for (int x = (currentRegionX - 6) / 8; x <= (currentRegionX + 6) / 8; x++) {
@@ -15804,12 +15318,8 @@ public class Client extends GameApplet {
             if (quakeDirectionActive[4] && quakeAmplitudes[4] + 128 > i)
                 i = quakeAmplitudes[4] + 128;
             int k = cameraHorizontal + cameraRotation & 0x7ff;
-            setCameraPos(
-                    cameraZoom + i * ((SceneGraph.viewDistance == 9)
-                            && (frameMode == ScreenMode.RESIZABLE) ? 2
-                            : SceneGraph.viewDistance == 10 ? 5 : 3),
-                    i, anInt1014, getCenterHeight(plane, localPlayer.y, localPlayer.x) - 50, k,
-                    anInt1015);
+            setCameraPos(600 + i * 3,
+                    i, anInt1014, getCenterHeight(plane, localPlayer.y, localPlayer.x) - 50, k, anInt1015);
         }
         int j;
         if (!inCutScene)
@@ -15849,9 +15359,26 @@ public class Client extends GameApplet {
         Model.obj_loaded = 0;
         Model.anInt1685 = super.mouseX - (frameMode == ScreenMode.FIXED ? 4 : 0);
         Model.anInt1686 = super.mouseY - (frameMode == ScreenMode.FIXED ? 4 : 0);
+
+
+        if (Client.processGpuPlugin() && gameState != GameState.LOGGED_IN) {
+            return;
+        }
+
         Rasterizer2D.clear();
+        if (Rasterizer3D.fieldOfView != cameraZoom) {
+            Rasterizer3D.fieldOfView = cameraZoom;
+        }
+
+        // Cap the buffer
+        Rasterizer2D.setDrawingArea(screenAreaHeight,
+                (frameMode == ScreenMode.FIXED ? 4 : 0),
+                screenAreaWidth,
+                (frameMode == ScreenMode.FIXED ? 4 : 0));
         scene.render(xCameraPos, yCameraPos, xCameraCurve, zCameraPos, j, yCameraCurve);
+        gameScreenImageProducer.initDrawingArea();
         scene.clearGameObjectCache();
+
         if (Configuration.enableGroundItemNames) {
             renderGroundItemNames();
         }
@@ -15873,18 +15400,29 @@ public class Client extends GameApplet {
                 drawExpCounterDrops();
             }
         }
-        if (frameMode != ScreenMode.FIXED) {
-            drawChatArea();
-            drawMinimap();
-            drawTabArea();
+        if(frameMode == ScreenMode.FIXED) {
+            leftFrame.method346(0, 4);
+            topFrame.method346(0, 0);
         }
-        gameScreenImageProducer.drawGraphics(frameMode == ScreenMode.FIXED ? 4 : 0, super.graphics, frameMode == ScreenMode.FIXED ? 4 : 0);
+        drawChatArea();
+        drawMinimap();
+        drawTabArea();
+
+
+        if (Client.processGpuPlugin()) {
+            drawCallbacks.draw(0);
+        }
+
         xCameraPos = l;
         zCameraPos = i1;
         yCameraPos = j1;
         yCameraCurve = k1;
         xCameraCurve = l1;
     }
+
+
+    public Sprite leftFrame;
+    public Sprite topFrame;
 
     private void tabToReplyPm() {
         String name = null;
@@ -15992,7 +15530,7 @@ public class Client extends GameApplet {
 
         final boolean wilderness = openWalkableInterface == 23300;
         int xPos = wilderness && frameMode != ScreenMode.FIXED ? frameWidth - 363 : frameWidth - 375;
-        int yPos = wilderness ? (frameMode != ScreenMode.FIXED ? 114 : 100) : 2;
+        int yPos = wilderness ? (frameMode != ScreenMode.FIXED ? 114 : 100) : 6;
 
         // Draw box
         spriteCache.draw(452, xPos, yPos, true);
@@ -16154,25 +15692,8 @@ public class Client extends GameApplet {
     }
 
     public void resetAllImageProducers() {
-        if (super.fullGameScreen != null) {
-            return;
-        }
-        chatboxImageProducer = null;
-        minimapImageProducer = null;
-        tabImageProducer = null;
-        gameScreenImageProducer = null;
-        chatSettingImageProducer = null;
-        topLeft1BackgroundTile = null;
-        bottomLeft1BackgroundTile = null;
-        loginBoxImageProducer = null;
-        flameLeftBackground = null;
-        flameRightBackground = null;
-        bottomLeft0BackgroundTile = null;
-        bottomRightImageProducer = null;
-        loginMusicImageProducer = null;
-        middleLeft1BackgroundTile = null;
-        aRSImageProducer_1115 = null;
-        super.fullGameScreen = new ProducingGraphicsBuffer(765, 503);
+        gameScreenImageProducer = new ProducingGraphicsBuffer(frameWidth, frameHeight);
+        Rasterizer2D.clear();
         welcomeScreenRaised = true;
     }
 
@@ -16376,4 +15897,3344 @@ public class Client extends GameApplet {
         INVENTORY,
         BANK;
     }
+
+    /**
+     * Runelite
+     */
+    public DrawCallbacks drawCallbacks;
+    @javax.inject.Inject
+    private Callbacks callbacks;
+    private GameState gameState = GameState.STARTING;
+    private TextureManager textureManager = new TextureManager();
+    private boolean gpu = false;
+
+
+    @Override
+    public Thread getClientThread() {
+        return clientThread;
+    }
+
+    @Override
+    public boolean isClientThread() {
+        return (this.clientThread == Thread.currentThread());
+    }
+
+    @Override
+    public void resizeCanvas() {
+    }
+
+    @Override
+    public boolean isResizeCanvasNextFrame() {
+        return false;
+    }
+
+    @Override
+    public void setResizeCanvasNextFrame(boolean resize) {
+
+    }
+
+    @Override
+    public boolean isReplaceCanvasNextFrame() {
+        return false;
+    }
+
+    @Override
+    public void setReplaceCanvasNextFrame(boolean replace) {
+    }
+
+    @Override
+    public void setMaxCanvasWidth(int width) {
+
+    }
+
+    @Override
+    public void setMaxCanvasHeight(int height) {
+
+    }
+
+    @Override
+    public void setFullRedraw(boolean fullRedraw) {
+
+    }
+
+    @Override
+    public Callbacks getCallbacks() {
+        return callbacks;
+    }
+
+    @Override
+    public DrawCallbacks getDrawCallbacks() {
+        return drawCallbacks;
+    }
+
+    @Override
+    public void setDrawCallbacks(DrawCallbacks drawCallbacks) {
+        this.drawCallbacks = drawCallbacks;
+    }
+
+    @Override
+    public Logger getLogger() {
+        return log;
+    }
+
+    @Override
+    public String getBuildID() {
+        return "1";
+    }
+
+    @Override
+    public List<net.runelite.api.Player> getPlayers() {
+        return Arrays.asList(players);
+    }
+
+    @Override
+    public List<NPC> getNpcs() {
+        List<NPC> npcs = new ArrayList<NPC>(npcCount);
+        for (int i = 0; i < npcCount; ++i)
+        {
+            npcs.add(this.npcs[npcIndices[i]]);
+        }
+        return npcs;
+    }
+
+    @Override
+    public RSNPC[] getCachedNPCs() {
+        return npcs;
+    }
+
+    @Override
+    public RSPlayer[] getCachedPlayers() {
+        return players;
+    }
+
+    @Override
+    public int getLocalInteractingIndex() {
+        return 0;
+    }
+
+    @Override
+    public void setLocalInteractingIndex(int idx) {
+
+    }
+
+    @Override
+    public RSNodeDeque getTilesDeque() {
+        return null;
+    }
+
+    @Override
+    public RSNodeDeque[][][] getGroundItemDeque() {
+        return new RSNodeDeque[0][][];
+    }
+
+    @Override
+    public RSNodeDeque getProjectilesDeque() {
+        return null;
+    }
+
+    @Override
+    public RSNodeDeque getGraphicsObjectDeque() {
+        return null;
+    }
+
+    @Override
+    public int getBoostedSkillLevel(Skill skill) {
+        return 1;
+    }
+
+    @Override
+    public int getRealSkillLevel(Skill skill) {
+        return 1;
+    }
+
+    @Override
+    public int getTotalLevel() {
+        return 0;
+    }
+
+    @Override
+    public MessageNode addChatMessage(ChatMessageType type, String name, String message, String sender) {
+        return null;
+    }
+
+    @Override
+    public MessageNode addChatMessage(ChatMessageType type, String name, String message, String sender,
+                                      boolean postEvent) {
+        return null;
+    }
+
+    @Override
+    public GameState getGameState() {
+        return gameState;
+    }
+
+    @Override
+    public int getRSGameState() {
+        return loadingStage;
+    }
+
+    @Override
+    public void setRSGameState(int gameState) {
+
+    }
+
+    @Override
+    public void setCheckClick(boolean checkClick) {
+        scene.clicked = checkClick;
+    }
+
+    @Override
+    public void setMouseCanvasHoverPositionX(int x) {
+
+    }
+
+    @Override
+    public void setMouseCanvasHoverPositionY(int y) {
+
+    }
+
+    @Override
+    public void setGameState(GameState state) {
+        if(gameState.ordinal() == state.ordinal()) {
+            return;
+        }
+
+        gameState = state;
+        GameStateChanged event = new GameStateChanged();
+        event.setGameState(state);
+        callbacks.post(event);
+
+        switch(state) {
+            case LOADING: //let me check on a git one sec
+                if (processGpuPlugin()) {
+                    //it is a gpu/hd method I think
+                }
+                break;
+            case CONNECTION_LOST:
+                dropClient();
+                break;
+        }
+    }
+
+    @Override
+    public void setGameState(int gameState) {
+        loadingStage = gameState;
+    }
+
+    @Override
+    public void stopNow() {
+    }
+
+    @Override
+    public String getUsername() {
+        return myUsername;
+    }
+
+    @Override
+    public void setUsername(String name) {
+    }
+
+    @Override
+    public void setPassword(String password) {
+    }
+
+    @Override
+    public void setOtp(String otp) {
+
+    }
+
+    @Override
+    public int getCurrentLoginField() {
+        return 0;
+    }
+
+    @Override
+    public int getLoginIndex() {
+        return 0;
+    }
+
+    @Override
+    public AccountType getAccountType() {
+        return AccountType.NORMAL;
+    }
+
+    @Override
+    public Component getCanvas() {
+        return this;
+    }
+
+    @Override
+    public void post(Object canvas) {
+
+    }
+
+    @Override
+    public int getFPS() {
+        return fps;
+    }
+
+    @Override
+    public int getCameraX() {
+        return this.xCameraPos;
+    }
+
+    @Override
+    public int getCameraY() {
+        return this.yCameraPos;
+    }
+
+    @Override
+    public int getCameraZ() {
+        return this.zCameraPos;
+    }
+
+    @Override
+    public int getCameraPitch() {
+        return yCameraCurve;
+    }
+
+    @Override
+    public void setCameraPitch(int cameraPitch) {
+        yCameraCurve = cameraPitch;
+    }
+
+    @Override
+    public int getCameraYaw() {
+        return xCameraCurve;
+    }
+
+    @Override
+    public int getWorld() {
+        return 1;
+    }
+
+    @Override
+    public int getCanvasHeight() {
+        return getGameComponent().getHeight();
+    }
+
+    @Override
+    public int getCanvasWidth() {
+        return getGameComponent().getWidth();
+    }
+
+    @Override
+    public int getViewportHeight() {
+        return screenAreaHeight;
+    }
+
+    @Override
+    public int getViewportWidth() {
+        return screenAreaWidth;
+    }
+
+    @Override
+    public int getViewportXOffset() {
+        return frameMode == ScreenMode.FIXED ? 4 : 0;
+    }
+
+    @Override
+    public int getViewportYOffset() {
+        return frameMode == ScreenMode.FIXED ? 4 : 0;
+    }
+
+    @Override
+    public int getScale() {
+        return Rasterizer3D.fieldOfView;
+    }
+
+    @Override
+    public Point getMouseCanvasPosition() {
+        return new Point(this.mouseX, this.mouseY);
+    }
+
+    @Override
+    public int[][][] getTileHeights() {
+        return tileHeights;
+    }
+
+    @Override
+    public byte[][][] getTileSettings() {
+        return tileFlags;
+    }
+
+    @Override
+    public int getPlane() {
+        return plane;
+    }
+
+    @Override
+    public SceneGraph getScene() {
+        return scene;
+    }
+
+    @Override
+    public RSPlayer getLocalPlayer() {
+        return localPlayer;
+    }
+
+    @Override
+    public int getLocalPlayerIndex() {
+        return localPlayer.index;
+    }
+
+    @Override
+    public int getNpcIndexesCount() {
+        return 0;
+    }
+
+    @Override
+    public int[] getNpcIndices() {
+        return new int[0];
+    }
+
+    @Override
+    public ItemComposition getItemComposition(int id) {
+        return ItemDefinition.lookup(id);
+    }
+
+    @Override
+    public ItemComposition getItemDefinition(int id) {
+        return ItemDefinition.lookup(id);
+    }
+
+    @Override
+    public SpritePixels createItemSprite(int itemId, int quantity, int border, int shadowColor, int stackable,
+                                         boolean noted, int scale) {
+        return null;
+    }
+
+
+    @Override
+    public RSSpritePixels[] getSprites(IndexDataBase source, int archiveId, int fileId) {
+        return null;
+    }
+
+    @Override
+    public RSArchive getIndexSprites() {
+        return null;
+    }
+
+    @Override
+    public RSArchive getIndexScripts() {
+        return null;
+    }
+
+    @Override
+    public RSArchive getIndexConfig() {
+        return null;
+    }
+
+    @Override
+    public RSArchive getMusicTracks() {
+        return null;
+    }
+
+    @Override
+    public int getBaseX() {
+        return regionBaseX;
+    }
+
+    @Override
+    public int getBaseY() {
+        return regionBaseY;
+    }
+
+    @Override
+    public int getMouseCurrentButton() {
+        return 0;
+    }
+
+    @Override
+    public int getSelectedSceneTileX() {
+        return scene.clickedTileX;
+    }
+
+    @Override
+    public void setSelectedSceneTileX(int selectedSceneTileX) {
+        scene.clickedTileX = selectedSceneTileX;
+    }
+
+    @Override
+    public int getSelectedSceneTileY() {
+        return scene.clickedTileY;
+    }
+
+    @Override
+    public void setSelectedSceneTileY(int selectedSceneTileY) {
+        scene.clickedTileY = selectedSceneTileY;
+    }
+
+    @Override
+    public Tile getSelectedSceneTile() {
+        int tileX = scene.hoverX;
+        int tileY = scene.hoverY;
+
+        if (tileX == -1 || tileY == -1)
+        {
+            return null;
+        }
+
+        return getScene().getTiles()[getPlane()][tileX][tileY];
+
+    }
+
+    @Override
+    public boolean isDraggingWidget() {
+        return false;
+    }
+
+    @Override
+    public RSWidget getDraggedWidget() {
+        return null;
+    }
+
+    @Override
+    public RSWidget getDraggedOnWidget() {
+        return null;
+    }
+
+    @Override
+    public void setDraggedOnWidget(net.runelite.api.widgets.Widget widget) {
+    }
+
+    @Override
+    public RSWidget[][] getWidgets() {
+        return new RSWidget[0][];
+    }
+
+    @Override
+    public RSWidget[] getGroup(int groupId) {
+        return new RSWidget[0];
+    }
+
+    @Override
+    public int getTopLevelInterfaceId() {
+        return openInterfaceId;
+    }
+
+    @Override
+    public RSWidget[] getWidgetRoots() {
+        return null;
+    }
+
+    @Override
+    public RSWidget getWidget(WidgetInfo widget) {
+        int groupId = widget.getGroupId();
+        int childId = widget.getChildId();
+
+        return getWidget(groupId, childId);
+    }
+
+    @Override
+    public RSWidget getWidget(int groupId, int childId) {
+        return null;
+    }
+
+    @Override
+    public RSWidget getWidget(int packedID) {
+        return null;
+    }
+
+    @Override
+    public int[] getWidgetPositionsX() {
+        return null;
+    }
+
+    @Override
+    public int[] getWidgetPositionsY() {
+        return null;
+    }
+
+    @Override
+    public boolean isMouseCam() {
+        return false;
+    }
+
+    @Override
+    public int getCamAngleDX() {
+        return anInt1187;
+    }
+
+    @Override
+    public void setCamAngleDX(int angle) {
+        anInt1187 = angle;
+    }
+
+    @Override
+    public int getCamAngleDY() {
+        return anInt1186;
+    }
+
+    @Override
+    public void setCamAngleDY(int angle) {
+        anInt1186 = angle;
+    }
+
+    @Override
+    public RSWidget createWidget() {
+        return null;
+    }
+
+    @Override
+    public void revalidateWidget(net.runelite.api.widgets.Widget w) {
+
+    }
+
+    @Override
+    public void revalidateWidgetScroll(net.runelite.api.widgets.Widget[] group, net.runelite.api.widgets.Widget w, boolean postEvent) {
+
+    }
+
+    @Override
+    public int getEntitiesAtMouseCount() {
+        return 0;
+    }
+
+    @Override
+    public void setEntitiesAtMouseCount(int i) {
+
+    }
+
+    @Override
+    public long[] getEntitiesAtMouse() {
+        return new long[0];
+    }
+
+    @Override
+    public int getViewportMouseX() {
+        return 0;
+    }
+
+    @Override
+    public int getViewportMouseY() {
+        return 0;
+    }
+
+    @Override
+    public int getEnergy() {
+        return 0;
+    }
+
+    @Override
+    public int getWeight() {
+        return 0;
+    }
+
+    @Override
+    public String[] getPlayerOptions() {
+        return null;
+    }
+
+    @Override
+    public boolean[] getPlayerOptionsPriorities() {
+        return null;
+    }
+
+    @Override
+    public int[] getPlayerMenuTypes() {
+        return null;
+    }
+
+    @Override
+    public int getMouseX() {
+        return mouseX;
+    }
+
+    @Override
+    public int getMouseY() {
+        return mouseY;
+    }
+
+    @Override
+    public int getMouseX2() {
+        return scene.clickScreenX;
+    }
+
+    @Override
+    public int getMouseY2() {
+        return scene.clickScreenY;
+    }
+
+    @Override
+    public boolean containsBounds(int var0, int var1, int var2, int var3, int var4, int var5, int var6, int var7) {
+        return scene.inBounds(var0, var1, var2, var3, var4, var5, var6, var7);
+    }
+
+    @Override
+    public boolean isCheckClick() {
+        return SceneGraph.clicked;
+    }
+
+    @Override
+    public RSWorld[] getWorldList() {
+        return null;
+    }
+
+    @Override
+    public MenuEntry createMenuEntry(int idx) {
+        return null;
+    }
+
+    @Override
+    public void addRSChatMessage(int type, String name, String message, String sender) {
+
+    }
+
+    @Override
+    public RSObjectComposition getRSObjectComposition(int objectId) {
+        return null;
+    }
+
+    @Override
+    public RSNPCComposition getRSNpcComposition(int npcId) {
+        return null;
+    }
+
+
+    @Override
+    public MenuEntry createMenuEntry(String option, String target, int identifier, int opcode, int param1, int param2,
+                                     boolean forceLeftClick) {
+        return null;
+    }
+
+    @Override
+    public MenuEntry[] getMenuEntries() {
+        return null;
+    }
+
+    @Override
+    public int getMenuOptionCount() {
+        return 0;
+    }
+
+
+    @Override
+    public void setMenuEntries(MenuEntry[] entries) {
+
+    }
+
+    @Override
+    public void setMenuOptionCount(int count) {
+        this.menuActionRow = count;
+    }
+
+    @Override
+    public String[] getMenuOptions() {
+        return new String[0];
+    }
+
+    @Override
+    public String[] getMenuTargets() {
+        return new String[0];
+    }
+
+    @Override
+    public int[] getMenuIdentifiers() {
+        return new int[0];
+    }
+
+    @Override
+    public int[] getMenuOpcodes() {
+        return new int[0];
+    }
+
+    @Override
+    public int[] getMenuArguments1() {
+        return new int[0];
+    }
+
+    @Override
+    public int[] getMenuArguments2() {
+        return new int[0];
+    }
+
+    @Override
+    public boolean[] getMenuForceLeftClick() {
+        return new boolean[0];
+    }
+
+    @Override
+    public boolean isMenuOpen() {
+        return menuOpen;
+    }
+
+    @Override
+    public int getMenuX() {
+        return 0;
+    }
+
+    @Override
+    public int getMenuY() {
+        return 0;
+    }
+
+    @Override
+    public int getMenuHeight() {
+        return 0;
+    }
+
+    @Override
+    public int getMenuWidth() {
+        return 0;
+    }
+
+    @Override
+    public net.runelite.rs.api.RSFont getFontBold12() {
+        return null;
+    }
+
+    @Override
+    public void rasterizerDrawHorizontalLine(int x, int y, int w, int rgb) {
+
+    }
+
+    @Override
+    public void rasterizerDrawHorizontalLineAlpha(int x, int y, int w, int rgb, int a) {
+
+    }
+
+    @Override
+    public void rasterizerDrawVerticalLine(int x, int y, int h, int rgb) {
+
+    }
+
+    @Override
+    public void rasterizerDrawVerticalLineAlpha(int x, int y, int h, int rgb, int a) {
+
+    }
+
+    @Override
+    public void rasterizerDrawGradient(int x, int y, int w, int h, int rgbTop, int rgbBottom) {
+
+    }
+
+    @Override
+    public void rasterizerDrawGradientAlpha(int x, int y, int w, int h, int rgbTop, int rgbBottom, int alphaTop, int alphaBottom) {
+
+    }
+
+    @Override
+    public void rasterizerFillRectangleAlpha(int x, int y, int w, int h, int rgb, int a) {
+        Rasterizer2D.drawTransparentBox(x,y,w,h,rgb,a);
+    }
+
+    @Override
+    public void rasterizerDrawRectangle(int x, int y, int w, int h, int rgb) {
+
+    }
+
+    @Override
+    public void rasterizerDrawRectangleAlpha(int x, int y, int w, int h, int rgb, int a) {
+
+    }
+
+    @Override
+    public void rasterizerDrawCircle(int x, int y, int r, int rgb) {
+
+    }
+
+    @Override
+    public void rasterizerDrawCircleAlpha(int x, int y, int r, int rgb, int a) {
+
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getHealthBarCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getHealthBarSpriteCache() {
+        return null;
+    }
+
+    @Override
+    public int getMapAngle() {
+        return 0;
+    }
+
+    @Override
+    public void setCameraYawTarget(int cameraYawTarget) {
+
+    }
+
+    @Override
+    public boolean isResized() {
+        return frameMode == ScreenMode.RESIZABLE;
+    }
+
+    @Override
+    public int getRevision() {
+        return 1;
+    }
+
+    @Override
+    public int[] getMapRegions() {
+        return new int[0];
+    }
+
+    @Override
+    public int[][][] getInstanceTemplateChunks() {
+        return constructRegionData;
+    }
+
+    @Override
+    public int[][] getXteaKeys() {
+        return null;
+    }
+
+    @Override
+    public int getCycleCntr() {
+        return 0;
+    }
+
+    @Override
+    public void setChatCycle(int value) {
+
+    }
+
+    @Override
+    public int[] getVarps() {
+        return settings;
+    }
+
+    @Override
+    public RSVarcs getVarcs() {
+        return null;
+    }
+
+    @Override
+    public Map<Integer, Object> getVarcMap() {
+        return null;
+    }
+
+    @Override
+    public int getVar(VarPlayer varPlayer) {
+        return getVarps()[varPlayer.getId()];
+    }
+
+    @Override
+    public int getVar(Varbits varbit) {
+        return getVarps()[varbit.getId()];
+    }
+
+    @Override
+    public int getVar(VarClientInt varClientInt) {
+        return getVarps()[varClientInt.getIndex()];
+    }
+
+    @Override
+    public String getVar(VarClientStr varClientStr) {
+        return null;
+    }
+
+    @Override
+    public int getVarbitValue(int varbitId) {
+        return 0;
+    }
+
+    @Override
+    public int getVarcIntValue(int varcIntId) {
+        return 0;
+    }
+
+    @Override
+    public String getVarcStrValue(int varcStrId) {
+        return null;
+    }
+
+    @Override
+    public void setVar(VarClientStr varClientStr, String value) {
+    }
+
+    @Override
+    public void setVar(VarClientInt varClientStr, int value) {
+    }
+
+    @Override
+    public void setVarbit(Varbits varbit, int value) {
+    }
+
+    @Override
+    public VarbitComposition getVarbit(int id) {
+        return null;
+    }
+
+    @Override
+    public int getVarbitValue(int[] varps, int varbitId) {
+        return 0;
+    }
+
+    @Override
+    public int getVarpValue(int[] varps, int varpId) {
+        return 0;
+    }
+
+    @Override
+    public int getVarpValue(int i) {
+        return 0;
+    }
+
+    @Override
+    public void setVarbitValue(int[] varps, int varbit, int value) {
+    }
+
+    @Override
+    public void queueChangedVarp(int varp) {
+    }
+
+    @Override
+    public RSNodeHashTable getWidgetFlags() {
+        return null;
+    }
+
+    @Override
+    public RSNodeHashTable getComponentTable() {
+        return null;
+    }
+
+    @Override
+    public RSGrandExchangeOffer[] getGrandExchangeOffers() {
+        return null;
+    }
+
+    @Override
+    public boolean isPrayerActive(Prayer prayer) {
+        return false;
+    }
+
+    @Override
+    public int getSkillExperience(Skill skill) {
+        return 1;
+    }
+
+    @Override
+    public long getOverallExperience() {
+        return 1;
+    }
+
+    @Override
+    public void refreshChat() {
+    }
+
+    @Override
+    public Map<Integer, ChatLineBuffer> getChatLineMap() {
+        return null;
+    }
+
+    @Override
+    public RSIterableNodeHashTable getMessages() {
+        return null;
+    }
+
+    @Override
+    public ObjectComposition getObjectDefinition(int objectId) {
+        return ObjectDefinition.lookup(objectId);
+    }
+
+    @Override
+    public NPCComposition getNpcDefinition(int npcId) {
+        return NpcDefinition.lookup(npcId);
+    }
+
+    @Override
+    public StructComposition getStructComposition(int structID) {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getStructCompositionCache() {
+        return null;
+    }
+
+    @Override
+    public RSWorldMapElement[] getMapElementConfigs() {
+        return null;
+    }
+
+    @Override
+    public RSIndexedSprite[] getMapScene() {
+        return null;
+    }
+
+    public Sprite[] minimapDot = new Sprite[7];
+
+
+    @Override
+    public RSSpritePixels[] getMapDots() {
+        return null;
+    }
+
+    @Override
+    public int getGameCycle() {
+        return tick;
+    }
+
+    @Override
+    public RSSpritePixels[] getMapIcons() {
+        return null;
+    }
+
+    @Override
+    public RSIndexedSprite[] getModIcons() {
+        return null;
+    }
+
+    @Override
+    public void setRSModIcons(RSIndexedSprite[] modIcons) {
+
+    }
+
+    @Override
+    public void setModIcons(IndexedSprite[] modIcons) {
+
+    }
+
+    @Override
+    public RSIndexedSprite createIndexedSprite() {
+        return null;
+    }
+
+    @Override
+    public RSSpritePixels createSpritePixels(int[] pixels, int width, int height) {
+        return null;
+    }
+
+    @Override
+    public int getDestinationX() {
+        return 0;
+    }
+
+    @Override
+    public int getDestinationY() {
+        return 0;
+    }
+
+    @Override
+    public RSSoundEffect[] getAudioEffects() {
+        return new RSSoundEffect[0];
+    }
+
+    @Override
+    public int[] getQueuedSoundEffectIDs() {
+        return new int[0];
+    }
+
+    @Override
+    public int[] getSoundLocations() {
+        return new int[0];
+    }
+
+    @Override
+    public int[] getQueuedSoundEffectLoops() {
+        return new int[0];
+    }
+
+    @Override
+    public int[] getQueuedSoundEffectDelays() {
+        return new int[0];
+    }
+
+    @Override
+    public int getQueuedSoundEffectCount() {
+        return 0;
+    }
+
+    @Override
+    public void setQueuedSoundEffectCount(int queuedSoundEffectCount) {
+
+    }
+
+    @Override
+    public void queueSoundEffect(int id, int numLoops, int delay) {
+
+    }
+
+    @Override
+    public LocalPoint getLocalDestinationLocation() {
+        return null;
+    }
+
+    @Override
+    public List<net.runelite.api.Projectile> getProjectiles() {
+        List<net.runelite.api.Projectile> projectileList = new ArrayList<>();
+        for (Projectile projectile = (Projectile) projectiles
+                .reverseGetFirst(); projectile != null; projectile = (Projectile) projectiles.reverseGetNext()) {
+            projectileList.add(projectile);
+        }
+        return projectileList;
+    }
+
+    @Override
+    public List<GraphicsObject> getGraphicsObjects() {
+        List<net.runelite.api.GraphicsObject> list = new ArrayList<>();
+        for (GraphicsObject projectile = (GraphicsObject) incompleteAnimables
+                .reverseGetFirst(); projectile != null; projectile = (GraphicsObject) incompleteAnimables.reverseGetNext()) {
+            list.add(projectile);
+        }
+        return list;
+    }
+
+    @Override
+    public RuneLiteObject createRuneLiteObject() {
+        return null;
+    }
+
+    @Override
+    public net.runelite.api.Model loadModel(int id) {
+        return null;
+    }
+
+    @Override
+    public net.runelite.api.Model loadModel(int id, short[] colorToFind, short[] colorToReplace) {
+        return null;
+    }
+
+    @Override
+    public net.runelite.api.Animation loadAnimation(int id) {
+        return null;
+    }
+
+    @Override
+    public int getMusicVolume() {
+        return 0;
+    }
+
+    @Override
+    public void setMusicVolume(int volume) {
+    }
+
+    @Override
+    public void playSoundEffect(int id) {
+
+    }
+
+    @Override
+    public void playSoundEffect(int id, int x, int y, int range) {
+    }
+
+    @Override
+    public void playSoundEffect(int id, int x, int y, int range, int delay) {
+    }
+
+    @Override
+    public void playSoundEffect(int id, int volume) {
+
+    }
+
+    @Override
+    public RSAbstractRasterProvider getBufferProvider() {
+        return gameScreenImageProducer;
+    }
+
+    @Override
+    public int getMouseIdleTicks() {
+        return 0;
+    }
+
+    @Override
+    public long getMouseLastPressedMillis() {
+        return 0;
+    }
+
+    @Override
+    public int getKeyboardIdleTicks() {
+        return 0;
+    }
+
+    @Override
+    public void changeMemoryMode(boolean lowMemory) {
+        setLowMemory(lowMemory);
+        setSceneLowMemory(lowMemory);
+        setAudioHighMemory(true);
+        setObjectDefinitionLowDetail(lowMemory);
+        if (getGameState() == GameState.LOGGED_IN)
+        {
+            setGameState(1);
+        }
+    }
+
+    public HashMap<Integer, ItemContainer> containers = new HashMap<Integer, ItemContainer>();
+
+    @Override
+    public ItemContainer getItemContainer(InventoryID inventory) {
+        return containers.get(inventory.getId());
+    }
+
+    @Override
+    public ItemContainer getItemContainer(int id) {
+        return containers.get(id);
+    }
+
+    @Override
+    public RSNodeHashTable getItemContainers() {
+        return null;
+    }
+
+    @Override
+    public RSItemComposition getRSItemDefinition(int itemId) {
+        return ItemDefinition.lookup(itemId);
+    }
+
+    @Override
+    public RSSpritePixels createRSItemSprite(int itemId, int quantity, int thickness, int borderColor, int stackable, boolean noted) {
+        return null;
+    }
+
+    @Override
+    public void sendMenuAction(int n2, int n3, int n4, int n5, String string, String string2, int n6, int n7) {
+
+    }
+
+    @Override
+    public void decodeSprite(byte[] data) {
+
+    }
+
+    @Override
+    public int getIndexedSpriteCount() {
+        return 0;
+    }
+
+    @Override
+    public int getIndexedSpriteWidth() {
+        return 0;
+    }
+
+    @Override
+    public int getIndexedSpriteHeight() {
+        return 0;
+    }
+
+    @Override
+    public int[] getIndexedSpriteOffsetXs() {
+        return new int[0];
+    }
+
+    @Override
+    public void setIndexedSpriteOffsetXs(int[] indexedSpriteOffsetXs) {
+
+    }
+
+    @Override
+    public int[] getIndexedSpriteOffsetYs() {
+        return new int[0];
+    }
+
+    @Override
+    public void setIndexedSpriteOffsetYs(int[] indexedSpriteOffsetYs) {
+
+    }
+
+    @Override
+    public int[] getIndexedSpriteWidths() {
+        return new int[0];
+    }
+
+    @Override
+    public void setIndexedSpriteWidths(int[] indexedSpriteWidths) {
+
+    }
+
+    @Override
+    public int[] getIndexedSpriteHeights() {
+        return new int[0];
+    }
+
+    @Override
+    public void setIndexedSpriteHeights(int[] indexedSpriteHeights) {
+
+    }
+
+    @Override
+    public byte[][] getSpritePixels() {
+        return new byte[0][];
+    }
+
+    @Override
+    public void setSpritePixels(byte[][] spritePixels) {
+
+    }
+
+    @Override
+    public int[] getIndexedSpritePalette() {
+        return new int[0];
+    }
+
+    @Override
+    public void setIndexedSpritePalette(int[] indexedSpritePalette) {
+
+    }
+
+    @Override
+    public int getIntStackSize() {
+        return 0;
+    }
+
+    @Override
+    public void setIntStackSize(int stackSize) {
+    }
+
+    @Override
+    public int[] getIntStack() {
+        return null;
+    }
+
+    @Override
+    public int getStringStackSize() {
+        return 0;
+    }
+
+    @Override
+    public void setStringStackSize(int stackSize) {
+    }
+
+    @Override
+    public String[] getStringStack() {
+        return null;
+    }
+
+    @Override
+    public RSFriendSystem getFriendManager() {
+        return null;
+    }
+
+    @Override
+    public RSWidget getScriptActiveWidget() {
+        return null;
+    }
+
+    @Override
+    public RSWidget getScriptDotWidget() {
+        return null;
+    }
+
+    @Override
+    public RSScriptEvent createRSScriptEvent(Object... args) {
+        return null;
+    }
+
+    @Override
+    public void runScriptEvent(RSScriptEvent event) {
+
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getScriptCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getRSStructCompositionCache() {
+        return null;
+    }
+
+    @Override
+    public RSStructComposition getRSStructComposition(int id) {
+        return null;
+    }
+
+    @Override
+    public RSParamComposition getRSParamComposition(int id) {
+        return null;
+    }
+
+    @Override
+    public void setMouseLastPressedMillis(long time) {
+
+    }
+
+    @Override
+    public long getClientMouseLastPressedMillis() {
+        return 0;
+    }
+
+    @Override
+    public void setClientMouseLastPressedMillis(long time) {
+    }
+
+    @Override
+    public int getRootWidgetCount() {
+        return 0;
+    }
+
+    @Override
+    public int getWidgetClickX() {
+        return 0;
+    }
+
+    @Override
+    public int getWidgetClickY() {
+        return 0;
+    }
+
+    @Override
+    public int getStaffModLevel() {
+        return 0;
+    }
+
+    @Override
+    public int getTradeChatMode() {
+        return 0;
+    }
+
+    @Override
+    public int getPublicChatMode() {
+        return 0;
+    }
+
+    @Override
+    public int getClientType() {
+        return 0;
+    }
+
+    @Override
+    public boolean isOnMobile() {
+        return false;
+    }
+
+    @Override
+    public boolean hadFocus() {
+        return false;
+    }
+
+    @Override
+    public int getMouseCrossColor() {
+        return 0;
+    }
+
+    @Override
+    public void setMouseCrossColor(int color) {
+
+    }
+
+    @Override
+    public int getLeftClickOpensMenu() {
+        return 0;
+    }
+
+    @Override
+    public boolean getShowMouseOverText() {
+        return false;
+    }
+
+    @Override
+    public void setShowMouseOverText(boolean showMouseOverText) {
+
+    }
+
+    @Override
+    public int[] getDefaultRotations() {
+        return new int[0];
+    }
+
+    @Override
+    public boolean getShowLoadingMessages() {
+        return false;
+    }
+
+    @Override
+    public void setShowLoadingMessages(boolean showLoadingMessages) {
+
+    }
+
+    @Override
+    public void setStopTimeMs(long time) {
+
+    }
+
+    @Override
+    public void clearLoginScreen(boolean shouldClear) {
+
+    }
+
+    @Override
+    public void setLeftTitleSprite(SpritePixels background) {
+
+    }
+
+    @Override
+    public void setRightTitleSprite(SpritePixels background) {
+
+    }
+
+    @Override
+    public RSBuffer newBuffer(byte[] bytes) {
+        return null;
+    }
+
+    @Override
+    public RSVarbitComposition newVarbitDefinition() {
+        return null;
+    }
+
+    @Override
+    public boolean[] getPressedKeys() {
+        return null;
+    }
+
+    public boolean lowMemoryMusic = false;
+    @Override
+    public void setLowMemory(boolean lowMemory) {
+        this.lowMemory = lowMemory;
+    }
+
+    @Override
+    public void setSceneLowMemory(boolean lowMemory) {
+        MapRegion.lowMem = lowMemory;
+        SceneGraph.lowMem = lowMemory;
+        Rasterizer3D.lowMem = lowMemory;
+
+    }
+
+    @Override
+    public void setAudioHighMemory(boolean highMemory) {
+        lowMemoryMusic = highMemory;
+    }
+
+    @Override
+    public void setObjectDefinitionLowDetail(boolean lowDetail) {
+        ObjectDefinition.lowMemory = lowDetail;
+    }
+
+
+    @Override
+    public boolean isFriended(String name, boolean mustBeLoggedIn) {
+        return false;
+    }
+
+    @Override
+    public RSFriendsChat getFriendsChatManager() {
+        return null;
+    }
+
+    @Override
+    public RSLoginType getLoginType() {
+        return null;
+    }
+
+    @Override
+    public RSUsername createName(String name, RSLoginType type) {
+        return null;
+    }
+
+    @Override
+    public int rs$getVarbit(int varbitId) {
+        return 0;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getVarbitCache() {
+        return null;
+    }
+
+    @Override
+    public FriendContainer getFriendContainer() {
+        return null;
+    }
+
+    @Override
+    public NameableContainer<Ignore> getIgnoreContainer() {
+        return null;
+    }
+
+    @Override
+    public RSClientPreferences getPreferences() {
+        return null;
+    }
+
+    @Override
+    public int getCameraPitchTarget() {
+        return anInt1184;
+    }
+
+    @Override
+    public void setCameraPitchTarget(int pitch) {
+        anInt1184 = pitch;
+    }
+
+    @Override
+    public void setPitchSin(int v) {
+        scene.camUpDownY = v;
+    }
+
+    @Override
+    public void setPitchCos(int v) {
+        scene.camUpDownX = v;
+    }
+
+    @Override
+    public void setYawSin(int v) {
+        scene.camLeftRightY = v;
+    }
+
+    @Override
+    public void setYawCos(int v) {
+        scene.camLeftRightX = v;
+    }
+
+    @Override
+    public void setCameraPitchRelaxerEnabled(boolean enabled) {
+        scene.pitchRelaxEnabled = enabled;
+    }
+
+    @Override
+    public void setInvertYaw(boolean state) {
+
+    }
+
+    @Override
+    public void setInvertPitch(boolean state) {
+
+    }
+
+    @Override
+    public RSWorldMap getRenderOverview() {
+        return null;
+    }
+
+    @Override
+    public boolean isStretchedEnabled() {
+        return frameMode == ScreenMode.RESIZABLE;
+    }
+
+    @Override
+    public void setStretchedEnabled(boolean state) {
+
+    }
+
+    @Override
+    public boolean isStretchedFast() {
+        return false;
+    }
+
+    @Override
+    public void setStretchedFast(boolean state) {
+    }
+
+    @Override
+    public void setStretchedIntegerScaling(boolean state) {
+
+    }
+
+    @Override
+    public void setStretchedKeepAspectRatio(boolean state) {
+
+    }
+
+    @Override
+    public void setScalingFactor(int factor) {
+
+    }
+
+    @Override
+    public double getScalingFactor() {
+        return 0;
+    }
+
+    @Override
+    public void invalidateStretching(boolean resize) {
+    }
+
+    @Override
+    public Dimension getStretchedDimensions() {
+        return new Dimension(frameWidth, frameHeight);
+    }
+
+    @Override
+    public Dimension getRealDimensions() {
+        return new Dimension(frameWidth, frameHeight);
+    }
+
+    @Override
+    public void changeWorld(World world) {
+
+    }
+
+    @Override
+    public RSWorld createWorld() {
+        return null;
+    }
+
+    @Override
+    public void setAnimOffsetX(int animOffsetX) {
+
+    }
+
+    @Override
+    public void setAnimOffsetY(int animOffsetY) {
+
+    }
+
+    @Override
+    public void setAnimOffsetZ(int animOffsetZ) {
+
+    }
+
+    @Override
+    public RSSpritePixels drawInstanceMap(int z) {
+        return null;
+    }
+
+    @Override
+    public void setMinimapReceivesClicks(boolean minimapReceivesClicks) {
+
+    }
+
+    @Override
+    public void runScript(Object... args) {
+
+    }
+
+    @Override
+    public ScriptEvent createScriptEvent(Object... args) {
+        return null;
+    }
+
+    @Override
+    public boolean hasHintArrow() {
+        return false;
+    }
+
+    @Override
+    public HintArrowType getHintArrowType() {
+        return null;
+    }
+
+    @Override
+    public void clearHintArrow() {
+
+    }
+
+    @Override
+    public void setHintArrow(WorldPoint point) {
+
+    }
+
+    @Override
+    public void setHintArrow(net.runelite.api.Player player) {
+
+    }
+
+    @Override
+    public void setHintArrow(NPC npc) {
+
+    }
+
+    @Override
+    public WorldPoint getHintArrowPoint() {
+        return null;
+    }
+
+    @Override
+    public net.runelite.api.Player getHintArrowPlayer() {
+        return null;
+    }
+
+    @Override
+    public NPC getHintArrowNpc() {
+        return null;
+    }
+
+    @Override
+    public boolean isInterpolatePlayerAnimations() {
+        return false;
+    }
+
+    @Override
+    public void setInterpolatePlayerAnimations(boolean interpolate) {
+
+    }
+
+    @Override
+    public boolean isInterpolateNpcAnimations() {
+        return false;
+    }
+
+    @Override
+    public void setInterpolateNpcAnimations(boolean interpolate) {
+
+    }
+
+    @Override
+    public boolean isInterpolateObjectAnimations() {
+        return false;
+    }
+
+    @Override
+    public void setInterpolateObjectAnimations(boolean interpolate) {
+
+    }
+
+    @Override
+    public boolean isInterpolateWidgetAnimations() {
+        return false;
+    }
+
+    @Override
+    public void setInterpolateWidgetAnimations(boolean interpolate) {
+
+    }
+
+    @Override
+    public boolean isInInstancedRegion() {
+        return false; //TODO:
+    }
+
+    @Override
+    public int getItemPressedDuration() {
+        return 0;
+    }
+
+    @Override
+    public void setItemPressedDuration(int duration) {
+
+    }
+
+    @Override
+    public int getFlags() {
+        return 0;
+    }
+
+
+    @Override
+    public void setIsHidingEntities(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setOthersHidden(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setOthersHidden2D(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setFriendsHidden(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setFriendsChatMembersHidden(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setIgnoresHidden(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setLocalPlayerHidden(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setLocalPlayerHidden2D(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setNPCsHidden(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setNPCsHidden2D(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setHideSpecificPlayers(List<String> players)
+    {
+
+    }
+
+
+    @Override
+    public void setHiddenNpcIndices(List<Integer> npcIndices)
+    {
+
+    }
+
+    @Override
+    public List<Integer> getHiddenNpcIndices()
+    {
+        return null;
+    }
+
+    @Override
+    public void setPetsHidden(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setAttackersHidden(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setProjectilesHidden(boolean state)
+    {
+
+    }
+
+    @Override
+    public void setDeadNPCsHidden(boolean state)
+    {
+
+    }
+
+    @Override
+    public void addHiddenNpcName(String npc)
+    {
+
+    }
+
+    @Override
+    public void removeHiddenNpcName(String npc)
+    {
+
+    }
+
+
+    @Override
+    public void setBlacklistDeadNpcs(Set<Integer> blacklist) {
+
+    }
+
+    public boolean addEntityMarker(int x, int y, RSRenderable entity)
+    {
+
+        return true;
+    }
+
+    public boolean shouldDraw(Object entity, boolean drawingUI)
+    {
+
+
+        return true;
+    }
+
+    @Override
+    public RSCollisionMap[] getCollisionMaps() {
+        return collisionMaps;
+    }
+
+    @Override
+    public int getPlayerIndexesCount() {
+        return 0;
+    }
+
+    @Override
+    public int[] getPlayerIndices() {
+        return new int[0];
+    }
+
+    @Override
+    public int[] getBoostedSkillLevels() {
+        return null;
+    }
+
+    @Override
+    public int[] getRealSkillLevels() {
+        return null;
+    }
+
+    @Override
+    public int[] getSkillExperiences() {
+        return null;
+    }
+
+    @Override
+    public int[] getChangedSkills() {
+        return new int[0];
+    }
+
+    @Override
+    public int getChangedSkillsCount() {
+        return 0;
+    }
+
+    @Override
+    public void setChangedSkillsCount(int i) {
+
+    }
+
+    @Override
+    public void queueChangedSkill(Skill skill) {
+    }
+
+    @Override
+    public Map<Integer, SpritePixels> getSpriteOverrides() {
+        return null;
+    }
+
+    @Override
+    public Map<Integer, SpritePixels> getWidgetSpriteOverrides() {
+        return null;
+    }
+
+    @Override
+    public void setCompass(SpritePixels SpritePixels) {
+
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getWidgetSpriteCache() {
+        return null;
+    }
+
+    @Override
+    public int getTickCount() {
+        return 0;
+    }
+
+    @Override
+    public void setTickCount(int tickCount) {
+
+    }
+
+
+    @Override
+    public void setInventoryDragDelay(int delay) {
+
+    }
+
+
+    @Override
+    public boolean isHdMinimapEnabled() {
+        return scene.hdMinimapEnabled;
+    }
+
+    @Override
+    public void setHdMinimapEnabled(boolean enabled) {
+        scene.hdMinimapEnabled = enabled;
+    }
+
+    @Override
+    public EnumSet<WorldType> getWorldType() {
+        return EnumSet.of(WorldType.MEMBERS);
+    }
+
+    @Override
+    public int getOculusOrbState() {
+        return 0;
+    }
+
+    @Override
+    public void setOculusOrbState(int state) {
+
+    }
+
+    @Override
+    public void setOculusOrbNormalSpeed(int speed) {
+
+    }
+
+    @Override
+    public int getOculusOrbFocalPointX() {
+        return 0;
+    }
+
+    @Override
+    public int getOculusOrbFocalPointY() {
+        return 0;
+    }
+
+    @Override
+    public void setOculusOrbFocalPointX(int xPos) {
+
+    }
+
+    @Override
+    public void setOculusOrbFocalPointY(int yPos) {
+
+    }
+
+    @Override
+    public RSTileItem getLastItemDespawn() {
+        return null;
+    }
+
+    @Override
+    public void setLastItemDespawn(RSTileItem lastItemDespawn) {
+
+    }
+
+    @Override
+    public void openWorldHopper() {
+
+    }
+
+    @Override
+    public void hopToWorld(World world) {
+
+    }
+
+    @Override
+    public void setSkyboxColor(int skyboxColor) {
+        scene.skyboxColor = skyboxColor;
+    }
+
+    @Override
+    public int getSkyboxColor() {
+        return scene.skyboxColor;
+    }
+
+    @Override
+    public boolean isGpu() {
+        return gpu;
+    }
+
+    @Override
+    public void setGpu(boolean gpu) {
+        this.gpu = gpu;
+        gameScreenImageProducer = new ProducingGraphicsBuffer(frameWidth, frameHeight);
+    }
+
+    public static boolean processGpuPlugin() {
+        return loggedIn && instance.loadingStage == 2 && instance.getDrawCallbacks() != null;
+    }
+
+    @Override
+    public int get3dZoom() {
+        return cameraZoom;
+    }
+
+    @Override
+    public void set3dZoom(int zoom) {
+        this.cameraZoom = zoom;
+    }
+
+    @Override
+    public int getCenterX() {
+        return getViewportWidth() / 2;
+    }
+
+    @Override
+    public int getCenterY() {
+        return getViewportHeight() / 2;
+    }
+
+    @Override
+    public int getCameraX2() {
+        return SceneGraph.xCameraPos;
+    }
+
+    @Override
+    public int getCameraY2() {
+        return SceneGraph.zCameraPos;
+    }
+
+    @Override
+    public int getCameraZ2() {
+        return SceneGraph.yCameraPos;
+    }
+
+    @Override
+    public RSTextureProvider getTextureProvider() {
+        return textureManager;
+    }
+
+    @Override
+    public int[][] getOccupiedTilesTick() {
+        return new int[0][];
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getObjectDefinitionModelsCache() {
+        return null;
+    }
+
+    @Override
+    public int getCycle() {
+        return scene.cycle;
+    }
+
+    @Override
+    public void setCycle(int cycle) {
+        scene.cycle = cycle;
+    }
+
+    @Override
+    public boolean[][][][] getVisibilityMaps() {
+        return scene.visibilityMap;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getCachedModels2() {
+        return null;
+    }
+
+    @Override
+    public void setRenderArea(boolean[][] renderArea) {
+        scene.renderArea = renderArea;
+    }
+
+    @Override
+    public void setCameraX2(int cameraX2) {
+        scene.xCameraPos = cameraX2;
+    }
+
+    @Override
+    public void setCameraY2(int cameraY2) {
+        scene.zCameraPos = cameraY2;
+    }
+
+    @Override
+    public void setCameraZ2(int cameraZ2) {
+        scene.yCameraPos = cameraZ2;
+    }
+
+    @Override
+    public void setScreenCenterX(int screenCenterX) {
+        scene.screenCenterX = screenCenterX;
+    }
+
+    @Override
+    public void setScreenCenterZ(int screenCenterZ) {
+        scene.screenCenterZ = screenCenterZ;
+    }
+
+    @Override
+    public void setScenePlane(int scenePlane) {
+        scene.currentRenderPlane = scenePlane;
+    }
+
+    @Override
+    public void setMinTileX(int i) {
+        scene.minTileX = i;
+    }
+
+    @Override
+    public void setMinTileZ(int i) {
+        scene.minTileZ = i;
+    }
+
+    @Override
+    public void setMaxTileX(int i) {
+        scene.maxTileX = i;
+    }
+
+    @Override
+    public void setMaxTileZ(int i) {
+        scene.maxTileZ = i;
+    }
+
+    @Override
+    public int getTileUpdateCount() {
+        return scene.tileUpdateCount;
+    }
+
+    @Override
+    public void setTileUpdateCount(int tileUpdateCount) {
+        scene.tileUpdateCount = tileUpdateCount;
+    }
+
+    @Override
+    public boolean getViewportContainsMouse() {
+        return false;
+    }
+
+    @Override
+    public int getRasterizer3D_clipMidX2() {
+        return Rasterizer2D.viewportCenterX;
+    }
+
+    @Override
+    public int getRasterizer3D_clipNegativeMidX() {
+        return -Rasterizer2D.viewportCenterX;
+    }
+
+    @Override
+    public int getRasterizer3D_clipNegativeMidY() {
+        return -Rasterizer2D.viewportCenterY;
+    }
+
+    @Override
+    public int getRasterizer3D_clipMidY2() {
+        return Rasterizer2D.viewportCenterY;
+    }
+
+    @Override
+    public void checkClickbox(net.runelite.api.Model model, int orientation, int pitchSin, int pitchCos, int yawSin,
+                              int yawCos, int x, int y, int z, long hash) {
+
+    }
+
+    @Override
+    public RSWidget getIf1DraggedWidget() {
+        return null;
+    }
+
+    @Override
+    public int getIf1DraggedItemIndex() {
+        return 0;
+    }
+
+    @Override
+    public void setSpellSelected(boolean selected) {
+
+    }
+
+    @Override
+    public RSEnumComposition getRsEnum(int id) {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getItemCompositionCache() {
+        return null;
+    }
+
+    @Override
+    public RSSpritePixels[] getCrossSprites() {
+        return null;
+    }
+
+    @Override
+    public EnumComposition getEnum(int id) {
+        return null;
+    }
+
+    @Override
+    public void draw2010Menu(int alpha) {
+
+    }
+
+    @Override
+    public int[] getGraphicsPixels() {
+        return null;
+    }
+
+    @Override
+    public int getGraphicsPixelsWidth() {
+        return 0;
+    }
+
+    @Override
+    public int getGraphicsPixelsHeight() {
+        return 0;
+    }
+
+    @Override
+    public void rasterizerFillRectangle(int x, int y, int w, int h, int rgb) {
+        Rasterizer2D.drawBox(x,y,w,h,rgb);
+    }
+
+    @Override
+    public int getStartX() {
+        return 0;
+    }
+
+    @Override
+    public int getStartY() {
+        return 0;
+    }
+
+    @Override
+    public int getEndX() {
+        return 0;
+    }
+
+    @Override
+    public int getEndY() {
+        return 0;
+    }
+
+    @Override
+    public void drawOriginalMenu(int alpha) {
+
+    }
+
+    @Override
+    public void resetHealthBarCaches() {
+
+    }
+
+    @Override
+    public boolean getRenderSelf() {
+        return false;
+    }
+
+    @Override
+    public void setRenderSelf(boolean enabled) {
+
+    }
+
+    @Override
+    public void invokeMenuAction(String option, String target, int identifier, int opcode, int param0, int param1) {
+
+    }
+
+    @Override
+    public RSMouseRecorder getMouseRecorder() {
+        return null;
+    }
+
+    @Override
+    public void setPrintMenuActions(boolean b) {
+
+    }
+
+    @Override
+    public String getSelectedSpellName() {
+        return null;
+    }
+
+    @Override
+    public void setSelectedSpellName(String name) {
+
+    }
+
+    @Override
+    public boolean getSpellSelected() {
+        return false;
+    }
+
+    @Override
+    public RSSoundEffect getTrack(RSAbstractArchive indexData, int id, int var0) {
+        return null;
+    }
+
+    @Override
+    public RSRawPcmStream createRawPcmStream(RSRawSound audioNode, int var0, int volume) {
+        return null;
+    }
+
+    @Override
+    public RSPcmStreamMixer getSoundEffectAudioQueue() {
+        return null;
+    }
+
+    @Override
+    public RSArchive getIndexCache4() {
+        return null;
+    }
+
+    @Override
+    public RSDecimator getSoundEffectResampler() {
+        return null;
+    }
+
+    @Override
+    public void setMusicTrackVolume(int volume) {
+
+    }
+
+    @Override
+    public void setViewportWalking(boolean viewportWalking) {
+
+    }
+
+    @Override
+    public void playMusicTrack(int var0, RSAbstractArchive var1, int var2, int var3, int var4, boolean var5) {
+
+    }
+
+    @Override
+    public RSMidiPcmStream getMidiPcmStream() {
+        return null;
+    }
+
+    @Override
+    public int getCurrentTrackGroupId() {
+        return 0;
+    }
+
+    @Override
+    public String getSelectedSpellActionName() {
+        return null;
+    }
+
+    @Override
+    public int getSelectedSpellFlags() {
+        return 0;
+    }
+
+    @Override
+    public void setHideFriendAttackOptions(boolean yes) {
+
+    }
+
+    @Override
+    public void setHideFriendCastOptions(boolean yes) {
+
+    }
+
+    @Override
+    public void setHideClanmateAttackOptions(boolean yes) {
+    }
+
+    @Override
+    public void setHideClanmateCastOptions(boolean yes) {
+
+    }
+
+    @Override
+    public void setUnhiddenCasts(Set<String> casts) {
+
+    }
+
+    @Override
+    public void addFriend(String name) {
+
+    }
+
+    @Override
+    public void removeFriend(String name) {
+
+    }
+
+    @Override
+    public void setModulus(BigInteger modulus) {
+
+    }
+
+    @Override
+    public BigInteger getModulus() {
+        return null;
+    }
+
+    @Override
+    public int getItemCount() {
+        return 0;
+    }
+
+    @Override
+    public void setAllWidgetsAreOpTargetable(boolean value) {
+
+    }
+
+    @Override
+    public void insertMenuItem(String action, String target, int opcode, int identifier, int argument1, int argument2,
+                               boolean forceLeftClick) {
+
+    }
+
+    @Override
+    public void setSelectedItemID(int id) {
+
+    }
+
+    @Override
+    public int getSelectedItemWidget() {
+        return 0;
+    }
+
+    @Override
+    public void setSelectedItemWidget(int widgetID) {
+
+    }
+
+    @Override
+    public int getSelectedItemSlot() {
+        return 0;
+    }
+
+    @Override
+    public void setSelectedItemSlot(int idx) {
+
+    }
+
+    @Override
+    public int getSelectedSpellWidget() {
+        return 0;
+    }
+
+    @Override
+    public int getSelectedSpellChildIndex() {
+        return 0;
+    }
+
+    @Override
+    public void setSelectedSpellWidget(int widgetID) {
+
+    }
+
+    @Override
+    public void setSelectedSpellChildIndex(int index) {
+
+    }
+
+    @Override
+    public void scaleSprite(int[] canvas, int[] pixels, int color, int pixelX, int pixelY, int canvasIdx,
+                            int canvasOffset, int newWidth, int newHeight, int pixelWidth, int pixelHeight, int oldWidth) {
+
+    }
+
+    @Override
+    public void promptCredentials(boolean clearPass) {
+
+    }
+
+    @Override
+    public RSVarpDefinition getVarpDefinition(int id) {
+        return null;
+    }
+
+    @Override
+    public RSTileItem newTileItem() {
+        return null;
+    }
+
+    @Override
+    public RSNodeDeque newNodeDeque() {
+        return null;
+    }
+
+    @Override
+    public void updateItemPile(int localX, int localY) {
+
+    }
+
+    @Override
+    public void setHideDisconnect(boolean dontShow) {
+
+    }
+
+    @Override
+    public void setTempMenuEntry(MenuEntry entry) {
+
+    }
+
+    @Override
+    public void setShowMouseCross(boolean show) {
+
+    }
+
+    @Override
+    public int getDraggedWidgetX() {
+        return 0;
+    }
+
+    @Override
+    public int getDraggedWidgetY() {
+        return 0;
+    }
+
+    @Override
+    public int[] getChangedSkillLevels() {
+        return new int[0];
+    }
+
+    @Override
+    public void setMouseIdleTicks(int cycles) {
+
+    }
+
+    @Override
+    public void setKeyboardIdleTicks(int cycles) {
+
+    }
+
+    @Override
+    public void setGeSearchResultCount(int count) {
+    }
+
+    @Override
+    public void setGeSearchResultIds(short[] ids) {
+
+    }
+
+    @Override
+    public void setGeSearchResultIndex(int index) {
+
+    }
+
+    @Override
+    public void setComplianceValue(String key, boolean value) {
+
+    }
+
+    @Override
+    public boolean getComplianceValue(String key) {
+        return false;
+    }
+
+    @Override
+    public boolean isMirrored() {
+        return false;
+    }
+
+    @Override
+    public void setMirrored(boolean isMirrored) {
+
+    }
+
+    @Override
+    public boolean isComparingAppearance() {
+        return false;
+    }
+
+    @Override
+    public void setComparingAppearance(boolean comparingAppearance) {
+
+    }
+
+    @Override
+    public void setLoginScreen(SpritePixels pixels) {
+
+    }
+
+    @Override
+    public void setShouldRenderLoginScreenFire(boolean val) {
+
+    }
+
+    @Override
+    public boolean shouldRenderLoginScreenFire() {
+        return false;
+    }
+
+    @Override
+    public boolean isKeyPressed(int keycode) {
+        return false;
+    }
+
+    @Override
+    public int getFollowerIndex() {
+        return 0;
+    }
+
+    @Override
+    public int isItemSelected() {
+        return 0;
+    }
+
+    @Override
+    public String getSelectedItemName() {
+        return null;
+    }
+
+    @Override
+    public RSWidget getMessageContinueWidget() {
+        return null;
+    }
+
+    @Override
+    public void setMusicPlayerStatus(int var0) {
+
+    }
+
+    @Override
+    public void setMusicTrackArchive(RSAbstractArchive var0) {
+
+    }
+
+    @Override
+    public void setMusicTrackGroupId(int var0) {
+
+    }
+
+    @Override
+    public void setMusicTrackFileId(int var0) {
+
+    }
+
+    @Override
+    public void setMusicTrackBoolean(boolean var0) {
+
+    }
+
+    @Override
+    public void setPcmSampleLength(int var0) {
+
+    }
+
+    @Override
+    public int[] getChangedVarps() {
+        return new int[0];
+    }
+
+    @Override
+    public int getChangedVarpCount() {
+        return 0;
+    }
+
+    @Override
+    public void setChangedVarpCount(int changedVarpCount) {
+
+    }
+
+    @Override
+    public void setOutdatedScript(String outdatedScript) {
+
+    }
+
+    @Override
+    public List<String> getOutdatedScripts() {
+        return null;
+    }
+
+    @Override
+    public RSFrames getFrames(int frameId) {
+        return null;
+    }
+
+    @Override
+    public RSSpritePixels getMinimapSprite() {
+        return minimapImage;
+    }
+
+    @Override
+    public void setMinimapSprite(SpritePixels spritePixels) {
+
+    }
+
+    @Override
+    public void drawObject(int z, int x, int y, int randomColor1, int randomColor2) {
+
+    }
+
+    @Override
+    public RSScriptEvent createScriptEvent() {
+        return null;
+    }
+
+    @Override
+    public void runScript(RSScriptEvent ev, int ex, int var2) {
+
+    }
+
+    @Override
+    public void setHintArrowTargetType(int value) {
+        this.hintIconDrawType = value;
+    }
+
+    @Override
+    public int getHintArrowTargetType() {
+        return hintIconDrawType;
+    }
+
+    @Override
+    public void setHintArrowX(int value) {
+        this.hintIconX = value;
+    }
+
+    @Override
+    public int getHintArrowX() {
+        return this.hintIconX;
+    }
+
+    @Override
+    public void setHintArrowY(int value) {
+        this.hintIconY = value;
+    }
+
+    @Override
+    public int getHintArrowY() {
+        return this.hintIconY;
+    }
+
+    @Override
+    public void setHintArrowOffsetX(int value) {
+        this.hintIconX += value;
+    }
+
+    @Override
+    public void setHintArrowOffsetY(int value) {
+        this.hintIconY += value;
+    }
+
+    @Override
+    public void setHintArrowNpcTargetIdx(int value) {
+        this.hintIconNpcId = value;
+    }
+
+    @Override
+    public int getHintArrowNpcTargetIdx() {
+        return hintIconNpcId;
+    }
+
+    @Override
+    public void setHintArrowPlayerTargetIdx(int value) {
+        this.hintIconPlayerId = value;
+    }
+
+    @Override
+    public int getHintArrowPlayerTargetIdx() {
+        return hintIconPlayerId;
+    }
+
+    @Override
+    public RSSequenceDefinition getSequenceDefinition(int id) {
+        return null;
+    }
+
+    @Override
+    public RSIntegerNode newIntegerNode(int contents) {
+        return null;
+    }
+
+    @Override
+    public RSObjectNode newObjectNode(Object contents) {
+        return null;
+    }
+
+    @Override
+    public RSIterableNodeHashTable newIterableNodeHashTable(int size) {
+        return null;
+    }
+
+    @Override
+    public RSVarbitComposition getVarbitComposition(int id) {
+        return null;
+    }
+
+    @Override
+    public RSAbstractArchive getSequenceDefinition_skeletonsArchive() {
+        return null;
+    }
+
+    @Override
+    public RSAbstractArchive getSequenceDefinition_archive() {
+        return null;
+    }
+
+    @Override
+    public RSAbstractArchive getSequenceDefinition_animationsArchive() {
+        return null;
+    }
+
+    @Override
+    public RSAbstractArchive getNpcDefinition_archive() {
+        return null;
+    }
+
+    @Override
+    public RSAbstractArchive getObjectDefinition_modelsArchive() {
+        return null;
+    }
+
+    @Override
+    public RSAbstractArchive getObjectDefinition_archive() {
+        return null;
+    }
+
+    @Override
+    public RSAbstractArchive getItemDefinition_archive() {
+        return null;
+    }
+
+    @Override
+    public RSAbstractArchive getKitDefinition_archive() {
+        return null;
+    }
+
+    @Override
+    public RSAbstractArchive getKitDefinition_modelsArchive() {
+        return null;
+    }
+
+    @Override
+    public RSAbstractArchive getSpotAnimationDefinition_archive() {
+        return null;
+    }
+
+    @Override
+    public RSAbstractArchive getSpotAnimationDefinition_modelArchive() {
+        return null;
+    }
+
+    @Override
+    public RSBuffer createBuffer(byte[] initialBytes) {
+        return null;
+    }
+
+    @Override
+    public RSSceneTilePaint createSceneTilePaint(int swColor, int seColor, int neColor, int nwColor, int texture, int rgb, boolean isFlat) {
+        return null;
+    }
+
+    @Override
+    public long[] getCrossWorldMessageIds() {
+        return null;
+    }
+
+    @Override
+    public int getCrossWorldMessageIdsIndex() {
+        return 0;
+    }
+
+    @Override
+    public RSClanChannel[] getCurrentClanChannels() {
+        return new RSClanChannel[0];
+    }
+
+    @Override
+    public RSClanSettings[] getCurrentClanSettingsAry() {
+        return new RSClanSettings[0];
+    }
+
+    @Override
+    public RSClanChannel getClanChannel() {
+        return null;
+    }
+
+    @Override
+    public RSClanChannel getGuestClanChannel() {
+        return null;
+    }
+
+    @Override
+    public RSClanSettings getClanSettings() {
+        return null;
+    }
+
+    @Override
+    public RSClanSettings getGuestClanSettings() {
+        return null;
+    }
+
+    @Override
+    public ClanRank getClanRankFromRs(int rank) {
+        return null;
+    }
+
+    @Override
+    public RSIterableNodeHashTable readStringIntParameters(RSBuffer buffer, RSIterableNodeHashTable table) {
+        return null;
+    }
+
+    @Override
+    public int getRndHue() {
+        return 0;
+    }
+
+    @Override
+    public byte[][][] getTileUnderlays() {
+        return scene.getUnderlayIds();
+    }
+
+    @Override
+    public byte[][][] getTileOverlays() {
+        return scene.getOverlayIds();
+    }
+
+    @Override
+    public byte[][][] getTileShapes() {
+        return scene.getTileShapes();
+    }
+
+    @Override
+    public RSSpotAnimationDefinition getSpotAnimationDefinition(int id) {
+        return null;
+    }
+
+    @Override
+    public RSModelData getModelData(RSAbstractArchive var0, int var1, int var2) {
+        return null;
+    }
+
+    @Override
+    public boolean isCameraLocked() {
+        return false;
+    }
+
+    @Override
+    public boolean getCameraPitchRelaxerEnabled() {
+        return scene.pitchRelaxEnabled;
+    }
+
+    @Override
+    public boolean isUnlockedFps() {
+        return false;
+    }
+
+    @Override
+    public long getUnlockedFpsTarget() {
+        return 0;
+    }
+
+    @Override
+    public void posToCameraAngle(int var0, int var1) {
+
+    }
+
+    @Override
+    public RSClanChannel getClanChannel(int clanId) {
+        return null;
+    }
+
+    @Override
+    public RSClanSettings getClanSettings(int clanId) {
+        return null;
+    }
+
+    @Override
+    public void setUnlockedFps(boolean unlock) {
+    }
+
+    @Override
+    public void setUnlockedFpsTarget(int fps) {
+    }
+
+    @Override
+    public net.runelite.api.Deque<AmbientSoundEffect> getAmbientSoundEffects() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getEnumDefinitionCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getFloorUnderlayDefinitionCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getFloorOverlayDefinitionCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getHitSplatDefinitionCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getHitSplatDefinitionSpritesCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getHitSplatDefinitionDontsCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getInvDefinitionCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getItemDefinitionModelsCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getItemDefinitionSpritesCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getKitDefinitionCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getNpcDefinitionCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getNpcDefinitionModelsCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getObjectDefinitionCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getObjectDefinitionModelDataCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getObjectDefinitionEntitiesCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getParamDefinitionCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getPlayerAppearanceModelsCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getSequenceDefinitionCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getSequenceDefinitionFramesCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getSequenceDefinitionModelsCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getSpotAnimationDefinitionCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getSpotAnimationDefinitionModlesCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getVarcIntCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getVarpDefinitionCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getModelsCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getFontsCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getSpriteMasksCache() {
+        return null;
+    }
+
+    @Override
+    public RSEvictingDualNodeHashTable getSpritesCache() {
+        return null;
+    }
+
+    @Override
+    public RSIterableNodeHashTable createIterableNodeHashTable(int size) {
+        return null;
+    }
+
 }
