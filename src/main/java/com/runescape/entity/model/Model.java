@@ -2266,9 +2266,8 @@ public class Model extends Renderable implements RSModel {
         }
         try {
             method483(false, false, 0);
-            return;
         } catch (Exception _ex) {
-            return;
+            _ex.printStackTrace();
         }
     }
 
@@ -2385,7 +2384,7 @@ public class Model extends Renderable implements RSModel {
                 projected_vertex_x[index] = -5000;
                 near_sight = true;
             }
-            if (near_sight || numberOfTexturesFaces > 0) {
+            if (near_sight || numberOfTexturesFaces > 0 && !gpu) {
                 camera_vertex_y[index] = raster_x;
                 camera_vertex_x[index] = raster_y;
                 camera_vertex_z[index] = raster_z;
@@ -2394,14 +2393,18 @@ public class Model extends Renderable implements RSModel {
         }
 
         try {
-            method483(near_sight, highlighted, uid);
-            return;
+            if (!gpu || (highlighted && !(Math.sqrt(offsetX * offsetX + offsetZ * offsetZ) > 35 * Perspective.LOCAL_TILE_SIZE))) {
+                method483(near_sight, highlighted, uid);
+            }
+            if (gpu) {
+                Client.instance.getDrawCallbacks().draw(this, orientation, pitchSine, pitchCos, yawSin, yawCos, offsetX, offsetY, offsetZ, uid);
+            }
         } catch (Exception _ex) {
-            return;
+            _ex.printStackTrace();
         }
     }
 
-    private final void method483(boolean flag, boolean flag1, long i) {
+    private void method483(boolean flag, boolean flag1, long i) {
         final boolean gpu = Client.processGpuPlugin() && Rasterizer3D.world;
 
         for (int j = 0; j < scene_depth; j++)

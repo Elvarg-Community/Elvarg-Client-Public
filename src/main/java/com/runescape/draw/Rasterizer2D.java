@@ -1,4 +1,5 @@
 package com.runescape.draw;
+
 import com.runescape.Client;
 import com.runescape.collection.Cacheable;
 import net.runelite.rs.api.RSRasterizer2D;
@@ -485,6 +486,27 @@ public class Rasterizer2D extends Cacheable implements RSRasterizer2D {
     public static int viewportCenterX;
     public static int viewportCenterY;
 
+    public static Graphics2D createGraphics(boolean renderingHints) {
+        Graphics2D g2d = createGraphics(pixels, width, height);
+        if (renderingHints) {
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        }
+        return g2d;
+    }
+
+    private static final ColorModel COLOR_MODEL = new DirectColorModel(32, 0xff0000, 0xff00, 0xff);
+
+    public static Graphics2D createGraphics(int[] pixels, int width, int height) {
+        return new BufferedImage(COLOR_MODEL, Raster.createWritableRaster(COLOR_MODEL.createCompatibleSampleModel(width, height), new DataBufferInt(pixels, width * height), null), false, new Hashtable<Object, Object>()).createGraphics();
+    }
+
+    public static Shape createSector(int x, int y, int r, int angle) {
+        return new Arc2D.Double(x, y, r, r, 90, -angle, Arc2D.PIE);
+    }
+
+    public static Shape createCircle(int x, int y, int r) {
+        return new Ellipse2D.Double(x, y, r, r);
+    }
 
     public static void drawFilledCircle(int x, int y, int radius, int color, int alpha) {
         int y1 = y - radius;
@@ -512,69 +534,13 @@ public class Rasterizer2D extends Cacheable implements RSRasterizer2D {
             }
             int pos = x1 + iy * width;
             for (int ix = x1; ix <= x2; ix++) {
-                /*  Tried replacing all pixels[pos] with:
-                    Client.instance.gameScreenImageProducer.canvasRaster[pos]
-					AND Rasterizer3D.pixels[pos] */
                 int r2 = (pixels[pos] >> 16 & 0xff) * a2;
                 int g2 = (pixels[pos] >> 8 & 0xff) * a2;
                 int b2 = (pixels[pos] & 0xff) * a2;
-                pixels[pos++] = ((r1 + r2 >> 8) << 16) + ((g1 + g2 >> 8) << 8) + (b1 + b2 >> 8);
+                drawAlpha(pixels, pos++, ((r1 + r2 >> 8) << 16) + ((g1 + g2 >> 8) << 8) + (b1 + b2 >> 8), alpha);
+
             }
         }
-    }
-
-    public static void fillGradientRectangle(int x, int y, int w, int h, int startColour, int endColour) {
-        int k1 = 0;
-        int l1 = 0x10000 / h;
-        if (x < leftX) {
-            w -= leftX - x;
-            x = leftX;
-        }
-        if (y < topY) {
-            k1 += (topY - y) * l1;
-            h -= topY - y;
-            y = topY;
-        }
-        if (x + w > bottomX)
-            w = bottomX - x;
-        if (y + h > bottomY)
-            h = bottomY - y;
-        int lineGap = width - w;
-        int pixelOffset = x + y * width;
-        for (int yi = -h; yi < 0; yi++) {
-            int blendAmount = 0x10000 - k1 >> 8;
-            int blendInverse = k1 >> 8;
-            int combinedColour = ((startColour & 0xff00ff) * blendAmount + (endColour & 0xff00ff) * blendInverse & 0xff00ff00) + ((startColour & 0xff00) * blendAmount + (endColour & 0xff00) * blendInverse & 0xff0000) >>> 8;
-            int alpha = ((((startColour >> 24) & 0xff) * blendAmount + ((endColour >> 24) & 0xff) * blendInverse) >>> 8) + 5;
-            for (int index = -w; index < 0; index++) {
-                int backingPixel = pixels[pixelOffset];
-                pixels[pixelOffset++] = ((backingPixel & 0xff00ff) * (256 - alpha) + (combinedColour & 0xff00ff) * alpha & 0xff00ff00) + ((backingPixel & 0xff00) * (256 - alpha) + (combinedColour & 0xff00) * alpha & 0xff0000) >>> 8;
-            }
-            pixelOffset += lineGap;
-            k1 += l1;
-        }
-    }
-
-    public static Graphics2D createGraphics(boolean renderingHints) {
-        Graphics2D g2d = createGraphics(pixels, width, height);
-        if (renderingHints) {
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        }
-        return g2d;
-    }
-
-    private static final ColorModel COLOR_MODEL = new DirectColorModel(32, 0xff0000, 0xff00, 0xff);
-
-    public static Graphics2D createGraphics(int[] pixels, int width, int height) {
-        return new BufferedImage(COLOR_MODEL, Raster.createWritableRaster(COLOR_MODEL.createCompatibleSampleModel(width, height), new DataBufferInt(pixels, width * height), null), false, new Hashtable<Object, Object>()).createGraphics();
-    }
-
-    public static Shape createSector(int x, int y, int r, int angle) {
-        return new Arc2D.Double(x, y, r, r, 90, -angle, Arc2D.PIE);
-    }
-
-    public static Shape createCircle(int x, int y, int r) {
-        return new Ellipse2D.Double(x, y, r, r);
     }
 
     public static Shape createRing(Shape sector, Shape innerCircle) {

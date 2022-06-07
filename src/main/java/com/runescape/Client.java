@@ -1203,15 +1203,15 @@ public class Client extends GameApplet implements RSClient {
                 frameWidth = 765;
                 frameHeight = 503;
                 cameraZoom = 600;
-                SceneGraph.viewDistance = 9;
+
             } else if (screenMode == ScreenMode.RESIZABLE) {
                 frameWidth = 766;
                 frameHeight = 529;
                 cameraZoom = 850;
-                SceneGraph.viewDistance = 10;
+
             } else if (screenMode == ScreenMode.FULLSCREEN) {
                 cameraZoom = 600;
-                SceneGraph.viewDistance = 10;
+
                 frameWidth = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
                 frameHeight = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight();
             }
@@ -2058,7 +2058,6 @@ public class Client extends GameApplet implements RSClient {
         }
 
 
-        gameScreenImageProducer.initDrawingArea();
         Rasterizer3D.scanOffsets = anIntArray1182;
     }
     
@@ -2306,7 +2305,6 @@ public class Client extends GameApplet implements RSClient {
             }
             packetSender.sendEmptyPacket();
             currentMapRegion.createRegionScene(collisionMaps, scene);
-            gameScreenImageProducer.initDrawingArea();
             packetSender.sendEmptyPacket();
             int k3 = MapRegion.maximumPlane;
             if (k3 > plane)
@@ -10838,24 +10836,17 @@ public class Client extends GameApplet implements RSClient {
                         text = "Please wait...";
                         colour = childInterface.textColor;
                     }
-                    if (Rasterizer2D.width == 519) {
-                        if (colour == 0xffff00)
+
+                    if ((backDialogueId != -1 || dialogueId != -1
+                            || childInterface.defaultText
+                            .contains("Click here to continue"))
+                            && (rsInterface.id == backDialogueId
+                            || rsInterface.id == dialogueId)) {
+                        if (colour == 0xffff00) {
                             colour = 255;
-                        if (colour == 49152)
+                        }
+                        if (colour == 49152) {
                             colour = 0xffffff;
-                    }
-                    if (frameMode != ScreenMode.FIXED) {
-                        if ((backDialogueId != -1 || dialogueId != -1
-                                || childInterface.defaultText
-                                .contains("Click here to continue"))
-                                && (rsInterface.id == backDialogueId
-                                || rsInterface.id == dialogueId)) {
-                            if (colour == 0xffff00) {
-                                colour = 255;
-                            }
-                            if (colour == 49152) {
-                                colour = 0xffffff;
-                            }
                         }
                     }
                     if ((childInterface.parent == 1151) || (childInterface.parent == 12855)) {
@@ -12957,41 +12948,6 @@ public class Client extends GameApplet implements RSClient {
         } else {
             spriteDrawX = -1;
             spriteDrawY = -1;
-        }
-    }
-
-    public void projectParticle(int i, int j, int l) {
-
-        if (i < 128 || l < 128 || i > 13056 || l > 13056) {
-            particleDrawX = -1;
-            particleDrawY = -1;
-            return;
-        }
-        int i1 = getCenterHeight(plane, l, i) - j;
-        i -= xCameraPos;
-        i1 -= zCameraPos;
-        l -= yCameraPos;
-
-        int j1 = Model.SINE[yCameraCurve];
-        int k1 = Model.COSINE[yCameraCurve];
-        int l1 = Model.SINE[xCameraCurve];
-        int i2 = Model.COSINE[xCameraCurve];
-        int j2 = l * l1 + i * i2 >> 16;
-        l = l * i2 - i * l1 >> 16;
-        i = j2;
-        j2 = i1 * k1 - l * j1 >> 16;
-        l = i1 * j1 + l * k1 >> 16;
-        i1 = j2;
-        if (l >= 50) {
-            particleDrawX = Rasterizer3D.originViewX + (i << SceneGraph.viewDistance) / l;
-            particleDrawY = Rasterizer3D.originViewY + (i1 << SceneGraph.viewDistance) / l;
-            //particleDrawZ = Rasterizer3D.originViewY + (((i1) << SceneGraph.viewDistance) / l) * Rasterizer3D.originViewY +((i) << SceneGraph.viewDistance) / l;
-            //particleDrawZ = l;
-            particleDrawZ = Rasterizer3D.originViewY + ((i) << SceneGraph.viewDistance) / l; // TODO
-
-        } else {
-            particleDrawX = -1;
-            particleDrawY = -1;
         }
     }
 
@@ -15429,12 +15385,8 @@ public class Client extends GameApplet implements RSClient {
             if (quakeDirectionActive[4] && quakeAmplitudes[4] + 128 > i)
                 i = quakeAmplitudes[4] + 128;
             int k = cameraHorizontal + cameraRotation & 0x7ff;
-            setCameraPos(
-                    cameraZoom + i * ((SceneGraph.viewDistance == 9)
-                            && (frameMode == ScreenMode.RESIZABLE) ? 2
-                            : SceneGraph.viewDistance == 10 ? 5 : 3),
-                    i, anInt1014, getCenterHeight(plane, localPlayer.y, localPlayer.x) - 50, k,
-                    anInt1015);
+            setCameraPos(600 + i * 3,
+                    i, anInt1014, getCenterHeight(plane, localPlayer.y, localPlayer.x) - 50, k, anInt1015);
         }
         int j;
         if (!inCutScene)
@@ -15645,7 +15597,7 @@ public class Client extends GameApplet implements RSClient {
 
         final boolean wilderness = openWalkableInterface == 23300;
         int xPos = wilderness && frameMode != ScreenMode.FIXED ? frameWidth - 363 : frameWidth - 375;
-        int yPos = wilderness ? (frameMode != ScreenMode.FIXED ? 114 : 100) : 2;
+        int yPos = wilderness ? (frameMode != ScreenMode.FIXED ? 114 : 100) : 6;
 
         // Draw box
         spriteCache.draw(452, xPos, yPos, true);
