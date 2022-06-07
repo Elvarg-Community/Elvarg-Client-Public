@@ -30,7 +30,6 @@ import com.jogamp.nativewindow.AbstractGraphicsConfiguration;
 import com.jogamp.nativewindow.NativeWindowFactory;
 import com.jogamp.nativewindow.awt.AWTGraphicsConfiguration;
 import com.jogamp.nativewindow.awt.JAWTWindow;
-import com.jogamp.opengl.DebugGL4;
 import com.jogamp.opengl.GL;
 import static com.jogamp.opengl.GL.GL_ARRAY_BUFFER;
 import static com.jogamp.opengl.GL.GL_DYNAMIC_DRAW;
@@ -225,6 +224,7 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 	private int textureArrayId;
 
 	private final GLBuffer uniformBuffer = new GLBuffer();
+	private final float[] textureOffsets = new float[256];
 
 	private GpuIntBuffer vertexBuffer;
 	private GpuFloatBuffer uvBuffer;
@@ -292,13 +292,12 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 	private int uniTexTargetDimensions;
 	private int uniUiAlphaOverlay;
 	private int uniTextures;
-	private int uniTextureAnimations;
+	private int uniTextureOffsets;
 	private int uniBlockSmall;
 	private int uniBlockLarge;
 	private int uniBlockMain;
 	private int uniSmoothBanding;
 	private int uniTextureLightMode;
-	private int uniTick;
 
 	private int needsReset;
 
@@ -354,8 +353,6 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 				{
 					System.setProperty("jogl.debug", "true");
 				}
-
-				System.setProperty("jogamp.gluegen.TestTempDirExec", "false");
 
 				GLProfile.initSingleton();
 
@@ -421,25 +418,11 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 
 					this.gl = glContext.getGL().getGL4();
 
+					setupSyncMode();
+
 					if (log.isDebugEnabled())
 					{
-						try
-						{
-							gl = new DebugGL4(gl);
-						}
-						catch (NoClassDefFoundError ex)
-						{
-							log.debug("Disabling DebugGL due to jogl-gldesktop-dbg not being present on the classpath");
-						}
-
-						try
-						{
-							gl.glEnable(gl.GL_DEBUG_OUTPUT);
-						}
-						catch (GLException ex)
-						{
-							// macos doesn't support GL_DEBUG_OUTPUT
-						}
+						gl.glEnable(gl.GL_DEBUG_OUTPUT);
 
 						//	GLDebugEvent[ id 0x20071
 						//		type Warning: generic
@@ -457,8 +440,6 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 						glContext.glDebugMessageControl(gl.GL_DEBUG_SOURCE_API, gl.GL_DEBUG_TYPE_PERFORMANCE,
 							gl.GL_DONT_CARE, 1, new int[]{0x20052}, 0, false);
 					}
-
-					setupSyncMode();
 
 					initVao();
 					try
@@ -685,7 +666,6 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 		uniDrawDistance = gl.glGetUniformLocation(glProgram, "drawDistance");
 		uniColorBlindMode = gl.glGetUniformLocation(glProgram, "colorBlindMode");
 		uniTextureLightMode = gl.glGetUniformLocation(glProgram, "textureLightMode");
-		uniTick = gl.glGetUniformLocation(glProgram, "tick");
 
 		uniTex = gl.glGetUniformLocation(glUiProgram, "tex");
 		uniTexSamplingMode = gl.glGetUniformLocation(glUiProgram, "samplingMode");
@@ -694,14 +674,11 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 		uniUiColorBlindMode = gl.glGetUniformLocation(glUiProgram, "colorBlindMode");
 		uniUiAlphaOverlay = gl.glGetUniformLocation(glUiProgram, "alphaOverlay");
 		uniTextures = gl.glGetUniformLocation(glProgram, "textures");
-		uniTextureAnimations = gl.glGetUniformLocation(glProgram, "textureAnimations");
+		uniTextureOffsets = gl.glGetUniformLocation(glProgram, "textureOffsets");
 
-		if (computeMode == ComputeMode.OPENGL)
-		{
-			uniBlockSmall = gl.glGetUniformBlockIndex(glSmallComputeProgram, "uniforms");
-			uniBlockLarge = gl.glGetUniformBlockIndex(glComputeProgram, "uniforms");
-			uniBlockMain = gl.glGetUniformBlockIndex(glProgram, "uniforms");
-		}
+		uniBlockSmall = gl.glGetUniformBlockIndex(glSmallComputeProgram, "uniforms");
+		uniBlockLarge = gl.glGetUniformBlockIndex(glComputeProgram, "uniforms");
+		uniBlockMain = gl.glGetUniformBlockIndex(glProgram, "uniforms");
 	}
 
 	private void shutdownProgram()
@@ -865,11 +842,7 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 		// Create color render buffer
 		rboSceneHandle = glGenRenderbuffer(gl);
 		gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, rboSceneHandle);
-		gl.glRenderbufferStorageMultisample(gl.GL_RENDERBUFFER, aaSamples,
-			// on macos glBlitFramebuffer errors with GL_INVALID_OPERATION if the alpha channel
-			// is enabled on the rbo
-			OSType.getOSType() == OSType.MacOS ? gl.GL_RGB : gl.GL_RGBA,
-			width, height);
+		gl.glRenderbufferStorageMultisample(gl.GL_RENDERBUFFER, aaSamples, gl.GL_RGBA, width, height);
 		gl.glFramebufferRenderbuffer(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0, gl.GL_RENDERBUFFER, rboSceneHandle);
 
 		// Reset
@@ -1139,6 +1112,12 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 
 	private void prepareInterfaceTexture(int canvasWidth, int canvasHeight)
 	{
+		final boolean fixed = com.runescape.Client.frameMode == com.runescape.Client.ScreenMode.FIXED;
+		if (!fixed) {
+			canvasWidth = com.runescape.Client.frameWidth;
+			canvasHeight = com.runescape.Client.frameHeight;
+		}
+
 		if (canvasWidth != lastCanvasWidth || canvasHeight != lastCanvasHeight)
 		{
 			lastCanvasWidth = canvasWidth;
@@ -1176,8 +1155,8 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 
 		gl.glBindBuffer(gl.GL_PIXEL_UNPACK_BUFFER, interfacePbo);
 		gl.glMapBuffer(gl.GL_PIXEL_UNPACK_BUFFER, gl.GL_WRITE_ONLY)
-			.asIntBuffer()
-			.put(pixels, 0, width * height);
+				.asIntBuffer()
+				.put(pixels, 0, width * height);
 		gl.glUnmapBuffer(gl.GL_PIXEL_UNPACK_BUFFER);
 		gl.glBindTexture(gl.GL_TEXTURE_2D, interfaceTexture);
 		gl.glTexSubImage2D(gl.GL_TEXTURE_2D, 0, 0, 0, width, height, gl.GL_BGRA, gl.GL_UNSIGNED_INT_8_8_8_8_REV, 0);
@@ -1250,25 +1229,18 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 		gl.glClear(gl.GL_COLOR_BUFFER_BIT);
 
 		// Draw 3d scene
+		final TextureProvider textureProvider = client.getTextureProvider();
 		final GameState gameState = client.getGameState();
-		if (gameState.getState() >= GameState.LOADING.getState())
+		if (textureProvider != null && gameState.getState() >= GameState.LOADING.getState())
 		{
-			final TextureProvider textureProvider = client.getTextureProvider();
 			if (textureArrayId == -1)
 			{
 				// lazy init textures as they may not be loaded at plugin start.
 				// this will return -1 and retry if not all textures are loaded yet, too.
 				textureArrayId = textureManager.initTextureArray(textureProvider, gl);
-				if (textureArrayId > -1)
-				{
-					// if texture upload is successful, compute and set texture animations
-					float[] texAnims = textureManager.computeTextureAnimations(textureProvider);
-					gl.glUseProgram(glProgram);
-					gl.glUniform2fv(uniTextureAnimations, texAnims.length, texAnims, 0);
-					gl.glUseProgram(0);
-				}
 			}
 
+			final Texture[] textures = textureProvider.getTextures();
 			int renderWidthOff = viewportOffsetX;
 			int renderHeightOff = viewportOffsetY;
 			int renderCanvasHeight = canvasHeight;
@@ -1320,11 +1292,6 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 			gl.glUniform1f(uniSmoothBanding, config.smoothBanding() ? 0f : 1f);
 			gl.glUniform1i(uniColorBlindMode, config.colorBlindMode().ordinal());
 			gl.glUniform1f(uniTextureLightMode, config.brightTextures() ? 1f : 0f);
-			if (gameState == GameState.LOGGED_IN)
-			{
-				// avoid textures animating during loading
-				gl.glUniform1i(uniTick, client.getGameCycle());
-			}
 
 			// Calculate projection matrix
 			Matrix4 projectionMatrix = new Matrix4();
@@ -1335,9 +1302,24 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 			projectionMatrix.translate(-client.getCameraX2(), -client.getCameraY2(), -client.getCameraZ2());
 			gl.glUniformMatrix4fv(uniProjectionMatrix, 1, false, projectionMatrix.getMatrix(), 0);
 
+			for (int id = 0; id < textures.length; ++id)
+			{
+				Texture texture = textures[id];
+				if (texture == null)
+				{
+					continue;
+				}
+
+				textureProvider.load(id); // trips the texture load flag which lets textures animate
+
+				textureOffsets[id * 2] = texture.getU();
+				textureOffsets[id * 2 + 1] = texture.getV();
+			}
+
 			// Bind uniforms
 			gl.glUniformBlockBinding(glProgram, uniBlockMain, 0);
 			gl.glUniform1i(uniTextures, 1); // texture sampler array is bound to texture1
+			gl.glUniform2fv(uniTextureOffsets, textureOffsets.length, textureOffsets, 0);
 
 			// We just allow the GL to do face culling. Note this requires the priority renderer
 			// to have logic to disregard culled faces in the priority depth testing.
@@ -1543,7 +1525,7 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 	@Override
 	public void animate(Texture texture, int diff)
 	{
-		// texture animation happens on gpu
+		textureManager.animate(texture, diff);
 	}
 
 	@Subscribe

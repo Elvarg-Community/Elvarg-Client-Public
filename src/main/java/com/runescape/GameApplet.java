@@ -26,6 +26,8 @@ import com.runescape.draw.Console;
 import com.runescape.draw.ProducingGraphicsBuffer;
 import com.runescape.model.content.Keybinding;
 
+import static com.runescape.Client.frameMode;
+
 public class GameApplet extends Applet implements Runnable, MouseListener, MouseMotionListener, MouseWheelListener,
         KeyListener, FocusListener, WindowListener {
 
@@ -81,32 +83,6 @@ public class GameApplet extends Applet implements Runnable, MouseListener, Mouse
         shouldDebug = false;
         shouldClearScreen = true;
         awtFocus = true;
-    }
-
-    public void rebuildFrame(int width, int height, boolean resizable, boolean full) {
-        boolean createdByApplet = (isApplet && !full);
-        myWidth = width;
-        myHeight = height;
-        if (gameFrame != null) {
-            gameFrame.dispose();
-        }
-        if (!createdByApplet) {
-            gameFrame = new GameFrame(this, width, height, resizable, full);
-            gameFrame.addWindowListener(this);
-        }
-        graphics = (createdByApplet ? this : gameFrame).getGraphics();
-        if (!createdByApplet) {
-            getGameComponent().addMouseWheelListener(this);
-            getGameComponent().addMouseListener(this);
-            getGameComponent().addMouseMotionListener(this);
-            getGameComponent().addKeyListener(this);
-            getGameComponent().addFocusListener(this);
-            getGameComponent().setFocusTraversalKeysEnabled(false);
-        }
-        
-        graphics.setColor(Color.BLACK);
-        graphics.fillRect(0, 0, width, height);
-        super.update(graphics);
     }
 
     public boolean appletClient() {
@@ -322,16 +298,26 @@ public class GameApplet extends Applet implements Runnable, MouseListener, Mouse
 				if (Client.showChatComponents && mouseX > 0 && mouseX < 512 && mouseY > Client.frameHeight - 165 && mouseY < Client.frameHeight - 25) {
 					return;
 				}
-				if (rotation == -1) {
-					if (Client.cameraZoom > 50) {
-						Client.cameraZoom -= 25;
-					}
-				} else {
-					if (Client.cameraZoom < 1450) {
-						Client.cameraZoom += 25;
-					}
-				}
-				
+                /** ZOOMING **/
+                boolean zoom = frameMode == Client.ScreenMode.FIXED ? (mouseX < 512) : (mouseX < Client.frameWidth - 200);
+                if(zoom && Client.openInterfaceId == -1) {
+                    int zoom_in = frameMode == Client.ScreenMode.FIXED ? 195 : 240;
+
+                    int zoom_out = frameMode == Client.ScreenMode.FIXED ? 1105 : 1220;
+
+                    if(Client.openInterfaceId == -1) {
+                        if (rotation != -1) {
+                            if (Client.cameraZoom > zoom_in) {
+                                Client.cameraZoom -= 45;
+                            }
+                        } else {
+                            if (Client.cameraZoom < zoom_out) {
+                                Client.cameraZoom += 45;
+                            }
+                        }
+                    }
+                }
+
                 int setting = 0;
 
                 if (Client.cameraZoom > 1000) {
@@ -359,7 +345,7 @@ public class GameApplet extends Applet implements Runnable, MouseListener, Mouse
         int offsetY = 0;
         int childID = 0;
         int tabInterfaceID = Client.tabInterfaceIDs[Client.tabId];
-        boolean fixed = Client.frameMode == Client.ScreenMode.FIXED;
+        boolean fixed = frameMode == Client.ScreenMode.FIXED;
         if (tabInterfaceID != -1) {
             Widget tab = Widget.interfaceCache[tabInterfaceID];
             if (tab != null) {
@@ -393,7 +379,7 @@ public class GameApplet extends Applet implements Runnable, MouseListener, Mouse
 			int x = (Client.frameWidth / 2) - 240;
 			int y = (Client.frameHeight / 2) - 167;
 			int count = Client.stackSideStones ? 3 : 4;
-			if (Client.frameMode != Client.ScreenMode.FIXED) {
+			if (frameMode != Client.ScreenMode.FIXED) {
 				for (int i = 0; i < count; i++) {
 					if (x + w > (Client.frameWidth - 225)) {
 						x = x - 30;
@@ -411,8 +397,8 @@ public class GameApplet extends Applet implements Runnable, MouseListener, Mouse
 			}
             Widget rsi = Widget.interfaceCache[Client.openInterfaceId];
             if (rsi != null) {
-                offsetX = Client.frameMode == Client.ScreenMode.FIXED ? 4 : x;
-                offsetY = Client.frameMode == Client.ScreenMode.FIXED ? 4 : y;
+                offsetX = frameMode == Client.ScreenMode.FIXED ? 4 : x;
+                offsetY = frameMode == Client.ScreenMode.FIXED ? 4 : y;
                 for (int index = 0; index < rsi.children.length; index++) {
                     if (Widget.interfaceCache[rsi.children[index]].scrollMax > 0) {
                         childID = index;

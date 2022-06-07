@@ -340,7 +340,7 @@ public class Perspective
 			final int xx = y * sin + cos * x >> 16;
 			final int yy = sin * x - y * cos >> 16;
 
-			Point loc = client.isResized() ? new Point (com.runescape.Client.frameWidth - 162, 6) : new Point (572, 9);
+			Point loc = client.isResized() ? new Point (client.getRealDimensions().width - 162, 6) : new Point (572, 9);
 			int miniMapX = loc.getX() + xx + (client.isResized() ? 152 : 145) / 2;
 			int miniMapY = (client.isResized() ? 152 : 151) / 2 + loc.getY() + yy;
 			return new Point(miniMapX, miniMapY);

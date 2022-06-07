@@ -9165,7 +9165,7 @@ public class Client extends GameApplet implements RSClient {
             if (!reconnecting) {
                 firstLoginMessage = "";
                 secondLoginMessage = "Connecting to server...";
-                drawLoginScreen(true);
+                drawLoginScreen();
             }
 
             setGameState(GameState.LOGGING_IN);
@@ -9433,7 +9433,7 @@ public class Client extends GameApplet implements RSClient {
                     firstLoginMessage = "You have only just left another world";
                     secondLoginMessage =
                             "Your profile will be transferred in: " + k1 + " seconds";
-                    drawLoginScreen(true);
+                    drawLoginScreen();
                     try {
                         Thread.sleep(1000L);
                     } catch (Exception _ex) {
@@ -11838,7 +11838,7 @@ public class Client extends GameApplet implements RSClient {
             return;
         }
         if (!loggedIn)
-            drawLoginScreen(false);
+            drawLoginScreen();
         else
             drawGameScreen();
 
@@ -13114,85 +13114,67 @@ public class Client extends GameApplet implements RSClient {
         }
     }
 
-    private void drawLoginScreen(boolean flag) {
+
+
+    private boolean registeringAccount;
+    private boolean usernameInputHover, passwordInputHover, rememberMeHover, loginHover;
+    private boolean rememberMe = true;
+
+    private void drawLoginScreen() {
         setGameState(GameState.LOGIN_SCREEN);
         resetAllImageProducers();
-       // titleBoxIndexedImage.draw(0, 0);
-        char c = '\u0168';
-        char c1 = '\310';
-        if (Configuration.enableMusic && !lowMemory) {
-            playSong(SoundConstants.SCAPE_RUNE);
-        }
-        if (loginScreenState == 0) {
-            int i = c1 / 2 + 80;
-            //smallText.method382(0x75a9a9, c / 2, resourceProvider.loadingMessage, i, true);
-            i = c1 / 2 - 20;
-            boldText.method382(0xffff00, c / 2, "Welcome to " + Configuration.CLIENT_NAME, i, true);
-            i += 30;
-            int l = c / 2 - 80;
-            int k1 = c1 / 2 + 20;
-            //titleButtonIndexedImage.draw(l - 73, k1 - 20);
-            boldText.method382(0xffffff, l, "New User", k1 + 5, true);
-            l = c / 2 + 80;
-           // titleButtonIndexedImage.draw(l - 73, k1 - 20);
-            boldText.method382(0xffffff, l, "Existing User", k1 + 5, true);
-        }
-        if (loginScreenState == 2) {
-            int j = c1 / 2 - 45;
-            if (firstLoginMessage.length() > 0) {
-                boldText.method382(0xffff00, c / 2, firstLoginMessage, j - 15, true);
-                boldText.method382(0xffff00, c / 2, secondLoginMessage, j, true);
-                j += 25;
-            } else {
-                boldText.method382(0xffff00, c / 2, secondLoginMessage, j - 7, true);
-                j += 25;
+        //Draw bg
+        spriteCache.lookup(339).drawAdvancedSprite(0, 0);
+
+        //newBoldFont.drawBasicString("MouseX: "+super.mouseX+", MouseY: "+super.mouseY, 20, 200);
+
+        if(registeringAccount) {
+
+        } else {
+
+            //Hovers
+
+
+            //Draw login box
+            spriteCache.lookup(644).drawAdvancedSprite(0, 0);
+
+            //Draw username text box
+            spriteCache.lookup(usernameInputHover ? 636 : 635).drawAdvancedSprite(270, 215);
+            //Username
+            newBoldFont.drawBasicString(myUsername, 278, 248, 0xD3D3D3);
+            if((loginScreenCursorPos == 0) & (tick % 40 < 20)) {
+                newBoldFont.drawBasicString(myUsername + "|", 278, 248, 0xD3D3D3);
             }
 
-            boldText.drawTextWithPotentialShadow(true, c / 2 - 90, 0xffffff, "Login: " + myUsername
-                            + ((loginScreenCursorPos == 0) & (tick % 40 < 20)
-                            ? "@yel@|" : ""),
-                    j);
-            j += 15;
-            boldText.drawTextWithPotentialShadow(true, c / 2 - 90, 0xffffff,
-                    "Password: " + StringUtils.passwordAsterisks(myPassword)
-                            + ((loginScreenCursorPos == 1) & (tick % 40 < 20)
-                            ? "@yel@|" : ""),
-                    j);
-            j += 15;
-
-            // Remember me
-            rememberUsernameHover = mouseInRegion(269, 284, 279, 292);
-            if (rememberUsername) {
-                spriteCache.draw(rememberUsernameHover ? 346 : 348, 67, 108, true);
-            } else {
-                spriteCache.draw(rememberUsernameHover ? 345 : 347, 67, 108, true);
+            //Draw password text box
+            spriteCache.lookup(passwordInputHover ? 636 : 635).drawAdvancedSprite(272, 260);
+            //password
+            String password = StringUtils.passwordAsterisks(myPassword);
+            newBoldFont.drawBasicString(password, 278, 295, 0xD3D3D3);
+            if((loginScreenCursorPos == 1) & (tick % 40 < 20)) {
+                newBoldFont.drawBasicString(password + "|", 278, 295, 0xD3D3D3);
             }
-            smallText.method382(0xffff00, 136, "Remember username", 120, true);
 
-            // Hide username
-            rememberPasswordHover = mouseInRegion(410, 425, 279, 292);
-            if (rememberPassword) {
-                spriteCache.draw(rememberPasswordHover ? 346 : 348, 208, 108, true);
+            //Remember me button
+            if(rememberMe) {
+                spriteCache.lookup(rememberMeHover ? 640 : 641).drawAdvancedSprite(397, 300);
             } else {
-                spriteCache.draw(rememberPasswordHover ? 345 : 347, 208, 108, true);
+                spriteCache.lookup(rememberMeHover ? 639 : 642).drawAdvancedSprite(397, 300);
             }
-            smallText.method382(0xffff00, 276, "Remember password", 120, true);
 
-            forgottenPasswordHover = mouseInRegion(288, 471, 346, 357);
-            smallText.method382(0xffff00, 178, "Forgotten your password? @whi@Click here.", 186, true);
+            //Login button
+            spriteCache.lookup(loginHover ? 637 : 638).drawAdvancedSprite(300, 330);
 
-            if (!flag) {
-                int i1 = c / 2 - 80;
-                int l1 = c1 / 2 + 50;
-               // titleButtonIndexedImage.draw(i1 - 73, l1 - 20);
-                boldText.method382(0xffffff, i1, "Login", l1 + 5, true);
-                i1 = c / 2 + 80;
-               // titleButtonIndexedImage.draw(i1 - 73, l1 - 20);
-                boldText.method382(0xffffff, i1, "Cancel", l1 + 5, true);
+            //Draw errors
+            int errorY = 380;
+            if(firstLoginMessage.length() > 0) {
+                newFancyFont.drawBasicString(firstLoginMessage, 267, errorY, 0xffff00);
+                errorY += 22;
+            }
+            if(secondLoginMessage.length() > 0) {
+                newFancyFont.drawBasicString(secondLoginMessage, 267, errorY, 0xffff00);
             }
         }
-
-
     }
 
     private void drawFlames() {
@@ -13534,113 +13516,64 @@ public class Client extends GameApplet implements RSClient {
     }
 
     private void processLoginScreenInput() {
-        if (loading)
-            return;
-        if (loginScreenState == 0) {
-            if (super.clickMode3 == 1 && super.saveClickX >= 722 && super.saveClickX <= 751 && super.saveClickY >= 463 && super.saveClickY <= 493) {
-                Configuration.enableMusic = !Configuration.enableMusic;
-            }
 
-            int i = super.myWidth / 2;
-            int l = super.myHeight / 2;
-            if (super.clickMode3 == 1) {
-                if (mouseInRegion(394, 530, 275, 307)) {
-                    firstLoginMessage = "";
-                    secondLoginMessage = "Enter your username & password.";
-                    loginScreenState = 2;
-                    if (myUsername.length() == 0) {
-                        loginScreenCursorPos = 0;
-                    }
-                } else if (mouseInRegion(229, 375, 271, 312)) {
-                    MiscUtils.launchURL("www.aqp.io");
-                }
-            }
-        } else if (loginScreenState == 2) {
-
-            if (super.clickMode3 == 1) {
-                if (super.saveClickX >= 722 && super.saveClickX <= 753 && super.saveClickY >= 463 && super.saveClickY <= 493) {
-                    Configuration.enableMusic = !Configuration.enableMusic;
-                    savePlayerData();
-                } else if (rememberUsernameHover) {
-                    rememberUsername = !rememberUsername;
-                    savePlayerData();
-                } else if (rememberPasswordHover) {
-                    rememberPassword = !rememberPassword;
-                    savePlayerData();
-                } else if (forgottenPasswordHover) {
-                    MiscUtils.launchURL("www.aqp.io");
-                }
-            }
-            int j = super.myHeight / 2 - 45;
-            j += 25;
-            j += 25;
-
-            if (super.clickMode3 == 1 && super.saveClickY >= 239 && super.saveClickY < 252)
+        usernameInputHover = mouseInRegion(270, 231, 472, 252);
+        passwordInputHover = mouseInRegion(270, 278, 472, 299);
+        rememberMeHover = mouseInRegion(397, 310, 478, 320);
+        loginHover = mouseInRegion(300, 330, 456, 358);
+        if (super.clickMode3 == 1) {
+            if(usernameInputHover) {
                 loginScreenCursorPos = 0;
-            j += 15;
-            if (super.clickMode3 == 1 && super.saveClickY >= 257 && super.saveClickY < 266)
+            } else if(passwordInputHover) {
                 loginScreenCursorPos = 1;
-            j += 15;
-            int i1 = super.myWidth;
-            int k1 = super.myHeight;
-            k1 += 20;
-
-            // login
-            if (super.clickMode3 == 1 && mouseInRegion(235, 370, 305, 339)) {
-                loginFailures = 0;
-                login(myUsername, myPassword, false);
+            } else if(rememberMeHover) {
+                rememberMe = !rememberMe;
                 savePlayerData();
-                if (loggedIn)
-                    return;
+            } else if(loginHover) {
+                login(myUsername, myPassword, false);
             }
-
-            i1 = super.myWidth / 2 + 80;
-
-            // cancel
-            if (super.clickMode3 == 1 && mouseInRegion(394, 530, 305, 339)) {
-                loginScreenState = 0;
-            }
-            do {
-                int l1 = readChar(-796);
-                if (l1 == -1)
-                    break;
-                boolean flag1 = false;
-                for (int i2 = 0; i2 < validUserPassChars.length(); i2++) {
-                    if (l1 != validUserPassChars.charAt(i2))
-                        continue;
-                    flag1 = true;
-                    break;
-                }
-
-                if (loginScreenCursorPos == 0) {
-                    if (l1 == 8 && myUsername.length() > 0)
-                        myUsername = myUsername.substring(0, myUsername.length() - 1);
-                    if (l1 == 9 || l1 == 10 || l1 == 13)
-                        loginScreenCursorPos = 1;
-                    if (flag1)
-                        myUsername += (char) l1;
-                    if (myUsername.length() > 12)
-                        myUsername = myUsername.substring(0, 12);
-                    if (myUsername.length() > 0) {
-                        myUsername = StringUtils.formatText(StringUtils.capitalize(myUsername));
-                    }
-                } else if (loginScreenCursorPos == 1) {
-                    if (l1 == 8 && myPassword.length() > 0)
-                        myPassword = myPassword.substring(0, myPassword.length() - 1);
-                    if (l1 == 9) {
-                        loginScreenCursorPos = 0;
-                    } else if (l1 == 10 || l1 == 13) {
-                        login(myUsername, myPassword, false);
-                        return;
-                    }
-                    if (flag1)
-                        myPassword += (char) l1;
-                    if (myPassword.length() > 15)
-                        myPassword = myPassword.substring(0, 15);
-                }
-            } while (true);
-            return;
         }
+
+        do {
+            int l1 = readChar(-796);
+            if (l1 == -1)
+                break;
+            boolean flag1 = false;
+            for (int i2 = 0; i2 < validUserPassChars.length(); i2++) {
+                if (l1 != validUserPassChars.charAt(i2))
+                    continue;
+                flag1 = true;
+                break;
+            }
+
+            if (loginScreenCursorPos == 0) {
+                if (l1 == 8 && myUsername.length() > 0)
+                    myUsername = myUsername.substring(0, myUsername.length() - 1);
+                if (l1 == 9 || l1 == 10 || l1 == 13)
+                    loginScreenCursorPos = 1;
+                if (flag1)
+                    myUsername += (char) l1;
+                if (myUsername.length() > 12)
+                    myUsername = myUsername.substring(0, 12);
+                if(myUsername.length() > 0) {
+                    myUsername = StringUtils.formatText(StringUtils.capitalize(myUsername));
+                }
+            } else if (loginScreenCursorPos == 1) {
+                if (l1 == 8 && myPassword.length() > 0)
+                    myPassword = myPassword.substring(0, myPassword.length() - 1);
+                if(l1 == 9) {
+                    loginScreenCursorPos = 0;
+                } else if (l1 == 10 || l1 == 13) {
+                    login(myUsername, myPassword, false);
+                    return;
+                }
+                if (flag1)
+                    myPassword += (char) l1;
+                if (myPassword.length() > 15)
+                    myPassword = myPassword.substring(0, 15);
+            }
+        } while (true);
+        return;
     }
 
     private void removeObject(int y, int z, int k, int l, int x, int group, int previousId) {

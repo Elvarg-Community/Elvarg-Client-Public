@@ -830,9 +830,7 @@ public class OverlayRenderer extends MouseAdapter implements KeyListener
 			changed = true;
 		}
 
-		Rectangle viewport = new Rectangle(com.runescape.Client.instance.frameMode == com.runescape.Client.ScreenMode.FIXED ? 4 : 0,
-				com.runescape.Client.instance.frameMode == com.runescape.Client.ScreenMode.FIXED ? 4 : 0,
-				com.runescape.Client.instance.screenAreaWidth, com.runescape.Client.instance.screenAreaHeight);
+		Rectangle viewport = new Rectangle(!client.isResized() ? 4 : 0, !client.isResized() ? 4 : 0, client.getViewportWidth(), client.getViewportHeight());
 		final boolean viewportChanged = !viewport.equals(viewportBounds);
 
 		if (viewportChanged)

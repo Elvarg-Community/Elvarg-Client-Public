@@ -75,6 +75,9 @@ import static javax.swing.JOptionPane.INFORMATION_MESSAGE;
 @Singleton
 public class ClientUI
 {
+	@Inject
+	private Client clients;
+
 	private static final String CONFIG_GROUP = "runelite";
 	private static final String CONFIG_CLIENT_BOUNDS = "clientBounds";
 	private static final String CONFIG_CLIENT_MAXIMIZED = "clientMaximized";
@@ -1123,8 +1126,8 @@ public class ClientUI
 	public void onResizeableChanged(ResizeableChanged event)
 	{
 		// Smoother way to handle refresh on GPU mode
-		if (com.runescape.Client.instance.isGpu() && !event.isResized()) {
-			frame.setSize(new Dimension(com.runescape.Client.instance.frameWidth, com.runescape.Client.instance.frameHeight));
+		if (clients.isGpu() && !event.isResized()) {
+			frame.setSize(clients.getRealDimensions());
 		}
 	}
 }

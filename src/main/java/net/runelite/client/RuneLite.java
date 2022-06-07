@@ -55,7 +55,6 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import javax.swing.SwingUtilities;
 
-import com.runescape.Configuration;
 import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -91,7 +90,7 @@ import org.slf4j.LoggerFactory;
 @Slf4j
 public class RuneLite
 {
-	public static final File RUNELITE_DIR = new File(System.getProperty("user.home"), "." + Configuration.CLIENT_NAME);
+	public static final File RUNELITE_DIR = new File(System.getProperty("user.home"), "." + "Elvarg");
 	public static final File CACHE_DIR = new File(RUNELITE_DIR, "cache");
 	public static final File PLUGINS_DIR = new File(RUNELITE_DIR, "plugins");
 	public static final File PROFILES_DIR = new File(RUNELITE_DIR, "profiles");

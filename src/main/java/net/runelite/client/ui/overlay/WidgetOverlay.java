@@ -31,7 +31,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 
-import com.runescape.Configuration;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.widgets.Widget;
@@ -210,10 +209,7 @@ public class WidgetOverlay extends Overlay
 		{
 			// The xptracker component layer isn't hidden if the counter and process bar are both configured "Off",
 			// it just has its children hidden.
-			if (Configuration.expCounterOpen)
-			{
-				return null;
-			}
+			
 
 			return super.render(graphics);
 		}
