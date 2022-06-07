@@ -3465,6 +3465,7 @@ public class Client extends GameApplet implements RSClient {
     }
 
     public void updateEntities() {
+        int offset = 4;
         try {
             int messageLength = 0;
 
@@ -3480,12 +3481,11 @@ public class Client extends GameApplet implements RSClient {
                     continue;
                 if (obj instanceof Npc) {
                     NpcDefinition entityDef = ((Npc) obj).desc;
+                    npcScreenPos((Npc) obj, ((Npc) obj).height + 15);
+
                     if (Configuration.namesAboveHeads) {
                         npcScreenPos(((Mob) (obj)), ((Mob) (obj)).height + 15);
-                        smallText.drawText(0x0099FF, entityDef.name, spriteDrawY - 5,
-                                spriteDrawX); // -15
-                        // from
-                        // original
+                        smallText.drawText(0xffff00, entityDef.name, spriteDrawY - 5 + offset, spriteDrawX); // -15
                     }
                     if (entityDef.configs != null)
                         entityDef = entityDef.morph();
@@ -3500,8 +3500,7 @@ public class Client extends GameApplet implements RSClient {
                         npcScreenPos(((Mob) (obj)), ((Mob) (obj)).height + 15);
                         if (spriteDrawX > -1) {
                             if (player.skullIcon < 2) {
-                                skullIcons[player.skullIcon].drawSprite(
-                                        spriteDrawX - 12, spriteDrawY - l);
+                                skullIcons[player.skullIcon].drawSprite(spriteDrawX - 12 + offset, spriteDrawY - l);
                                 l += 25;
                                 if (Configuration.hpAboveHeads && Configuration.namesAboveHeads) {
                                     text_over_head_offset -= 25;
@@ -3511,9 +3510,8 @@ public class Client extends GameApplet implements RSClient {
                                     text_over_head_offset -= 33;
                                 }
                             }
-                            if (player.headIcon < 13) {
-                                headIcons[player.headIcon].drawSprite(
-                                        spriteDrawX - 12, spriteDrawY - l - 3);
+                            if (player.headIcon < 20) {
+                                headIcons[player.headIcon].drawSprite(spriteDrawX - 12 + offset, spriteDrawY - l - 3);
                                 l += 21;
                                 text_over_head_offset -= 5;
                                 if (Configuration.hpAboveHeads && Configuration.namesAboveHeads) {
@@ -3526,70 +3524,51 @@ public class Client extends GameApplet implements RSClient {
                             }
                         }
                     }
-                    if (j >= 0 && hintIconDrawType == 10
-                            && hintIconPlayerId == playerList[j]) {
+                    if (j >= 0 && hintIconDrawType == 10 && hintIconPlayerId == playerList[j]) {
                         npcScreenPos(((Mob) (obj)), ((Mob) (obj)).height + 15);
                         if (spriteDrawX > -1) {
                             l += 13;
                             text_over_head_offset -= 17;
-                            headIconsHint[player.hintIcon].drawSprite(
-                                    spriteDrawX - 12, spriteDrawY - l);
+                            headIconsHint[player.hintIcon].drawAdvancedSprite(spriteDrawX - 12 + offset, spriteDrawY - l, 200);
                         }
                     }
                     if (Configuration.hpAboveHeads && Configuration.namesAboveHeads) {
                         newSmallFont.drawCenteredString(
-                                (new StringBuilder())
-                                        .append(((Mob) (Mob) obj).currentHealth)
-                                        .append("/")
-                                        .append(((Mob) (Mob) obj).maxHealth)
-                                        .toString(),
-                                spriteDrawX, spriteDrawY - 29 + text_over_head_offset, 0xff0000, 0);
+                                (new StringBuilder()).append(((Mob) (Mob) obj).currentHealth).append("/")
+                                        .append(((Mob) (Mob) obj).maxHealth).toString(),
+                                spriteDrawX + offset, spriteDrawY - 29 + text_over_head_offset, 0xff0000, 0);
                     } // Draws HP above head
                     else if (Configuration.hpAboveHeads && !Configuration.namesAboveHeads) {
                         newSmallFont.drawCenteredString(
-                                (new StringBuilder())
-                                        .append(((Mob) (Mob) obj).currentHealth)
-                                        .append("/")
-                                        .append(((Mob) (Mob) obj).maxHealth)
-                                        .toString(),
-                                spriteDrawX, spriteDrawY - 5 + text_over_head_offset, 0xff0000, 0);
+                                (new StringBuilder()).append(((Mob) (Mob) obj).currentHealth).append("/")
+                                        .append(((Mob) (Mob) obj).maxHealth).toString(),
+                                spriteDrawX + offset, spriteDrawY - 5 + text_over_head_offset, 0xff0000, 0);
                     }
                     if (Configuration.namesAboveHeads) {
                         npcScreenPos(((Mob) (obj)), ((Mob) (obj)).height + 15);
                         int col = 0xff0000;
                         if (player.clanName == localPlayer.clanName)
-                            col = 0x00ff00;
-                        smallText.drawText(col, player.name, spriteDrawY - 15 + text_over_head_offset, spriteDrawX);
-						/*if (player.clanName != "" && player.clanName != "None")
-							smallText.drawText(col, "<" + player.clanName + ">",
-									spriteDrawY - 5 + text_over_head_offset, spriteDrawX);*/
+                            col = 0xFFFFEA;
+                        smallText.drawText(col, player.name, spriteDrawY - 15 + text_over_head_offset, spriteDrawX + offset);
                     }
                 } else {
                     Npc npc = ((Npc) obj);
-                    if (npc.getHeadIcon() >= 0
-                            && npc.getHeadIcon() < headIcons.length) {
+                    if (npc.getHeadIcon() >= 0 && npc.getHeadIcon() < headIcons.length) {
                         npcScreenPos(((Mob) (obj)), ((Mob) (obj)).height + 15);
                         if (spriteDrawX > -1)
-                            headIcons[npc.getHeadIcon()].drawSprite(
-                                    spriteDrawX - 12, spriteDrawY - 30);
+                            headIcons[npc.getHeadIcon()].drawSprite(spriteDrawX - 12 + offset, spriteDrawY - 30);
                     }
-                    if (hintIconDrawType == 1
-                            && hintIconNpcId == npcIndices[j - playerCount]
-                            && tick % 20 < 10) {
+                    if (hintIconDrawType == 1 && hintIconNpcId == npcIndices[j - playerCount] && tick % 20 < 10) {
                         npcScreenPos(((Mob) (obj)), ((Mob) (obj)).height + 15);
                         if (spriteDrawX > -1)
-                            headIconsHint[0].drawSprite(spriteDrawX - 12,
-                                    spriteDrawY - 28);
+                            headIconsHint[0].drawAdvancedSprite(spriteDrawX - 12 + offset, spriteDrawY - 28, 200);
                     }
                 }
-                if (((Mob) (obj)).spokenText != null && (j >= playerCount
-                        || publicChatMode == 0 || publicChatMode == 3
-                        || publicChatMode == 1
-                        && isFriendOrSelf(((Player) obj).name))) {
+                if (((Mob) (obj)).spokenText != null && (j >= playerCount || publicChatMode == 0 || publicChatMode == 3
+                        || publicChatMode == 1 && isFriendOrSelf(((Player) obj).name))) {
                     npcScreenPos(((Mob) (obj)), ((Mob) (obj)).height);
                     if (spriteDrawX > -1 && messageLength < anInt975) {
-                        anIntArray979[messageLength] =
-                                boldText.method384(((Mob) (obj)).spokenText) / 2;
+                        anIntArray979[messageLength] = boldText.method384(((Mob) (obj)).spokenText) / 2;
                         anIntArray978[messageLength] = boldText.verticalSpace;
                         anIntArray976[messageLength] = spriteDrawX;
                         anIntArray977[messageLength] = spriteDrawY;
@@ -3597,8 +3576,7 @@ public class Client extends GameApplet implements RSClient {
                         anIntArray981[messageLength] = ((Mob) (obj)).textEffect;
                         anIntArray982[messageLength] = ((Mob) (obj)).textCycle;
                         aStringArray983[messageLength++] = ((Mob) (obj)).spokenText;
-                        if (anInt1249 == 0 && ((Mob) (obj)).textEffect >= 1
-                                && ((Mob) (obj)).textEffect <= 3) {
+                        if (anInt1249 == 0 && ((Mob) (obj)).textEffect >= 1 && ((Mob) (obj)).textEffect <= 3) {
                             anIntArray978[messageLength] += 10;
                             anIntArray977[messageLength] += 5;
                         }
@@ -3612,30 +3590,19 @@ public class Client extends GameApplet implements RSClient {
                     try {
                         npcScreenPos(((Mob) (obj)), ((Mob) (obj)).height + 15);
                         if (spriteDrawX > -1) {
-                            int i1 = (((Mob) (obj)).currentHealth * 30)
-                                    / ((Mob) (obj)).maxHealth;
+                            int i1 = (((Mob) (obj)).currentHealth * 30) / ((Mob) (obj)).maxHealth;
 
                             if (i1 > 30) {
                                 i1 = 30;
                             }
-                            int hpPercent = (((Mob) (obj)).currentHealth * 56)
-                                    / ((Mob) (obj)).maxHealth;
+                            int hpPercent = (((Mob) (obj)).currentHealth * 56) / ((Mob) (obj)).maxHealth;
 
                             if (hpPercent > 56) {
                                 hpPercent = 56;
                             }
+                            Rasterizer2D.drawBox(spriteDrawX - 15 + offset, spriteDrawY - 3, i1, 5, 65280);
+                            Rasterizer2D.drawBox((spriteDrawX - 15) + i1 + offset, spriteDrawY - 3, 30 - i1, 5, 0xff0000);
 
-                            if (!Configuration.hpBar554) {
-                                Rasterizer2D.drawBox(spriteDrawX - 15, spriteDrawY - 3, i1, 5,
-                                        65280);
-                                Rasterizer2D.drawBox((spriteDrawX - 15) + i1, spriteDrawY - 3, 30 - i1, 5,
-                                        0xff0000
-                                );
-                            } else {
-                                spriteCache.draw(41, spriteDrawX - 28, spriteDrawY - 3);
-                                hp = new Sprite(hp, hpPercent, 7);
-                                hp.drawSprite(spriteDrawX - 28, spriteDrawY - 3);
-                            }
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -3646,9 +3613,9 @@ public class Client extends GameApplet implements RSClient {
                     Npc npc = ((Npc) obj);
                     if (localPlayer.interactingEntity == -1) {
 
-                        //Is the npc interacting with us?
-                        //If we aren't interacting with others,
-                        //Start combat box timer.
+                        // Is the npc interacting with us?
+                        // If we aren't interacting with others,
+                        // Start combat box timer.
                         if ((npc.interactingEntity - 32768) == localPlayerIndex) {
                             currentInteract = npc;
                             combatBoxTimer.start(10);
@@ -3656,8 +3623,8 @@ public class Client extends GameApplet implements RSClient {
 
                     } else {
 
-                        //Are we interacting with the npc?
-                        //Start combat box timer.
+                        // Are we interacting with the npc?
+                        // Start combat box timer.
                         if (npc.index == localPlayer.interactingEntity) {
                             currentInteract = npc;
                             combatBoxTimer.start(10);
@@ -3667,17 +3634,17 @@ public class Client extends GameApplet implements RSClient {
                     Player player = ((Player) obj);
                     if (localPlayer.interactingEntity == -1) {
 
-                        //Is the player interacting with us?
-                        //If we aren't interacting with others,
-                        //Start combat box timer.
+                        // Is the player interacting with us?
+                        // If we aren't interacting with others,
+                        // Start combat box timer.
                         if ((player.interactingEntity - 32768) == localPlayerIndex) {
                             currentInteract = player;
                             combatBoxTimer.start(10);
                         }
 
                     } else {
-                        //Are we interacting with the player?
-                        //Start combat box timer.
+                        // Are we interacting with the player?
+                        // Start combat box timer.
                         if (player.index == localPlayer.interactingEntity - 32768) {
                             currentInteract = player;
                             combatBoxTimer.start(10);
@@ -3685,12 +3652,11 @@ public class Client extends GameApplet implements RSClient {
                     }
                 }
 
-                //Drawing hits..
+                // Drawing hits..
                 if (!Configuration.hitmarks554) {
                     for (int j1 = 0; j1 < 4; j1++) {
                         if (((Mob) (obj)).hitsLoopCycle[j1] > tick) {
-                            npcScreenPos(((Mob) (obj)),
-                                    ((Mob) (obj)).height / 2);
+                            npcScreenPos(((Mob) (obj)), ((Mob) (obj)).height / 2);
                             if (spriteDrawX > -1) {
                                 if (j1 == 1)
                                     spriteDrawY -= 20;
@@ -3702,79 +3668,47 @@ public class Client extends GameApplet implements RSClient {
                                     spriteDrawX += 15;
                                     spriteDrawY -= 10;
                                 }
-                                hitMarks[((Mob) (obj)).hitMarkTypes[j1]]
-                                        .drawSprite(spriteDrawX - 12,
-                                                spriteDrawY - 12);
+                                hitMarks[((Mob) (obj)).hitMarkTypes[j1]].drawTransparentSprite(spriteDrawX - 12 + offset, spriteDrawY - 12, 250);
 
-                                smallText.drawText(0,
-                                        Configuration.tenXHp
-                                                ? String.valueOf(
-                                                ((Mob) (obj)).hitDamages[j1]
-                                                        * 10)
-                                                : String.valueOf(
-                                                ((Mob) (obj)).hitDamages[j1]
-                                                        * 1),
-                                        spriteDrawY + 4, spriteDrawX);
+                                smallText.drawText(0, String.valueOf(((Mob) (obj)).hitDamages[j1] * 1), spriteDrawY + 4,
+                                        spriteDrawX + offset);
 
-                                smallText.drawText(0xffffff,
-                                        Configuration.tenXHp
-                                                ? String.valueOf(
-                                                ((Mob) (obj)).hitDamages[j1]
-                                                        * 10)
-                                                : String.valueOf(
-                                                ((Mob) (obj)).hitDamages[j1]
-                                                        * 1),
-                                        spriteDrawY + 3, spriteDrawX - 1);
+                                smallText.drawText(0xffffff, String.valueOf(((Mob) (obj)).hitDamages[j1] * 1),
+                                        spriteDrawY + 3, spriteDrawX - 1 + offset);
                             }
                         }
                     }
                 } else {
                     for (int j2 = 0; j2 < 4; j2++) {
                         if (((Mob) (obj)).hitsLoopCycle[j2] > tick) {
-                            npcScreenPos(((Mob) (obj)),
-                                    ((Mob) (obj)).height / 2);
+                            npcScreenPos(((Mob) (obj)), ((Mob) (obj)).height / 2);
                             if (spriteDrawX > -1) {
                                 if (j2 == 0 && ((Mob) (obj)).hitDamages[j2] > 99)
                                     ((Mob) (obj)).hitMarkTypes[j2] = 3;
-                                else if (j2 == 1
-                                        && ((Mob) (obj)).hitDamages[j2] > 99)
+                                else if (j2 == 1 && ((Mob) (obj)).hitDamages[j2] > 99)
                                     ((Mob) (obj)).hitMarkTypes[j2] = 3;
-                                else if (j2 == 2
-                                        && ((Mob) (obj)).hitDamages[j2] > 99)
+                                else if (j2 == 2 && ((Mob) (obj)).hitDamages[j2] > 99)
                                     ((Mob) (obj)).hitMarkTypes[j2] = 3;
-                                else if (j2 == 3
-                                        && ((Mob) (obj)).hitDamages[j2] > 99)
+                                else if (j2 == 3 && ((Mob) (obj)).hitDamages[j2] > 99)
                                     ((Mob) (obj)).hitMarkTypes[j2] = 3;
                                 if (j2 == 1) {
                                     spriteDrawY -= 20;
                                 }
                                 if (j2 == 2) {
-                                    spriteDrawX -=
-                                            (((Mob) (obj)).hitDamages[j2] > 99
-                                                    ? 30 : 20);
+                                    spriteDrawX -= (((Mob) (obj)).hitDamages[j2] > 99 ? 30 : 20);
                                     spriteDrawY -= 10;
                                 }
                                 if (j2 == 3) {
-                                    spriteDrawX +=
-                                            (((Mob) (obj)).hitDamages[j2] > 99
-                                                    ? 30 : 20);
+                                    spriteDrawX += (((Mob) (obj)).hitDamages[j2] > 99 ? 30 : 20);
                                     spriteDrawY -= 10;
                                 }
                                 if (((Mob) (obj)).hitMarkTypes[j2] == 3) {
                                     spriteDrawX -= 8;
                                 }
-                                int id = hitmarks562[((Mob) (obj)).hitMarkTypes[j2]];
-                                Sprite sprite = spriteCache.lookup(id);
-                                if (sprite != null) {
-                                    sprite.draw24BitSprite(spriteDrawX - 12, spriteDrawY - 12);
-                                }
-                                smallText.drawText(0xffffff,
-                                        String.valueOf(
-                                                ((Mob) (obj)).hitDamages[j2]),
-                                        spriteDrawY + 3,
-                                        (((Mob) (obj)).hitMarkTypes[j2] == 3
-                                                ? spriteDrawX + 7
-                                                : spriteDrawX - 1));
+                                spriteCache.lookup(hitmarks562[((Mob) (obj)).hitMarkTypes[j2]])
+                                        .drawTransparentSprite(spriteDrawX - 12 + offset, spriteDrawY - 12 + 10 + (int) (10 * Math.sin(tick / 10.0)), 220);
+                                newSmallFont.drawCenteredString((((Mob) (obj)).hitMarkTypes[j2] == 0 ? "" : String.valueOf(((Mob) (obj)).hitDamages[j2])),
+                                        (((Mob) (obj)).hitMarkTypes[j2] == 3 ? spriteDrawX + 10 : spriteDrawX) + offset, spriteDrawY + 5 + 10 + (int) (10 * Math.sin(tick / 10.0D)), 0xffffff, 0x000000);
                             }
                         }
                     }
@@ -3789,8 +3723,7 @@ public class Client extends GameApplet implements RSClient {
                 while (flag) {
                     flag = false;
                     for (int l2 = 0; l2 < defaultText; l2++)
-                        if (l1 + 2 > anIntArray977[l2] - anIntArray978[l2]
-                                && l1 - k2 < anIntArray977[l2] + 2
+                        if (l1 + 2 > anIntArray977[l2] - anIntArray978[l2] && l1 - k2 < anIntArray977[l2] + 2
                                 && k1 - j2 < anIntArray976[l2] + anIntArray979[l2]
                                 && k1 + j2 > anIntArray976[l2] - anIntArray979[l2]
                                 && anIntArray977[l2] - anIntArray978[l2] < l1) {
@@ -3840,32 +3773,26 @@ public class Client extends GameApplet implements RSClient {
                             i3 = 0xffffff - 0x50000 * (l3 - 100);
                     }
                     if (anIntArray981[defaultText] == 0) {
-                        boldText.drawText(0, s, spriteDrawY + 1, spriteDrawX);
-                        boldText.drawText(i3, s, spriteDrawY, spriteDrawX);
+                        boldText.drawText(0, s, spriteDrawY + 1, spriteDrawX + offset);
+                        boldText.drawText(i3, s, spriteDrawY, spriteDrawX + offset);
                     }
                     if (anIntArray981[defaultText] == 1) {
-                        boldText.wave(0, s, spriteDrawX, anInt1265, spriteDrawY + 1);
-                        boldText.wave(i3, s, spriteDrawX, anInt1265, spriteDrawY);
+                        boldText.wave(0, s, spriteDrawX + offset, anInt1265, spriteDrawY + 1);
+                        boldText.wave(i3, s, spriteDrawX + offset, anInt1265, spriteDrawY);
                     }
                     if (anIntArray981[defaultText] == 2) {
-                        boldText.wave2(spriteDrawX, s, anInt1265, spriteDrawY + 1, 0);
-                        boldText.wave2(spriteDrawX, s, anInt1265, spriteDrawY, i3);
+                        boldText.wave2(spriteDrawX + offset, s, anInt1265, spriteDrawY + 1, 0);
+                        boldText.wave2(spriteDrawX + offset, s, anInt1265, spriteDrawY, i3);
                     }
                     if (anIntArray981[defaultText] == 3) {
-                        boldText.shake(150 - anIntArray982[defaultText], s, anInt1265,
-                                spriteDrawY + 1, spriteDrawX, 0);
-                        boldText.shake(150 - anIntArray982[defaultText], s, anInt1265,
-                                spriteDrawY, spriteDrawX, i3);
+                        boldText.shake(150 - anIntArray982[defaultText], s, anInt1265, spriteDrawY + 1, spriteDrawX + offset, 0);
+                        boldText.shake(150 - anIntArray982[defaultText], s, anInt1265, spriteDrawY, spriteDrawX + offset, i3);
                     }
                     if (anIntArray981[defaultText] == 4) {
                         int i4 = boldText.method384(s);
-                        int k4 = ((150 - anIntArray982[defaultText]) * (i4 + 100))
-                                / 150;
-                        Rasterizer2D.setDrawingArea(334, spriteDrawX - 50, spriteDrawX + 50,
-                                0);
-                        boldText.render(0, s, spriteDrawY + 1, (spriteDrawX + 50) - k4);
-                        boldText.render(i3, s, spriteDrawY, (spriteDrawX + 50) - k4);
-                        gameScreenImageProducer.initDrawingArea();
+                        int k4 = ((150 - anIntArray982[defaultText]) * (i4 + 100)) / 150;
+                        boldText.render(0, s, spriteDrawY + 1, (spriteDrawX + 50) - k4  + offset);
+                        boldText.render(i3, s, spriteDrawY, (spriteDrawX + 50) - k4  + offset);
                     }
                     if (anIntArray981[defaultText] == 5) {
                         int j4 = 150 - anIntArray982[defaultText];
@@ -3874,15 +3801,12 @@ public class Client extends GameApplet implements RSClient {
                             l4 = j4 - 25;
                         else if (j4 > 125)
                             l4 = j4 - 125;
-                        Rasterizer2D.setDrawingArea(spriteDrawY + 5, 0, 512,
-                                spriteDrawY - boldText.verticalSpace - 1);
-                        boldText.drawText(0, s, spriteDrawY + 1 + l4, spriteDrawX);
-                        boldText.drawText(i3, s, spriteDrawY + l4, spriteDrawX);
-                        gameScreenImageProducer.initDrawingArea();
+                        boldText.drawText(0, s, spriteDrawY + 1 + l4, spriteDrawX + offset);
+                        boldText.drawText(i3, s, spriteDrawY + l4, spriteDrawX + offset);
                     }
                 } else {
-                    boldText.drawText(0, s, spriteDrawY + 1, spriteDrawX);
-                    boldText.drawText(0xffff00, s, spriteDrawY, spriteDrawX);
+                    boldText.drawText(0, s, spriteDrawY + 1, spriteDrawX + offset);
+                    boldText.drawText(0xffff00, s, spriteDrawY, spriteDrawX + offset);
                 }
             }
         } catch (Exception e) {
