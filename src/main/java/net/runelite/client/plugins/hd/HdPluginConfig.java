@@ -30,10 +30,11 @@ import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.ConfigSection;
 import net.runelite.client.config.Range;
+import static net.runelite.client.plugins.hd.HdPlugin.MAX_DISTANCE;
+import static net.runelite.client.plugins.hd.HdPlugin.MAX_FOG_DEPTH;
 import net.runelite.client.plugins.hd.config.AntiAliasingMode;
 import net.runelite.client.plugins.hd.config.ColorBlindMode;
 import net.runelite.client.plugins.hd.config.Contrast;
-import net.runelite.client.plugins.hd.config.LevelOfDetail;
 import net.runelite.client.plugins.hd.config.MaxDynamicLights;
 import net.runelite.client.plugins.hd.config.Saturation;
 import net.runelite.client.plugins.hd.config.DefaultSkyColor;
@@ -41,57 +42,31 @@ import net.runelite.client.plugins.hd.config.FogDepthMode;
 import net.runelite.client.plugins.hd.config.ShadowDistance;
 import net.runelite.client.plugins.hd.config.ShadowResolution;
 import net.runelite.client.plugins.hd.config.UIScalingMode;
-import net.runelite.client.plugins.hd.config.WaterEffects;
-
-import static net.runelite.client.plugins.hd.HdPlugin.MAX_DISTANCE;
-import static net.runelite.client.plugins.hd.HdPlugin.MAX_FOG_DEPTH;
-
 
 @ConfigGroup("hd")
 public interface HdPluginConfig extends Config
 {
-	/*====== Limited-time settings ======*/
-
-	@ConfigSection(
-			name = "Limited-time",
-			description = "Fun and/or experimental settings that are available for a limited time",
-			position = -10,
-			closedByDefault = false
-	)
-	String limitedTimeSettings = "limitedTimeSettings";
-
-	@ConfigItem(
-			keyName = "winterTheme",
-			name = "Winter theme",
-			description = "Covers the Gielinor overworld with a layer of snow!",
-			position = -9,
-			section = limitedTimeSettings
-	)
-	default boolean winterTheme()
-	{
-		return true;
-	}
-
+	String KEY_WINTER_THEME = "winterTheme0";
 
 	/*====== General settings ======*/
 
 	@ConfigSection(
-			name = "General",
-			description = "General settings",
-			position = 0,
-			closedByDefault = false
+		name = "General",
+		description = "General settings",
+		position = 0,
+		closedByDefault = false
 	)
 	String generalSettings = "generalSettings";
 
 	@Range(
-			max = MAX_DISTANCE
+		max = MAX_DISTANCE
 	)
 	@ConfigItem(
-			keyName = "drawDistance",
-			name = "Draw Distance",
-			description = "Draw distance",
-			position = 1,
-			section = generalSettings
+		keyName = "drawDistance",
+		name = "Draw Distance",
+		description = "Draw distance",
+		position = 1,
+		section = generalSettings
 	)
 	default int drawDistance()
 	{
@@ -99,11 +74,11 @@ public interface HdPluginConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "antiAliasingMode",
-			name = "Anti Aliasing",
-			description = "Improves jagged/shimmering edges at a cost of GPU performance. 8x/16x MSAA are highly expensive.",
-			position = 2,
-			section = generalSettings
+		keyName = "antiAliasingMode",
+		name = "Anti Aliasing",
+		description = "Improves jagged/shimmering edges at a cost of GPU performance. 8x/16x MSAA are highly expensive.",
+		position = 2,
+		section = generalSettings
 	)
 	default AntiAliasingMode antiAliasingMode()
 	{
@@ -111,11 +86,11 @@ public interface HdPluginConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "uiScalingMode",
-			name = "UI scaling mode",
-			description = "Sampling function to use for the UI in stretched mode",
-			position = 3,
-			section = generalSettings
+		keyName = "uiScalingMode",
+		name = "UI scaling mode",
+		description = "Sampling function to use for the UI in stretched mode",
+		position = 3,
+		section = generalSettings
 	)
 	default UIScalingMode uiScalingMode()
 	{
@@ -123,15 +98,15 @@ public interface HdPluginConfig extends Config
 	}
 
 	@Range(
-			min = 0,
-			max = 16
+		min = 0,
+		max = 16
 	)
 	@ConfigItem(
-			keyName = "anisotropicFilteringLevel",
-			name = "Anisotropic Filtering",
-			description = "Configures the anisotropic filtering level from 0 to 16x.",
-			position = 4,
-			section = generalSettings
+		keyName = "anisotropicFilteringLevel",
+		name = "Anisotropic Filtering",
+		description = "Configures the anisotropic filtering level from 0 to 16x.",
+		position = 4,
+		section = generalSettings
 	)
 	default int anisotropicFilteringLevel()
 	{
@@ -139,11 +114,11 @@ public interface HdPluginConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "unlockFps",
-			name = "Unlock FPS",
-			description = "Removes the 50 FPS cap for camera movement, lighting and shadows.",
-			position = 5,
-			section = generalSettings
+		keyName = "unlockFps",
+		name = "Unlock FPS",
+		description = "Removes the 50 FPS cap for some game content such as camera movement and dynamic lighting.",
+		position = 5,
+		section = generalSettings
 	)
 	default boolean unlockFps()
 	{
@@ -186,11 +161,11 @@ public interface HdPluginConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "colorBlindMode",
-			name = "Colorblindness Correction",
-			description = "Adjusts colors to account for colorblindness",
-			position = 8,
-			section = generalSettings
+		keyName = "colorBlindMode",
+		name = "Colorblindness Correction",
+		description = "Adjusts colors to account for colorblindness",
+		position = 8,
+		section = generalSettings
 	)
 	default ColorBlindMode colorBlindMode()
 	{
@@ -198,11 +173,11 @@ public interface HdPluginConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "flashingEffects",
-			name = "Flashing Effects",
-			description = "Displays fast flashing effects, such as lightning, in certain areas.",
-			position = 9,
-			section = generalSettings
+		keyName = "flashingEffects",
+		name = "Flashing Effects",
+		description = "Displays fast flashing effects, such as lightning, in certain areas.",
+		position = 9,
+		section = generalSettings
 	)
 	default boolean flashingEffects()
 	{
@@ -210,11 +185,11 @@ public interface HdPluginConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "saturation",
-			name = "Saturation",
-			description = "Controls the saturation of the final rendered image.",
-			position = 10,
-			section = generalSettings
+		keyName = "saturation",
+		name = "Saturation",
+		description = "Controls the saturation of the final rendered image.",
+		position = 10,
+		section = generalSettings
 	)
 	default Saturation saturation()
 	{
@@ -222,11 +197,11 @@ public interface HdPluginConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "contrast",
-			name = "Contrast",
-			description = "Controls the contrast of the final rendered image.",
-			position = 11,
-			section = generalSettings
+		keyName = "contrast",
+		name = "Contrast",
+		description = "Controls the contrast of the final rendered image.",
+		position = 11,
+		section = generalSettings
 	)
 	default Contrast contrast()
 	{
@@ -234,48 +209,35 @@ public interface HdPluginConfig extends Config
 	}
 
 	@Range(
-			min = 1,
-			max = 50
+		min = 1,
+		max = 50
 	)
 	@ConfigItem(
-			keyName = "brightness2",
-			name = "Brightness",
-			description = "Controls the brightness of scene lighting.",
-			position = 12,
-			section = generalSettings
+		keyName = "brightness2",
+		name = "Brightness",
+		description = "Controls the brightness of scene lighting.",
+		position = 12,
+		section = generalSettings
 	)
 	default int brightness() { return 20; }
-
-	@ConfigItem(
-			keyName = "levelOfDetail",
-			name = "Level of Detail",
-			description = "Improves performance by preventing certain distant objects from being drawn.",
-			position = 13,
-			section = generalSettings
-	)
-	default LevelOfDetail levelOfDetail()
-	{
-		return LevelOfDetail.MEDIUM;
-	}
-
 
 
 	/*====== Lighting settings ======*/
 
 	@ConfigSection(
-			name = "Lighting",
-			description = "Lighting settings",
-			position = 100,
-			closedByDefault = false
+		name = "Lighting",
+		description = "Lighting settings",
+		position = 100,
+		closedByDefault = false
 	)
 	String lightingSettings = "lightingSettings";
 
 	@ConfigItem(
-			keyName = "maxDynamicLights",
-			name = "Dynamic Lights",
-			description = "The maximum number of dynamic lights visible at one time. GPU-heavy in certain scenes.",
-			position = 101,
-			section = lightingSettings
+		keyName = "maxDynamicLights",
+		name = "Dynamic Lights",
+		description = "The maximum number of dynamic lights visible at one time. Reducing this will improve performance.",
+		position = 101,
+		section = lightingSettings
 	)
 	default MaxDynamicLights maxDynamicLights()
 	{
@@ -283,11 +245,11 @@ public interface HdPluginConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "projectileLights",
-			name = "Projectile Lights",
-			description = "Adds dynamic lights to some projectiles.",
-			position = 102,
-			section = lightingSettings
+		keyName = "projectileLights",
+		name = "Projectile Lights",
+		description = "Adds dynamic lights to some projectiles.",
+		position = 102,
+		section = lightingSettings
 	)
 	default boolean projectileLights()
 	{
@@ -295,11 +257,11 @@ public interface HdPluginConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "npcLights",
-			name = "NPC Lights",
-			description = "Adds dynamic lights to some NPCs.",
-			position = 103,
-			section = lightingSettings
+		keyName = "npcLights",
+		name = "NPC Lights",
+		description = "Adds dynamic lights to some NPCs.",
+		position = 103,
+		section = lightingSettings
 	)
 	default boolean npcLights()
 	{
@@ -307,23 +269,23 @@ public interface HdPluginConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "atmosphericLighting",
-			name = "Atmospheric Lighting",
-			description = "Changes the color and brightness of full-scene lighting in certain areas.",
-			position = 104,
-			section = lightingSettings
+		keyName = "atmosphericLighting",
+		name = "Atmospheric Lighting",
+		description = "Changes the color and brightness of full-scene lighting in certain areas.",
+		position = 104,
+		section = lightingSettings
 	)
 	default boolean atmosphericLighting()
 	{
-		return false;
+		return true;
 	}
 
 	@ConfigItem(
-			keyName = "shadowsEnabled",
-			name = "Shadows",
-			description = "Enables fully-dynamic shadows.",
-			position = 105,
-			section = lightingSettings
+		keyName = "shadowsEnabled",
+		name = "Shadows",
+		description = "Enables fully-dynamic shadows.",
+		position = 105,
+		section = lightingSettings
 	)
 	default boolean shadowsEnabled()
 	{
@@ -331,11 +293,11 @@ public interface HdPluginConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "shadowResolution",
-			name = "Shadow Quality",
-			description = "The resolution of the shadow maps. Higher resolutions result in sharper, higher quality shadows at the cost of GPU performance.",
-			position = 106,
-			section = lightingSettings
+		keyName = "shadowResolution",
+		name = "Shadow Quality",
+		description = "The resolution of the shadow maps. Higher resolutions result in sharper, higher quality shadows at the cost of GPU performance.",
+		position = 106,
+		section = lightingSettings
 	)
 	default ShadowResolution shadowResolution()
 	{
@@ -343,11 +305,11 @@ public interface HdPluginConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "shadowDistance",
-			name = "Shadow Distance",
-			description = "The maximum draw distance of shadow maps. Shorter distances result in sharper, higher quality shadows.",
-			position = 107,
-			section = lightingSettings
+		keyName = "shadowDistance",
+		name = "Shadow Distance",
+		description = "The maximum draw distance of shadow maps. Shorter distances result in sharper, higher quality shadows.",
+		position = 107,
+		section = lightingSettings
 	)
 	default ShadowDistance shadowDistance()
 	{
@@ -355,35 +317,45 @@ public interface HdPluginConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "expandShadowDraw",
-			name = "Expand Shadow Draw",
-			description = "Reduces 'flickering' of shadows disappearing at screen edge by increasing geometry drawn at a cost of performance.",
-			position = 108,
-			section = lightingSettings
+		keyName = "expandShadowDraw",
+		name = "Expand Shadow Draw",
+		description = "Reduces 'flickering' of shadows disappearing at screen edge by increasing geometry drawn at a cost of performance.",
+		position = 108,
+		section = lightingSettings
 	)
 	default boolean expandShadowDraw()
 	{
 		return false;
 	}
 
+	@ConfigItem(
+		keyName = "hideBakedEffects",
+		name = "Hide Fake Lights and Shadows",
+		description = "Hides the fake light and shadow effects that Jagex often includes with models",
+		position = 109,
+		section = lightingSettings
+	)
+	default boolean hideBakedEffects() {
+		return true;
+	}
 
 
 	/*====== Environment settings ======*/
 
 	@ConfigSection(
-			name = "Environment",
-			description = "Environment settings",
-			position = 200,
-			closedByDefault = false
+		name = "Environment",
+		description = "Environment settings",
+		position = 200,
+		closedByDefault = false
 	)
 	String environmentSettings = "environmentSettings";
 
 	@ConfigItem(
-			keyName = "fogDepthMode",
-			name = "Fog Depth Mode",
-			description = "Determines the method of controlling the depth of the fog. 'Dynamic' changes fog depth based on the area.",
-			position = 201,
-			section = environmentSettings
+		keyName = "fogDepthMode",
+		name = "Fog Depth Mode",
+		description = "Determines the method of controlling the depth of the fog. 'Dynamic' changes fog depth based on the area.",
+		position = 201,
+		section = environmentSettings
 	)
 	default FogDepthMode fogDepthMode()
 	{
@@ -391,14 +363,14 @@ public interface HdPluginConfig extends Config
 	}
 
 	@Range(
-			max = MAX_FOG_DEPTH
+		max = MAX_FOG_DEPTH
 	)
 	@ConfigItem(
-			keyName = "fogDepth",
-			name = "Static Fog Depth",
-			description = "Distance from the scene edge the fog starts. Applies when 'Fog Depth Mode' is set to 'static'.",
-			position = 202,
-			section = environmentSettings
+		keyName = "fogDepth",
+		name = "Static Fog Depth",
+		description = "Distance from the scene edge the fog starts. Applies when 'Fog Depth Mode' is set to 'static'.",
+		position = 202,
+		section = environmentSettings
 	)
 	default int fogDepth()
 	{
@@ -406,22 +378,22 @@ public interface HdPluginConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "groundFog",
-			name = "Ground Fog",
-			description = "Enables a height-based fog effect that covers the ground in certain areas.",
-			position = 203,
-			section = environmentSettings
+		keyName = "groundFog",
+		name = "Ground Fog",
+		description = "Enables a height-based fog effect that covers the ground in certain areas.",
+		position = 203,
+		section = environmentSettings
 	)
 	default boolean groundFog() {
 		return true;
 	}
 
 	@ConfigItem(
-			keyName = "defaultSkyColor",
-			name = "Default Sky Color",
-			description = "Determines the color of the sky when in a location without a custom sky color assigned.",
-			position = 204,
-			section = environmentSettings
+		keyName = "defaultSkyColor",
+		name = "Default Sky Color",
+		description = "Determines the color of the sky when in a location without a custom sky color assigned.",
+		position = 204,
+		section = environmentSettings
 	)
 	default DefaultSkyColor defaultSkyColor()
 	{
@@ -429,11 +401,22 @@ public interface HdPluginConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "objectTextures",
-			name = "Object Textures",
-			description = "Adds detail textures to certain world objects.",
-			position = 205,
-			section = environmentSettings
+		keyName = "overrideSky",
+		name = "Override Sky Color",
+		description = "Forces the selected sky color in all environments",
+		position = 205,
+		section = environmentSettings
+	)
+	default boolean overrideSky() {
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "objectTextures",
+		name = "Object Textures",
+		description = "Adds detail textures to certain world objects.",
+		position = 206,
+		section = environmentSettings
 	)
 	default boolean objectTextures()
 	{
@@ -441,11 +424,11 @@ public interface HdPluginConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "groundTextures",
-			name = "Ground Textures",
-			description = "Adds detail textures to the ground.",
-			position = 206,
-			section = environmentSettings
+		keyName = "groundTextures",
+		name = "Ground Textures",
+		description = "Adds detail textures to the ground.",
+		position = 207,
+		section = environmentSettings
 	)
 	default boolean groundTextures()
 	{
@@ -456,7 +439,7 @@ public interface HdPluginConfig extends Config
 			keyName = "groundBlending",
 			name = "Ground Blending",
 			description = "Affects the quality of blending between different ground/terrain textures.",
-			position = 207,
+			position = 208,
 			section = environmentSettings
 	)
 	default boolean groundBlending()
@@ -465,23 +448,23 @@ public interface HdPluginConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "waterEffects",
-			name = "Water Effects",
-			description = "Changes the appearance of the water.",
-			position = 208,
-			section = environmentSettings
+		keyName = "underwaterCaustics",
+		name = "Underwater Caustics",
+		description = "Apply underwater lighting effects to imitate sunlight moving through waves on the surface.",
+		position = 209,
+		section = environmentSettings
 	)
-	default WaterEffects waterEffects()
+	default boolean underwaterCaustics()
 	{
-		return WaterEffects.ALL;
+		return true;
 	}
 
 	@ConfigItem(
-			keyName = "tzhaarHD",
-			name = "HD TzHaar Reskin",
-			description = "Recolors the TzHaar city of Mor Ul Rek to give it an appearance similar to that of its 2008 HD variant.",
-			position = 209,
-			section = environmentSettings
+		keyName = "tzhaarHD",
+		name = "HD TzHaar Reskin",
+		description = "Recolors the TzHaar city of Mor Ul Rek to give it an appearance similar to that of its 2008 HD variant.",
+		position = 210,
+		section = environmentSettings
 	)
 	default boolean tzhaarHD()
 	{
@@ -489,24 +472,23 @@ public interface HdPluginConfig extends Config
 	}
 
 
-
 	/*====== Miscellaneous settings ======*/
 
 	@ConfigSection(
-			name = "Miscellaneous",
-			description = "Miscellaneous settings",
-			position = 300,
-			closedByDefault = true
+		name = "Miscellaneous",
+		description = "Miscellaneous settings",
+		position = 300,
+		closedByDefault = true
 	)
 	String miscellaneousSettings = "miscellaneousSettings";
 
 	@ConfigItem(
-			keyName = "macosIntelWorkaround",
-			name = "Fix shading on MacOS with Intel",
-			description = "Workaround for visual artifacts on some Intel GPU drivers on MacOS.",
-			warning = "This setting can cause RuneLite to crash, and can be difficult to revert. Only enable it if you\nare seeing black patches. Are you sure you want to enable the setting?",
-			position = 301,
-			section = miscellaneousSettings
+		keyName = "macosIntelWorkaround",
+		name = "Fix shading on MacOS with Intel",
+		description = "Workaround for visual artifacts on some Intel GPU drivers on MacOS.",
+		warning = "This setting can cause RuneLite to crash, and can be difficult to revert. Only enable it if you\nare seeing black patches. Are you sure you want to enable the setting?",
+		position = 301,
+		section = miscellaneousSettings
 	)
 	default boolean macosIntelWorkaround()
 	{
@@ -514,11 +496,11 @@ public interface HdPluginConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "hdInfernalTexture",
-			name = "HD Infernal Texture",
-			description = "Replaces the OSRS infernal cape texture with a high detail one.",
-			position = 302,
-			section = miscellaneousSettings
+		keyName = "hdInfernalTexture",
+		name = "HD Infernal Texture",
+		description = "Replaces the OSRS infernal cape texture with a high detail one.",
+		position = 302,
+		section = miscellaneousSettings
 	)
 	default boolean hdInfernalTexture()
 	{
@@ -526,11 +508,40 @@ public interface HdPluginConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = KEY_WINTER_THEME,
+		name = "Winter theme",
+		description = "Covers the Gielinor overworld with a layer of snow!",
+		position = 303,
+		section = miscellaneousSettings
+	)
+	default boolean winterTheme()
+	{
+		return false;
+	}
+
+	@ConfigSection(
+			name = "Experimental",
+			description = "Experimental features - you likely won't need to modify these settings",
+			position = 400,
+			closedByDefault = true
+	)
+	String experimentalSettings = "experimentalSettings";
+
+	@ConfigItem(
 			keyName = "modelCaching",
 			name = "Disable model caching",
 			description = "Model caching improves performance with increased memory usage.",
-			position = 303,
-			section = miscellaneousSettings
+			position = 401,
+			section = experimentalSettings
 	)
 	default boolean disableModelCaching() { return false; }
+
+	@ConfigItem(
+			keyName = "modelBatching",
+			name = "Disable model batching",
+			description = "Model batching generally improves performance but could cause some graphical artifacts",
+			position = 402,
+			section = experimentalSettings
+	)
+	default boolean disableModelBatching() { return false; }
 }

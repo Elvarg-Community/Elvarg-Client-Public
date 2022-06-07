@@ -30,6 +30,8 @@ import com.runescape.Configuration;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.ui.FatalErrorDialog;
 import net.runelite.client.ui.SplashScreen;
+import net.runelite.client.RuntimeConfig;
+import net.runelite.client.RuntimeConfigLoader;
 
 import javax.swing.*;
 import java.applet.Applet;
@@ -37,7 +39,7 @@ import java.io.IOException;
 import java.util.function.Supplier;
 
 @Slf4j
-@SuppressWarnings("deprecation")
+@SuppressWarnings({"deprecation", "removal"})
 public class ClientLoader implements Supplier<Applet>
 {
 	private Object client;

@@ -31,6 +31,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.http.api.RuneLiteAPI;
@@ -40,8 +42,10 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import javax.annotation.Nullable;
+
 @Slf4j
-class RuntimeConfigLoader implements Supplier<RuntimeConfig>
+public class RuntimeConfigLoader implements Supplier<RuntimeConfig>
 {
     private final OkHttpClient okHttpClient;
     private final CompletableFuture<RuntimeConfig> configFuture;
@@ -50,6 +54,19 @@ class RuntimeConfigLoader implements Supplier<RuntimeConfig>
     {
         this.okHttpClient = okHttpClient;
         configFuture = fetch();
+    }
+
+    @Nullable
+    public RuntimeConfig tryGet()
+    {
+        try
+        {
+            return configFuture.get(0, TimeUnit.SECONDS);
+        }
+        catch (InterruptedException | ExecutionException | TimeoutException e)
+        {
+            return null;
+        }
     }
 
     @Override

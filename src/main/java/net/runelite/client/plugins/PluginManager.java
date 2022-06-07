@@ -30,6 +30,7 @@ import com.google.common.collect.Lists;
 import com.google.common.graph.Graph;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.Graphs;
+import java.io.File;
 import com.google.common.graph.MutableGraph;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.ClassPath.ClassInfo;
@@ -88,6 +89,7 @@ public class PluginManager
 	 * Base package where the core plugins are
 	 */
 	private static final String PLUGIN_PACKAGE = "net.runelite.client.plugins";
+	private static final File SIDELOADED_PLUGINS = new File(RuneLite.RUNELITE_DIR, "sideloaded-plugins");
 
 	private final boolean developerMode;
 	private final boolean safeMode;
@@ -158,6 +160,45 @@ public class PluginManager
 				}
 			}
 		});
+	}
+
+	public void loadSideLoadPlugins()
+	{
+		if (!developerMode)
+		{
+			return;
+		}
+
+		File[] files = SIDELOADED_PLUGINS.listFiles();
+		if (files == null)
+		{
+			return;
+		}
+
+		for (File f : files)
+		{
+			if (f.getName().endsWith(".jar"))
+			{
+				log.info("Side-loading plugin {}", f);
+
+				try
+				{
+					ClassLoader classLoader = new PluginClassLoader(f, getClass().getClassLoader());
+
+					List<Class<?>> plugins = ClassPath.from(classLoader)
+							.getAllClasses()
+							.stream()
+							.map(ClassInfo::load)
+							.collect(Collectors.toList());
+
+					loadPlugins(plugins, null);
+				}
+				catch (PluginInstantiationException | IOException ex)
+				{
+					log.error("error sideloading plugin", ex);
+				}
+			}
+		}
 	}
 
 	public Config getPluginConfigProxy(Plugin plugin)

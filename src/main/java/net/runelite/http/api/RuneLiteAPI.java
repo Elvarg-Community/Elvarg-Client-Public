@@ -125,10 +125,10 @@ public class RuneLiteAPI
 
 		if (prop != null && !prop.isEmpty())
 		{
-			return HttpUrl.parse(prop);
+			return HttpUrl.get(prop);
 		}
 
-		return HttpUrl.parse(BASE + "/session");
+		return HttpUrl.get(BASE + "/session");
 	}
 
 	public static HttpUrl getApiBase()
@@ -137,10 +137,10 @@ public class RuneLiteAPI
 
 		if (prop != null && !prop.isEmpty())
 		{
-			return HttpUrl.parse(prop);
+			return HttpUrl.get(prop);
 		}
 
-		return HttpUrl.parse(BASE + "/runelite-" + getVersion());
+		return HttpUrl.get(BASE + "/runelite-" + getVersion());
 	}
 
 	public static HttpUrl getStaticBase()
@@ -149,10 +149,10 @@ public class RuneLiteAPI
 
 		if (prop != null && !prop.isEmpty())
 		{
-			return HttpUrl.parse(prop);
+			return HttpUrl.get(prop);
 		}
 
-		return HttpUrl.parse(STATICBASE);
+		return HttpUrl.get(STATICBASE);
 	}
 
 	public static HttpUrl getWsEndpoint()
@@ -161,10 +161,10 @@ public class RuneLiteAPI
 
 		if (prop != null && !prop.isEmpty())
 		{
-			return HttpUrl.parse(prop);
+			return HttpUrl.get(prop);
 		}
 
-		return HttpUrl.parse(WSBASE);
+		return HttpUrl.get(WSBASE);
 	}
 
 	public static String getVersion()

@@ -33,6 +33,7 @@ import com.google.inject.Injector;
 import java.applet.Applet;
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.nio.file.Files;
@@ -147,6 +148,10 @@ public class RuneLite
 	@Nullable
 	private Client client;
 
+	@Inject
+	@Nullable
+	private RuntimeConfig runtimeConfig;
+
 	public static void main(String[] args) throws Exception
 	{
 		Locale.setDefault(Locale.ENGLISH);
@@ -216,8 +221,8 @@ public class RuneLite
 
 		try
 		{
-			final ClientLoader clientLoader = new ClientLoader();
 			final RuntimeConfigLoader runtimeConfigLoader = new RuntimeConfigLoader(okHttpClient);
+			final ClientLoader clientLoader = new ClientLoader();
 
 			new Thread(() ->
 			{
@@ -235,6 +240,7 @@ public class RuneLite
 				{
 					SwingUtilities.invokeLater(() ->
 						new FatalErrorDialog("Developers should enable assertions; Add `-ea` to your JVM arguments`")
+							.addHelpButtons()
 							.addBuildingGuide()
 							.open());
 					return;
@@ -270,6 +276,7 @@ public class RuneLite
 			log.error("Failure during startup", e);
 			SwingUtilities.invokeLater(() ->
 				new FatalErrorDialog("RuneLite has encountered an unexpected error during startup.")
+					.addHelpButtons()
 					.open());
 		}
 		finally
@@ -288,6 +295,8 @@ public class RuneLite
 			// Inject members into client
 			injector.injectMembers(client);
 		}
+
+		setupSystemProps();
 
 		// Start the applet
 		if (applet != null)
@@ -325,6 +334,7 @@ public class RuneLite
 		// Load the plugins, but does not start them yet.
 		// This will initialize configuration
 		pluginManager.loadCorePlugins();
+		pluginManager.loadSideLoadPlugins();
 		externalPluginManager.loadExternalPlugins();
 
 		SplashScreen.stage(.70, null, "Finalizing configuration");
@@ -367,6 +377,21 @@ public class RuneLite
 		SplashScreen.stop();
 
 		clientUI.show();
+	}
+
+	private void setupSystemProps()
+	{
+		if (runtimeConfig == null || runtimeConfig.getSysProps() == null)
+		{
+			return;
+		}
+
+		for (Map.Entry<String, String> entry : runtimeConfig.getSysProps().entrySet())
+		{
+			String key = entry.getKey(), value = entry.getValue();
+			log.debug("Setting property {}={}", key, value);
+			System.setProperty(key, value);
+		}
 	}
 
 	@VisibleForTesting

@@ -1,20 +1,20 @@
-group = "com.runescape"
-version = "1.0"
+
+plugins {
+    id("com.github.johnrengelman.shadow") version "7.1.2"
+    java
+}
 
 repositories {
     mavenCentral()
-    maven("https://repo.runelite.net")
+    maven {
+        url = uri("https://repo.runelite.net")
+    }
 }
 
-plugins {
-    id("java")
-    kotlin("jvm") version "1.3.72"
-    kotlin("plugin.lombok") version "1.5.21"
-}
+description = "Elvarg Client"
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib")
-    annotationProcessor(group = "org.projectlombok", name = "lombok", version = "1.18.22")
+    annotationProcessor(group = "org.projectlombok", name = "lombok", version ="1.18.22")
     annotationProcessor(group = "org.pf4j", name = "pf4j", version = "3.6.0")
 
     compileOnly(group = "javax.annotation", name = "javax.annotation-api", version = "1.3.2")
@@ -30,11 +30,10 @@ dependencies {
         exclude(group = "org.codehaus.mojo", module = "animal-sniffer-annotations")
     }
     implementation(group = "com.google.inject", name = "guice", version = "5.0.1")
-    implementation(group = "com.h2database", name = "h2", version = "1.4.200")
     implementation(group = "com.jakewharton.rxrelay3", name = "rxrelay", version = "3.0.1")
     implementation(group = "com.squareup.okhttp3", name = "okhttp", version = "4.9.1")
     implementation(group = "io.reactivex.rxjava3", name = "rxjava", version = "3.1.2")
-    implementation(group = "org.jgroups", name = "jgroups", version = "5.1.9.Final")
+    implementation(group = "org.jgroups", name = "jgroups", version = "5.2.2.Final")
     implementation(group = "net.java.dev.jna", name = "jna", version = "5.9.0")
     implementation(group = "net.java.dev.jna", name = "jna-platform", version = "5.9.0")
     implementation(group = "net.runelite", name = "discord", version = "1.4")
@@ -51,32 +50,34 @@ dependencies {
         exclude(group = "org.slf4j")
     }
     implementation(group = "org.pf4j", name = "pf4j-update", version = "2.3.0")
-    implementation(group = "net.runelite.gluegen", name = "gluegen-rt", version = "2.4.0-rc-20200429")
-    implementation(group = "net.runelite.jogl", name = "jogl-all", version = "2.4.0-rc-20200429")
+    // implementation(group = "com.google.archivepatcher", name = "archive-patch-applier", version= "1.0.4")
+    implementation(group = "net.runelite.gluegen", name = "gluegen-rt", version = "2.4.0-rc-20220318")
+    implementation(group = "net.runelite.jogl", name = "jogl-rl", version = "2.4.0-rc-20220318")
+    implementation(group = "net.runelite.jogl", name = "jogl-gldesktop-dbg", version = "2.4.0-rc-20220318")
     implementation(group = "net.runelite.jocl", name = "jocl", version = "1.0")
-    implementation(group = "com.google.code.findbugs", name = "jsr305", version = "3.0.2")
-    implementation(group = "com.google.inject", name = "guice", version = "5.0.1")
-    implementation(group = "com.fifesoft", name = "rsyntaxtextarea", version = "3.1.2")
-    implementation(group = "com.fifesoft", name = "autocomplete", version = "3.1.1")
-    implementation(group = "org.slf4j", name = "slf4j-api", version = "1.7.32")
-    implementation(group = "net.runelite.pushingpixels", name = "trident", version = "1.5.00")
-    implementation("net.runelite.jogl:jogl-all:2.4.0-rc-20200429")
-    implementation("net.runelite.jocl:jocl:1.0")
-    implementation("net.runelite.gluegen:gluegen-rt:2.4.0-rc-20200429")
 
-    implementation("net.runelite.gluegen:gluegen-rt:2.4.0-rc-20200429:natives-windows-amd64")
-    implementation("net.runelite.gluegen:gluegen-rt:2.4.0-rc-20200429:natives-windows-i586")
-    implementation("net.runelite.gluegen:gluegen-rt:2.4.0-rc-20200429:natives-linux-amd64")
+    runtimeOnly(group = "net.runelite.pushingpixels", name = "trident", version = "1.5.00")
+    runtimeOnly(group = "net.runelite.gluegen", name = "gluegen-rt", version = "2.4.0-rc-20220318", classifier = "natives-linux-amd64")
+    runtimeOnly(group = "net.runelite.gluegen", name = "gluegen-rt", version = "2.4.0-rc-20220318", classifier = "natives-windows-amd64")
+    runtimeOnly(group = "net.runelite.gluegen", name = "gluegen-rt", version = "2.4.0-rc-20220318", classifier = "natives-windows-i586")
+    runtimeOnly(group = "net.runelite.gluegen", name = "gluegen-rt", version = "2.4.0-rc-20220318", classifier = "natives-macosx-universal")
+    runtimeOnly(group = "net.runelite.jogl", name = "jogl-rl", version = "2.4.0-rc-20220318", classifier = "natives-linux-amd64")
+    runtimeOnly(group = "net.runelite.jogl", name = "jogl-rl", version = "2.4.0-rc-20220318", classifier = "natives-windows-amd64")
+    runtimeOnly(group = "net.runelite.jogl", name = "jogl-rl", version = "2.4.0-rc-20220318", classifier = "natives-windows-i586")
+    runtimeOnly(group = "net.runelite.jogl", name = "jogl-rl", version = "2.4.0-rc-20220318", classifier = "natives-macosx-universal")
+    runtimeOnly(group = "net.runelite.jocl", name = "jocl", version = "1.0", classifier = "macos-x64")
+    runtimeOnly(group = "net.runelite.jocl", name = "jocl", version = "1.0", classifier = "macos-arm64")
 
-    implementation("net.runelite.jogl:jogl-all:2.4.0-rc-20200429:natives-windows-amd64")
-    implementation("net.runelite.jogl:jogl-all:2.4.0-rc-20200429:natives-windows-i586")
-    implementation("net.runelite.jogl:jogl-all:2.4.0-rc-20200429:natives-linux-amd64")
+    testAnnotationProcessor(group = "org.projectlombok", name = "lombok", version = "1.18.22")
 
+    testCompileOnly(group = "org.projectlombok", name = "lombok", version = "1.18.22")
+
+    testImplementation(group = "com.google.inject.extensions", name = "guice-grapher", version = "4.1.0")
+    testImplementation(group = "com.google.inject.extensions", name = "guice-testlib", version = "4.1.0")
+    testImplementation(group = "org.hamcrest", name = "hamcrest-library", version = "1.3")
+    testImplementation(group = "junit", name = "junit", version = "4.12")
+    testImplementation(group = "org.mockito", name = "mockito-core", version = "3.1.0")
+    testImplementation(group = "org.mockito", name = "mockito-inline", version = "3.1.0")
+    testImplementation(group = "com.squareup.okhttp3", name = "mockwebserver", version = "4.9.1")
+    testImplementation(group = "org.slf4j", name = "slf4j-api", version = "1.7.32")
 }
-
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_9
-    targetCompatibility = JavaVersion.VERSION_1_9
-}
-
