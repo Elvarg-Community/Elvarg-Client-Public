@@ -1,6 +1,6 @@
 # Elvarg
 
-##### Current Data: 205
+##### Current Data: 206
 ##### Launcher Setup: https://github.com/Mark7625/Runelite-Launcher-rsps/blob/main/SETUP.MD
 
 ### Updated
