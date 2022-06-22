@@ -10988,12 +10988,11 @@ public class Client extends GameApplet implements RSClient {
                                 animation.primaryFrames[childInterface.currentFrame],
                                 selected);
                     }
-                    try {
-                        if (model != null)
-                            Rasterizer3D.world = false;
-                            model.render_2D(childInterface.modelRotation2, 0, childInterface.modelRotation1, 0, sine, cosine);
+
+                    if (model != null) {
+                        Rasterizer3D.world = false;
+                        model.render_2D(childInterface.modelRotation2, 0, childInterface.modelRotation1, 0, sine, cosine);
                         Rasterizer3D.world = true;
-                    } catch (ArithmeticException e) {
                     }
                     Rasterizer3D.originViewX = centreX;
                     Rasterizer3D.originViewY = centreY;
