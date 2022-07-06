@@ -269,7 +269,7 @@ public final class IndexedImage extends Rasterizer2D implements RSTexture {
 
     @Override
     public boolean isLoaded() {
-        return true;
+        return false;
     }
 
     public int getAnimationDirection() {
