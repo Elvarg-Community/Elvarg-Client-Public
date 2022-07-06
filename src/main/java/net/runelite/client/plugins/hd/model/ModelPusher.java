@@ -1,9 +1,9 @@
 package net.runelite.client.plugins.hd.model;
 
 import com.google.common.primitives.Ints;
-import com.jogamp.opengl.math.VectorUtil;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
+import net.runelite.api.kit.KitType;
 import net.runelite.client.plugins.hd.HdPlugin;
 import net.runelite.client.plugins.hd.HdPluginConfig;
 import net.runelite.client.plugins.hd.data.materials.Material;
@@ -16,6 +16,7 @@ import net.runelite.client.plugins.hd.scene.ProceduralGenerator;
 import net.runelite.client.plugins.hd.data.BakedModels;
 import net.runelite.client.plugins.hd.model.objects.TzHaarRecolorType;
 import net.runelite.client.plugins.hd.utils.HDUtils;
+import static net.runelite.client.plugins.hd.utils.HDUtils.dotNormal3Lights;
 import net.runelite.client.plugins.hd.utils.buffer.GpuFloatBuffer;
 import net.runelite.client.plugins.hd.utils.buffer.GpuIntBuffer;
 
@@ -50,12 +51,6 @@ public class ModelPusher
     private static final float lightnessMultiplier = 3f;
     // the minimum amount by which each color will be lightened
     private static final int baseLighten = 10;
-    // a directional vector approximately opposite of the directional light
-    // used by the client
-    private static final float[] inverseLightDirection = new float[]{
-            0.57735026f, 0.57735026f, 0.57735026f
-    };
-
     // same thing but for the normalBuffer and uvBuffer
     private final static float[] zeroFloats = new float[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     private final static int[] twoInts = new int[2];
@@ -320,8 +315,10 @@ public class ModelPusher
         if (config.hideBakedEffects()) {
             // hide the shadows and lights that are often baked into models by setting the colors for the shadow faces to transparent
             NPC npc = renderable instanceof NPC ? (NPC) renderable : null;
+            Player player = renderable instanceof Player  ? (Player) renderable : null;
             GraphicsObject graphicsObject = renderable instanceof GraphicsObject ? (GraphicsObject) renderable : null;
-            if ((npc != null && BakedModels.NPCS.contains(npc.getId())) || (graphicsObject != null && BakedModels.OBJECTS.contains(graphicsObject.getId()))) {
+
+            if ((npc != null && BakedModels.NPCS.contains(npc.getId())) || (graphicsObject != null && BakedModels.OBJECTS.contains(graphicsObject.getId())) || (player != null &&  player.getPlayerComposition().getEquipmentId(KitType.WEAPON) == ItemID.MAGIC_CARPET)) {
                 int[] transparency = removeBakedGroundShading(face, triA, triB, triC, faceTransparencies, faceTextures, yVertices);
                 if (transparency != null) {
                     return transparency;
@@ -357,27 +354,27 @@ public class ModelPusher
         // reduce the effect of the baked shading by approximately inverting the process by which
         // the shading is added initially.
         int lightenA = (int) (Math.max((color1L - ignoreLowLightness), 0) * lightnessMultiplier) + baseLighten;
-        float dotA = Math.max(VectorUtil.dotVec3(VectorUtil.normalizeVec3(new float[]{
+        float dotA = Math.max(dotNormal3Lights(new float[]{
                 xVertexNormals[triA],
                 yVertexNormals[triA],
                 zVertexNormals[triA],
-        }), inverseLightDirection), 0);
+        }), 0);
         color1L = (int) HDUtils.lerp(color1L, lightenA, dotA);
 
         int lightenB = (int) (Math.max((color2L - ignoreLowLightness), 0) * lightnessMultiplier) + baseLighten;
-        float dotB = Math.max(VectorUtil.dotVec3(VectorUtil.normalizeVec3(new float[]{
+        float dotB = Math.max(dotNormal3Lights(new float[]{
                 xVertexNormals[triB],
                 yVertexNormals[triB],
                 zVertexNormals[triB],
-        }), inverseLightDirection), 0);
+        }), 0);
         color2L = (int) HDUtils.lerp(color2L, lightenB, dotB);
 
         int lightenC = (int) (Math.max((color3L - ignoreLowLightness), 0) * lightnessMultiplier) + baseLighten;
-        float dotC = Math.max(VectorUtil.dotVec3(VectorUtil.normalizeVec3(new float[]{
+        float dotC = Math.max(dotNormal3Lights(new float[]{
                 xVertexNormals[triC],
                 yVertexNormals[triC],
                 zVertexNormals[triC],
-        }), inverseLightDirection), 0);
+        }), 0);
         color3L = (int) HDUtils.lerp(color3L, lightenC, dotC);
 
         int maxBrightness = 55;

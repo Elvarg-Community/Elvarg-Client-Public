@@ -29,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 import net.runelite.api.Client;
 import net.runelite.client.plugins.hd.utils.HDUtils;
 
+
 @Getter
 @RequiredArgsConstructor
 public enum DefaultSkyColor

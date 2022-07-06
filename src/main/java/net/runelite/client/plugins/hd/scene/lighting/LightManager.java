@@ -28,9 +28,8 @@ package net.runelite.client.plugins.hd.scene.lighting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.primitives.Ints;
-import com.jogamp.opengl.math.FloatUtil;
-import static com.jogamp.opengl.math.FloatUtil.cos;
-import static com.jogamp.opengl.math.FloatUtil.pow;
+import static java.lang.Math.cos;
+import static java.lang.Math.pow;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -71,7 +70,7 @@ import net.runelite.client.plugins.hd.utils.FileWatcher;
 @Slf4j
 public class LightManager
 {
-	public static String LIGHTS_CONFIG_ENV = "RLHD_LIGHTS_PATH";
+	public static String ENV_LIGHTS_CONFIG = "RLHD_LIGHTS_PATH";
 
 	@Inject
 	private ConfigManager configManager;
@@ -114,12 +113,14 @@ public class LightManager
 
 	private EntityHiderConfig entityHiderConfig;
 
+	static final float PI = 3.14159265358979323846f;
+	static final float TWO_PI = 2f * PI;
+
 	public void startUp()
 	{
-
 		entityHiderConfig = configManager.getConfig(EntityHiderConfig.class);
 
-		Path lightsConfigPath = Env.getPath(LIGHTS_CONFIG_ENV);
+		Path lightsConfigPath = Env.getPath(ENV_LIGHTS_CONFIG);
 		if (lightsConfigPath == null)
 		{
 			reloadLightConfiguration();
@@ -181,7 +182,7 @@ public class LightManager
 		if (hotswapScheduled)
 		{
 			hotswapScheduled = false;
-			Path lightsConfigPath = Env.getPath(LIGHTS_CONFIG_ENV);
+			Path lightsConfigPath = Env.getPath(ENV_LIGHTS_CONFIG);
 			if (lightsConfigPath != null && lightsConfigPath.toFile().exists())
 			{
 				reloadLightConfiguration(lightsConfigPath.toFile());
@@ -226,6 +227,7 @@ public class LightManager
 
 			if (light.npc != null)
 			{
+
 				if (light.npc != client.getCachedNPCs()[light.npc.getIndex()])
 				{
 					lightIterator.remove();
@@ -290,9 +292,9 @@ public class LightManager
 			{
 				long repeatMs = 60000;
 				int offset = light.randomOffset;
-				float t = ((System.currentTimeMillis() + offset) % repeatMs) / (float) repeatMs * FloatUtil.TWO_PI;
+				float t = ((System.currentTimeMillis() + offset) % repeatMs) / (float) repeatMs * TWO_PI;
 
-				float flicker = (
+				float flicker = (float) (
 					pow(cos(11 * t), 2) +
 						pow(cos(17 * t), 4) +
 						pow(cos(23 * t), 6) +
@@ -640,6 +642,11 @@ public class LightManager
 	{
 		for (Light l : OBJECT_LIGHTS.get(tileObject.getId()))
 		{
+			// prevent objects at plane -1 and under from having lights
+			if (tileObject.getPlane() <= -1) {
+				continue;
+			}
+
 			// prevent duplicate lights being spawned for the same object
 			if (sceneLights.stream().anyMatch(light -> light.object != null && tileObjectHash(light.object) == tileObjectHash(tileObject)))
 			{

@@ -2,7 +2,8 @@ package net.runelite.client.plugins.hd.data;
 
 import java.util.Arrays;
 import java.util.HashSet;
-
+import net.runelite.api.NpcID;
+import net.runelite.api.ObjectID;
 
 public class BakedModels
 {
@@ -285,7 +286,6 @@ public class BakedModels
             NpcID.DUNGEON_RAT_3608,
             NpcID.DUNGEON_RAT_3609,
             NpcID.DUST_DEVIL,
-            NpcID.DUST_DEVIL_11238,
             NpcID.DUST_DEVIL_7249,
             NpcID.EARTH_ELEMENTAL,
             NpcID.EARTH_ELEMENTAL_1367,
@@ -459,7 +459,6 @@ public class BakedModels
             NpcID.GRIZZLY_BEAR_CUB,
             NpcID.GRIZZLY_BEAR_CUB_3425,
             NpcID.GULL,
-            NpcID.GULL_11297,
             NpcID.GULL_284,
             NpcID.GULL_285,
             NpcID.GULL_286,
@@ -951,7 +950,11 @@ public class BakedModels
             NpcID.ZILYANA_JR_6646,
             NpcID.ZOMBIE_RAT,
             NpcID.ZOMBIE_RAT_3970,
-            NpcID.ZOMBIE_RAT_3971
+            NpcID.ZOMBIE_RAT_3971,
+            NpcID.YOUNGLLEF,
+            NpcID.CORRUPTED_YOUNGLLEF,
+            NpcID.YOUNGLLEF_8737,
+            NpcID.CORRUPTED_YOUNGLLEF_8738
     ));
 
     public static final HashSet<Integer> OBJECTS = new HashSet<>(Arrays.asList(
