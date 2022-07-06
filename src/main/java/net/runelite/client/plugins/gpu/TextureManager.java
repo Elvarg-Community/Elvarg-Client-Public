@@ -41,7 +41,12 @@ class TextureManager
 
 	int initTextureArray(TextureProvider textureProvider)
 	{
-		
+
+		if (!allTexturesLoaded(textureProvider))
+		{
+			return -1;
+		}
+
 		Texture[] textures = textureProvider.getTextures();
 
 		int textureArrayId = GL43C.glGenTextures();
@@ -164,14 +169,6 @@ class TextureManager
 				}
 
 				++cnt;
-
-				if (srcPixels.length != TEXTURE_SIZE * TEXTURE_SIZE)
-				{
-					// The texture storage is 128x128 bytes, and will only work correctly with the
-					// 128x128 textures from high detail mode
-					log.warn("Texture size for {} is {}!", textureId, srcPixels.length);
-					continue;
-				}
 
 				byte[] pixels = convertPixels(srcPixels, TEXTURE_SIZE, TEXTURE_SIZE, TEXTURE_SIZE, TEXTURE_SIZE);
 				ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(pixels.length);

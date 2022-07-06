@@ -3,6 +3,10 @@ package com.runescape.draw;
 import com.runescape.Client;
 import com.runescape.cache.FileArchive;
 import com.runescape.cache.graphics.IndexedImage;
+import com.runescape.cache.graphics.textures.AnimatedTextureStore;
+import com.runescape.cache.graphics.textures.Texture;
+
+import java.util.Arrays;
 
 
 public final class Rasterizer3D extends Rasterizer2D {
@@ -72,11 +76,11 @@ public final class Rasterizer3D extends Rasterizer2D {
 
         for (int index = 0; index < texture_amt; index++) {
             try {
-                textures[index] = new IndexedImage(archive, String.valueOf(index), 0);
-                if (lowMem && textures[index].resizeWidth == 128) {
-                    textures[index].downscale();
+                textures[index] = new Texture(new IndexedImage(archive, String.valueOf(index), 0), AnimatedTextureStore.get(index));
+                if (lowMem && textures[index].getImage().resizeWidth == 128) {
+                    textures[index].getImage().downscale();
                 } else {
-                    textures[index].resize();
+                    textures[index].getImage().resize();
                 }
                 textureCount++;
             } catch (Exception ex) {
@@ -140,7 +144,7 @@ public final class Rasterizer3D extends Rasterizer2D {
             texturesPixelBuffer[target] = null;
         }
         texturesPixelBuffer[textureId] = texturePixels;
-        IndexedImage background = textures[textureId];
+        IndexedImage background = textures[textureId].getImage();
         int[] texturePalette = currentPalette[textureId];
 
         if (background.width == 64) {
@@ -247,7 +251,7 @@ public final class Rasterizer3D extends Rasterizer2D {
 
         for (int textureId = 0; textureId < texture_amt; textureId++) {
             if (textures[textureId] != null) {
-                int[] originalPalette = textures[textureId].palette;
+                int[] originalPalette = textures[textureId].getImage().palette;
                 currentPalette[textureId] = new int[originalPalette.length];
                 for (int colourId = 0; colourId < originalPalette.length; colourId++) {
                     currentPalette[textureId][colourId] = adjustBrightness(originalPalette[colourId],
@@ -281,7 +285,7 @@ public final class Rasterizer3D extends Rasterizer2D {
 
 
 
-    public static IndexedImage[] getTextures() {
+    public static Texture[] getTextures() {
         return textures;
     }
 
@@ -361,7 +365,7 @@ public final class Rasterizer3D extends Rasterizer2D {
 
         for (int textureId = 0; textureId < texture_amt; textureId++)
             if (textures[textureId] != null) {
-                int originalPalette[] = textures[textureId].palette;
+                int originalPalette[] = textures[textureId].getImage().palette;
                 currentPalette[textureId] = new int[originalPalette.length];
                 for (int colourId = 0; colourId < originalPalette.length; colourId++) {
                     currentPalette[textureId][colourId] = adjust_brightness(originalPalette[colourId], brightness);
@@ -2416,7 +2420,7 @@ public final class Rasterizer3D extends Rasterizer2D {
     public static int COSINE[];
     public static int scanOffsets[];
     private static int textureCount;
-    public static IndexedImage textures[] = new IndexedImage[texture_amt];
+    public static Texture textures[] = new Texture[texture_amt];
     private static boolean[] textureIsTransparant = new boolean[texture_amt];
     private static int[] averageTextureColours = new int[texture_amt];
     private static int textureRequestBufferPointer;

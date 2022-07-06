@@ -1103,10 +1103,10 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 		GL43C.glClear(GL43C.GL_COLOR_BUFFER_BIT);
 
 		// Draw 3d scene
-		final TextureProvider textureProvider = client.getTextureProvider();
 		final GameState gameState = client.getGameState();
-		if (textureProvider != null && gameState.getState() >= GameState.LOADING.getState())
+		if (gameState.getState() >= GameState.LOADING.getState())
 		{
+			final TextureProvider textureProvider = client.getTextureProvider();
 			if (textureArrayId == -1)
 			{
 				// lazy init textures as they may not be loaded at plugin start.
