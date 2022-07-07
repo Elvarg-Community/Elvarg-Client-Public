@@ -3971,23 +3971,23 @@ public class Client extends GameApplet implements RSClient {
 			drawRedStones();
 			drawSideIcons();
 		}
-		if (showTabComponents) {
+        if (showTabComponents) {
             int x = frameMode == ScreenMode.FIXED ? xOffset + 31 : frameWidth - 215;
             int y = frameMode == ScreenMode.FIXED ? yOffset + 37 : frameHeight - 299;
-			if (stackSideStones) {
-				x = frameWidth - 197;
-				y = frameWidth >= 1000 ? frameHeight - 303 : frameHeight - 340;
-			}
-			try {
+            if (stackSideStones && frameMode != ScreenMode.FIXED) {
+                x = frameWidth - 197;
+                y = frameWidth >= 1000 ? frameHeight - 303 : frameHeight - 340;
+            }
+            try {
                 if (overlayInterfaceId != -1) {
                     drawInterface(0, x, Widget.interfaceCache[overlayInterfaceId], y);
                 } else if (tabInterfaceIDs[tabId] != -1) {
                     drawInterface(0, x, Widget.interfaceCache[tabInterfaceIDs[tabId]], y);
                 }
             } catch (Exception ex) {
-            	ex.printStackTrace();
+
             }
-		}
+        }
 		if (menuOpen) {
 			drawMenu(0, 0);
 		} else {
