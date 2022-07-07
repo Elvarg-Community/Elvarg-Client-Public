@@ -24,7 +24,7 @@ public final class AreaDefinition {
     public int fontColor = -1;
     public int field3297 = -1;
     public String actions[];
-    public int field3310 = -1;
+    public int fontSize = -1;
 
 
     private AreaDefinition() {
@@ -81,13 +81,14 @@ public final class AreaDefinition {
         if (area >= 0) {
             area_data.currentPosition = indices[area];
             data.readValues(area_data);
+
+
             if (!sprites.containsKey(data.spriteId)) {
                 try {
                     sprites.put(data.spriteId, new Sprite(Client.instance.mediaStreamLoader, "mapfunction", data.spriteId));
                 } catch (Exception e) {
                     System.out.println("Missing Sprite: " + data.spriteId + " Using Shop Icon");
-                    Sprite mapfunction = sprites.put(data.spriteId, new Sprite(Client.instance.mediaStreamLoader, "mapfunction", 0));
-                    sprites.put(data.id,mapfunction);
+                    sprites.put(data.spriteId, new Sprite(Client.instance.mediaStreamLoader, "mapfunction", 0));
                 }
             }
         }
@@ -110,13 +111,7 @@ public final class AreaDefinition {
             else if (opCode == 5)
                 field3297 = buffer.readInt();
             else if (opCode == 6)
-                fontColor = buffer.readInt();
-            else if (opCode >= 6 && opCode < 11) {
-                if (actions  == null)
-                    actions = new String[5];
-                actions[opCode - 6] = buffer.readNewString();
-            } else if (opCode == 12)
-                field3310 = buffer.readInt();
+                fontSize = buffer.readUnsignedByte();
 
         } while (true);
     }
