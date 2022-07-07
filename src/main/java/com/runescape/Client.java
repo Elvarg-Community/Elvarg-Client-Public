@@ -1841,7 +1841,7 @@ public class Client extends GameApplet implements RSClient {
         if (showChatComponents) {
             if ((changeChatArea && frameMode != ScreenMode.FIXED) && !chatStateCheck()) {
                 Rasterizer2D.drawHorizontalLine(7, 7 + yOffset, 506, 0x575757);
-                Rasterizer2D.drawTransparentGradientBox(7, 7 + yOffset, 510, 130, 0x00000000, 0x5A000000,255);
+                Rasterizer2D.drawTransparentGradientBox(7, 7 + yOffset, 510, 130, 0x00000000, 0x5A000000,20);
             } else {
                 spriteCache.draw(20, 0, yOffset);
             }
