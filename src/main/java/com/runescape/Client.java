@@ -12776,8 +12776,8 @@ public class Client extends GameApplet implements RSClient {
         l = i1 * j1 + l * k1 >> 16;
         i1 = j2;
         if (l >= 50) {
-            spriteDrawX = Rasterizer3D.originViewX * Rasterizer3D.fieldOfView / l;
-            spriteDrawY = Rasterizer3D.originViewY * Rasterizer3D.fieldOfView / l;
+            spriteDrawX = (Rasterizer3D.originViewX + i * Rasterizer3D.fieldOfView / l) + 4;
+            spriteDrawY = Rasterizer3D.originViewY + i1 * Rasterizer3D.fieldOfView / l;
         } else {
             spriteDrawX = -1;
             spriteDrawY = -1;
