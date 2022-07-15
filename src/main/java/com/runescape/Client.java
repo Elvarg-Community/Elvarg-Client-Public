@@ -15397,9 +15397,9 @@ public class Client extends GameApplet implements RSClient {
 
                 if (xp_added[i][2] >= 0) {
 
-                    int transparency = 256;
+                    int transparency = 255;
                     if (xp_added[i][2] > 120) {
-                        transparency = (10 - (xp_added[i][2] - 120)) * 256 / 20;
+                        transparency = (10 - (xp_added[i][2] - 120)) * 255 / 20;
                     }
 
                     if (transparency > 0 && xp_added[i][1] != 0) {
