@@ -1482,6 +1482,12 @@ public class HdPlugin extends Plugin implements DrawCallbacks
 
 	private void prepareInterfaceTexture(int canvasWidth, int canvasHeight)
 	{
+		final boolean fixed = client.isResized();
+		if (!fixed) {
+			canvasWidth = client.getRealDimensions().width;
+			canvasHeight = client.getRealDimensions().height;
+		}
+
 		if (canvasWidth != lastCanvasWidth || canvasHeight != lastCanvasHeight)
 		{
 			lastCanvasWidth = canvasWidth;
