@@ -1,5 +1,7 @@
 package com.runescape.scene;
+
 import com.runescape.Client;
+import com.runescape.cache.ResourceProvider;
 import com.runescape.cache.def.FloorDefinition;
 import com.runescape.cache.def.ObjectDefinition;
 import com.runescape.draw.Rasterizer3D;
@@ -83,9 +85,10 @@ public final class MapRegion {
                 }
 
             }
+            int mapLight = Client.instance.isHdMinimapEnabled() ? 52 : 96;
             for (int z = 0; z < 4; z++) {
                 byte shading[][] = this.shading[z];
-                byte byte0 = 96;
+
                 char diffusion = '\u0300';
                 byte lightX = -50;
                 byte lightY = -10;
@@ -100,7 +103,7 @@ public final class MapRegion {
                         int k12 = (k6 << 8) / j9;
                         int l13 = 0x10000 / j9;
                         int j15 = (l7 << 8) / j9;
-                        int j16 = byte0 + (lightX * k12 + lightY * l13 + lightZ * j15) / l3;
+                        int j16 = 96 + (lightX * k12 + lightY * l13 + lightZ * j15) / l3;
                         int j17 = (shading[j5 - 1][j4] >> 2) + (shading[j5 + 1][j4] >> 3) + (shading[j5][j4 - 1] >> 2) + (shading[j5][j4 + 1] >> 3) + (shading[j5][j4] >> 1);
                         tileLighting[j5][j4] = j16 - j17;
                     }
@@ -207,8 +210,8 @@ public final class MapRegion {
                                         if (flag && j19 == k19 && j19 == l19 && j19 == i20)
                                             anIntArrayArrayArray135[z][l6][k17] |= 0x924;
                                     }
-                                    int mapLight = Client.instance.isHdMinimapEnabled() ? 50 : 96;
                                     int i22 = 0;
+
                                     if (j21 != -1)
                                         i22 = Rasterizer3D.hslToRgb[method187(k21, mapLight)];
                                     if (i19 == 0) {
@@ -452,22 +455,17 @@ public final class MapRegion {
         if (z < maximumPlane) {
             maximumPlane = z;
         }
-        int center = tileHeights[z][x][y];
-        int east = tileHeights[z][x + 1][y];
-        int northEast = tileHeights[z][x + 1][y + 1];
-        int north = tileHeights[z][x][y + 1];
-        int mean = center + east + northEast + north >> 2;
         int mX = Client.instance.currentRegionX - 6;
         int mY = Client.instance.currentRegionY - 6;
         int actualX = mX * 8 + x;
         int actualY = mY * 8 + y;
         int actualH = z;
+
         ObjectDefinition definition = ObjectDefinition.lookup(id);
 
-        /**
-         * Prevent objects from being drawn below.
-         * It can be any type of object, including walls.
-         */
+        boolean flag = rotation == 1 || rotation == 3;
+        int sizeY = flag ? definition.sizeY : definition.sizeX;
+        int sizeX = flag ? definition.sizeX : definition.sizeY;
 
         if(actualH == 0) {
             //EDGEVILLE HOUSE IN FRONT OF BANK WALLS REMOVAL
@@ -476,6 +474,20 @@ public final class MapRegion {
             }
         }
 
+        flag = 104 >= sizeY + x;
+        int modX = flag ? x + (sizeY >> 1) : x;
+        int modX1 = flag ? x + (sizeY + 1 >> 1) : x + 1;
+
+        flag = 104 >= sizeX + y;
+        int modY = flag ? (sizeX >> 1) + y : y;
+        int modY1 = flag ? y + (sizeX + 1 >> 1) : y + 1;
+
+        int center = tileHeights[z][modX][modY];
+        int east = tileHeights[z][modX1][modY];
+        int northEast = tileHeights[z][modX1][modY1];
+        int north = tileHeights[z][modX][modY1];
+
+        int mean = center + east + northEast + north >> 2;
 
         long key = (long) ((long) rotation << 20 | (long) type << 14 | ((long) y << 7 | x) + 0x40000000);
         if (!definition.isInteractive)
@@ -486,28 +498,35 @@ public final class MapRegion {
         key |= (long) id << 32;
         byte config = (byte) ((rotation << 6) + type);
         if (type == 22) {
-            if (lowMem && !definition.isInteractive && !definition.obstructsGround)
+            if (lowMem && !definition.isInteractive && !definition.obstructsGround) {
                 return;
+            }
             Object obj;
-            if (definition.animation == -1 && definition.configs == null)
+            if (definition.animation == -1 && definition.configs == null) {
                 obj = definition.modelAt(22, rotation, center, east, northEast, north, -1);
-            else
-                obj = new SceneObject(id, rotation, 22, east, northEast, center, north, definition.animation, true);
+            } else {
+                obj = new SceneObject(id, rotation, 22, east, northEast, center, north, definition.animation,
+                        true);
+            }
             scene.addGroundDecoration(z, mean, y, ((Renderable) (obj)), config, key, x);
-            if (definition.interactType && definition.isInteractive && class11 != null)
+            if (definition.interactType && definition.isInteractive && class11 != null) {
                 class11.block(x, y);
+            }
             return;
         }
         if (type == 10 || type == 11) {
             Object obj1;
-            if (definition.animation == -1 && definition.configs == null)
+            if (definition.animation == -1 && definition.configs == null) {
                 obj1 = definition.modelAt(10, rotation, center, east, northEast, north, -1);
-            else
-                obj1 = new SceneObject(id, rotation, 10, east, northEast, center, north, definition.animation, true);
+            } else {
+                obj1 = new SceneObject(id, rotation, 10, east, northEast, center, north, definition.animation,
+                        true);
+            }
             if (obj1 != null) {
                 int i5 = 0;
-                if (type == 11)
+                if (type == 11) {
                     i5 += 256;
+                }
                 int j4;
                 int l4;
                 if (rotation == 1 || rotation == 3) {
@@ -517,20 +536,24 @@ public final class MapRegion {
                     j4 = definition.sizeX;
                     l4 = definition.sizeY;
                 }
-                if (scene.addTiledObject(key, config, mean, l4, ((Renderable) (obj1)), j4, z, i5, y, x) && definition.castsShadow) {
+                if (scene.addTiledObject(key, config, mean, l4, ((Renderable) (obj1)), j4, z, i5, y, x)
+                        && definition.castsShadow) {
                     Model model;
-                    if (obj1 instanceof Model)
+                    if (obj1 instanceof Model) {
                         model = (Model) obj1;
-                    else
+                    } else {
                         model = definition.modelAt(10, rotation, center, east, northEast, north, -1);
+                    }
                     if (model != null) {
                         for (int j5 = 0; j5 <= j4; j5++) {
                             for (int k5 = 0; k5 <= l4; k5++) {
                                 int l5 = model.maxVertexDistanceXZPlane / 4;
-                                if (l5 > 30)
+                                if (l5 > 30) {
                                     l5 = 30;
-                                if (l5 > shading[z][x + j5][y + k5])
+                                }
+                                if (l5 > shading[z][x + j5][y + k5]) {
                                     shading[z][x + j5][y + k5] = (byte) l5;
+                                }
                             }
 
                         }
@@ -538,83 +561,104 @@ public final class MapRegion {
                     }
                 }
             }
-            if (definition.interactType && class11 != null)
+            if (definition.interactType && class11 != null) {
                 class11.method212(definition.blocksProjectile, definition.sizeX, definition.sizeY, x, y, rotation);
+            }
             return;
         }
         if (type >= 12) {
             Object obj2;
-            if (definition.animation == -1 && definition.configs == null)
+            if (definition.animation == -1 && definition.configs == null) {
                 obj2 = definition.modelAt(type, rotation, center, east, northEast, north, -1);
-            else
-                obj2 = new SceneObject(id, rotation, type, east, northEast, center, north, definition.animation, true);
+            } else {
+                obj2 = new SceneObject(id, rotation, type, east, northEast, center, north, definition.animation,
+                        true);
+            }
             scene.addTiledObject(key, config, mean, 1, ((Renderable) (obj2)), 1, z, 0, y, x);
-            if (type >= 12 && type <= 17 && type != 13 && z > 0)
+            if (type <= 17 && type != 13 && z > 0) {
                 anIntArrayArrayArray135[z][x][y] |= 0x924;
-            if (definition.interactType && class11 != null)
-                class11.method212(definition.blocksProjectile, definition.sizeX, definition.sizeY, x, y, rotation);
+            }
+            if (definition.occludes && class11 != null) {
+                class11.method212(definition.blocksProjectile, definition.sizeX, definition.sizeY,
+                        x, y, rotation);
+            }
             return;
         }
         if (type == 0) {
             Object obj3;
-            if (definition.animation == -1 && definition.configs == null)
+            if (definition.animation == -1 && definition.configs == null) {
                 obj3 = definition.modelAt(0, rotation, center, east, northEast, north, -1);
-            else
-                obj3 = new SceneObject(id, rotation, 0, east, northEast, center, north, definition.animation, true);
-            scene.addWallObject(anIntArray152[rotation], ((Renderable) (obj3)), key, y, config, x, null, mean, 0, z);
+            } else {
+                obj3 = new SceneObject(id, rotation, 0, east, northEast, center, north, definition.animation,
+                        true);
+            }
+            scene.addWallObject(anIntArray152[rotation], ((Renderable) (obj3)), key, y, config, x, null, mean,
+                    0, z);
             if (rotation == 0) {
                 if (definition.castsShadow) {
                     shading[z][x][y] = 50;
                     shading[z][x][y + 1] = 50;
                 }
-                if (definition.occludes)
+                if (definition.occludes) {
                     anIntArrayArrayArray135[z][x][y] |= 0x249;
+                }
             } else if (rotation == 1) {
                 if (definition.castsShadow) {
                     shading[z][x][y + 1] = 50;
                     shading[z][x + 1][y + 1] = 50;
                 }
-                if (definition.occludes)
+                if (definition.occludes) {
                     anIntArrayArrayArray135[z][x][y + 1] |= 0x492;
+                }
             } else if (rotation == 2) {
                 if (definition.castsShadow) {
                     shading[z][x + 1][y] = 50;
                     shading[z][x + 1][y + 1] = 50;
                 }
-                if (definition.occludes)
+                if (definition.occludes) {
                     anIntArrayArrayArray135[z][x + 1][y] |= 0x249;
-            } else if (rotation == 3) {
+                }
+            } else {
                 if (definition.castsShadow) {
                     shading[z][x][y] = 50;
                     shading[z][x + 1][y] = 50;
                 }
-                if (definition.occludes)
+                if (definition.occludes) {
                     anIntArrayArrayArray135[z][x][y] |= 0x492;
+                }
             }
-            if (definition.interactType && class11 != null)
+            if (definition.occludes && class11 != null) {
                 class11.method211(y, rotation, x, type, definition.blocksProjectile);
-            if (definition.decorDisplacement != 16)
+            }
+            if (definition.decorDisplacement != 16) {
                 scene.method290(y, definition.decorDisplacement, x, z);
+            }
             return;
         }
         if (type == 1) {
             Object obj4;
-            if (definition.animation == -1 && definition.configs == null)
+            if (definition.animation == -1 && definition.configs == null) {
                 obj4 = definition.modelAt(1, rotation, center, east, northEast, north, -1);
-            else
-                obj4 = new SceneObject(id, rotation, 1, east, northEast, center, north, definition.animation, true);
-            scene.addWallObject(anIntArray140[rotation], ((Renderable) (obj4)), key, y, config, x, null, mean, 0, z);
-            if (definition.castsShadow)
-                if (rotation == 0)
+            } else {
+                obj4 = new SceneObject(id, rotation, 1, east, northEast, center, north, definition.animation,
+                        true);
+            }
+            scene.addWallObject(anIntArray140[rotation], ((Renderable) (obj4)), key, y, config, x, null, mean,
+                    0, z);
+            if (definition.castsShadow) {
+                if (rotation == 0) {
                     shading[z][x][y + 1] = 50;
-                else if (rotation == 1)
+                } else if (rotation == 1) {
                     shading[z][x + 1][y + 1] = 50;
-                else if (rotation == 2)
+                } else if (rotation == 2) {
                     shading[z][x + 1][y] = 50;
-                else if (rotation == 3)
+                } else {
                     shading[z][x][y] = 50;
-            if (definition.interactType && class11 != null)
+                }
+            }
+            if (definition.occludes && class11 != null) {
                 class11.method211(y, rotation, x, type, definition.blocksProjectile);
+            }
             return;
         }
         if (type == 2) {
@@ -625,11 +669,14 @@ public final class MapRegion {
                 obj11 = definition.modelAt(2, 4 + rotation, center, east, northEast, north, -1);
                 obj12 = definition.modelAt(2, i3, center, east, northEast, north, -1);
             } else {
-                obj11 = new SceneObject(id, 4 + rotation, 2, east, northEast, center, north, definition.animation, true);
-                obj12 = new SceneObject(id, i3, 2, east, northEast, center, north, definition.animation, true);
+                obj11 = new SceneObject(id, 4 + rotation, 2, east, northEast, center, north, definition.animation,
+                        true);
+                obj12 = new SceneObject(id, i3, 2, east, northEast, center, north, definition.animation,
+                        true);
             }
-            scene.addWallObject(anIntArray152[rotation], ((Renderable) (obj11)), key, y, config, x, ((Renderable) (obj12)), mean, anIntArray152[i3], z);
-            if (definition.occludes)
+            scene.addWallObject(anIntArray152[rotation], ((Renderable) (obj11)), key, y, config, x,
+                    ((Renderable) (obj12)), mean, anIntArray152[i3], z);
+            if (definition.occludes) {
                 if (rotation == 0) {
                     anIntArrayArrayArray135[z][x][y] |= 0x249;
                     anIntArrayArrayArray135[z][x][y + 1] |= 0x492;
@@ -639,48 +686,61 @@ public final class MapRegion {
                 } else if (rotation == 2) {
                     anIntArrayArrayArray135[z][x + 1][y] |= 0x249;
                     anIntArrayArrayArray135[z][x][y] |= 0x492;
-                } else if (rotation == 3) {
+                } else {
                     anIntArrayArrayArray135[z][x][y] |= 0x492;
                     anIntArrayArrayArray135[z][x][y] |= 0x249;
                 }
-            if (definition.interactType && class11 != null)
+            }
+            if (definition.occludes && class11 != null) {
                 class11.method211(y, rotation, x, type, definition.blocksProjectile);
-            if (definition.decorDisplacement != 16)
+            }
+            if (definition.decorDisplacement != 16) {
                 scene.method290(y, definition.decorDisplacement, x, z);
+            }
             return;
         }
         if (type == 3) {
             Object obj5;
-            if (definition.animation == -1 && definition.configs == null)
+            if (definition.animation == -1 && definition.configs == null) {
                 obj5 = definition.modelAt(3, rotation, center, east, northEast, north, -1);
-            else
-                obj5 = new SceneObject(id, rotation, 3, east, northEast, center, north, definition.animation, true);
-            scene.addWallObject(anIntArray140[rotation], ((Renderable) (obj5)), key, y, config, x, null, mean, 0, z);
-            if (definition.castsShadow)
-                if (rotation == 0)
+            } else {
+                obj5 = new SceneObject(id, rotation, 3, east, northEast, center, north, definition.animation,
+                        true);
+            }
+            scene.addWallObject(anIntArray140[rotation], ((Renderable) (obj5)), key, y, config, x, null, mean,
+                    0, z);
+            if (definition.castsShadow) {
+                if (rotation == 0) {
                     shading[z][x][y + 1] = 50;
-                else if (rotation == 1)
+                } else if (rotation == 1) {
                     shading[z][x + 1][y + 1] = 50;
-                else if (rotation == 2)
+                } else if (rotation == 2) {
                     shading[z][x + 1][y] = 50;
-                else if (rotation == 3)
+                } else {
                     shading[z][x][y] = 50;
-            if (definition.interactType && class11 != null)
+                }
+            }
+            if (definition.occludes && class11 != null) {
                 class11.method211(y, rotation, x, type, definition.blocksProjectile);
+            }
             return;
         }
         if (type == 9) {
             Object obj6;
-            if (definition.animation == -1 && definition.configs == null)
+            if (definition.animation == -1 && definition.configs == null) {
                 obj6 = definition.modelAt(type, rotation, center, east, northEast, north, -1);
-            else
-                obj6 = new SceneObject(id, rotation, type, east, northEast, center, north, definition.animation, true);
+            } else {
+                obj6 = new SceneObject(id, rotation, type, east, northEast, center, north, definition.animation,
+                        true);
+            }
             scene.addTiledObject(key, config, mean, 1, ((Renderable) (obj6)), 1, z, 0, y, x);
-            if (definition.interactType && class11 != null)
-                class11.method212(definition.blocksProjectile, definition.sizeX, definition.sizeY, x, y, rotation);
+            if (definition.occludes && class11 != null) {
+                class11.method212(definition.blocksProjectile, definition.sizeX, definition.sizeY,
+                        x, y, rotation);
+            }
             return;
         }
-        if (definition.contouredGround)
+        if (definition.contouredGround) {
             if (rotation == 1) {
                 int j3 = north;
                 north = northEast;
@@ -701,52 +761,66 @@ public final class MapRegion {
                 east = northEast;
                 northEast = l3;
             }
+        }
         if (type == 4) {
             Object obj7;
-            if (definition.animation == -1 && definition.configs == null)
+            if (definition.animation == -1 && definition.configs == null) {
                 obj7 = definition.modelAt(4, 0, center, east, northEast, north, -1);
-            else
-                obj7 = new SceneObject(id, 0, 4, east, northEast, center, north, definition.animation, true);
-            scene.addWallDecoration(key, y, rotation * 512, z, 0, mean, ((Renderable) (obj7)), x, config, 0, anIntArray152[rotation]);
+            } else {
+                obj7 = new SceneObject(id, 0, 4, east, northEast, center, north, definition.animation,
+                        true);
+            }
+            scene.addWallDecoration(key, y, rotation * 512, z, 0, mean, ((Renderable) (obj7)), x, config, 0,
+                    anIntArray152[rotation]);
             return;
         }
         if (type == 5) {
             int i4 = 16;
             long k4 = scene.getWallObjectUid(z, x, y);
-            if (k4 > 0)
+            if (k4 > 0) {
                 i4 = ObjectDefinition.lookup(ObjectKeyUtil.getObjectId(k4)).decorDisplacement;
+            }
             Object obj13;
-            if (definition.animation == -1 && definition.configs == null)
+            if (definition.animation == -1 && definition.configs == null) {
                 obj13 = definition.modelAt(4, 0, center, east, northEast, north, -1);
-            else
-                obj13 = new SceneObject(id, 0, 4, east, northEast, center, north, definition.animation, true);
-            scene.addWallDecoration(key, y, rotation * 512, z, COSINE_VERTICES[rotation] * i4, mean, ((Renderable) (obj13)), x, config, SINE_VERTICIES[rotation] * i4, anIntArray152[rotation]);
+            } else {
+                obj13 = new SceneObject(id, 0, 4, east, northEast, center, north, definition.animation,
+                        true);
+            }
+            scene.addWallDecoration(key, y, rotation * 512, z, COSINE_VERTICES[rotation] * i4, mean,
+                    ((Renderable) (obj13)), x, config, SINE_VERTICIES[rotation] * i4, anIntArray152[rotation]);
             return;
         }
         if (type == 6) {
             Object obj8;
-            if (definition.animation == -1 && definition.configs == null)
+            if (definition.animation == -1 && definition.configs == null) {
                 obj8 = definition.modelAt(4, 0, center, east, northEast, north, -1);
-            else
-                obj8 = new SceneObject(id, 0, 4, east, northEast, center, north, definition.animation, true);
+            } else {
+                obj8 = new SceneObject(id, 0, 4, east, northEast, center, north, definition.animation,
+                        true);
+            }
             scene.addWallDecoration(key, y, rotation, z, 0, mean, ((Renderable) (obj8)), x, config, 0, 256);
             return;
         }
         if (type == 7) {
             Object obj9;
-            if (definition.animation == -1 && definition.configs == null)
+            if (definition.animation == -1 && definition.configs == null) {
                 obj9 = definition.modelAt(4, 0, center, east, northEast, north, -1);
-            else
-                obj9 = new SceneObject(id, 0, 4, east, northEast, center, north, definition.animation, true);
+            } else {
+                obj9 = new SceneObject(id, 0, 4, east, northEast, center, north, definition.animation,
+                        true);
+            }
             scene.addWallDecoration(key, y, rotation, z, 0, mean, ((Renderable) (obj9)), x, config, 0, 512);
             return;
         }
         if (type == 8) {
             Object obj10;
-            if (definition.animation == -1 && definition.configs == null)
+            if (definition.animation == -1 && definition.configs == null) {
                 obj10 = definition.modelAt(4, 0, center, east, northEast, north, -1);
-            else
-                obj10 = new SceneObject(id, 0, 4, east, northEast, center, north, definition.animation, true);
+            } else {
+                obj10 = new SceneObject(id, 0, 4, east, northEast, center, north, definition.animation,
+                        true);
+            }
             scene.addWallDecoration(key, y, rotation, z, 0, mean, ((Renderable) (obj10)), x, config, 0, 768);
         }
     }
@@ -954,6 +1028,8 @@ public final class MapRegion {
         return (a * (0x10000 - cosine) >> 16) + (b * cosine >> 16);
     }
 
+
+
     private int checkedLight(int color, int light) {
         if (color == -2) {
             return 12345678;
@@ -1008,192 +1084,231 @@ public final class MapRegion {
         return corners / 16 + sides / 8 + center / 4;
     }
 
-    public static void placeObject(SceneGraph worldController, int i, int j, int k, int l, CollisionMap class11, int ai[][][], int i1, int j1, int k1) {
-        int l1 = ai[l][i1][j];
-        int i2 = ai[l][i1 + 1][j];
-        int j2 = ai[l][i1 + 1][j + 1];
-        int k2 = ai[l][i1][j + 1];
+    public static void placeObject(SceneGraph worldController, int rotation, int regionY, int type, int plane,
+                                   CollisionMap class11, int[][][] ai, int regionX, int j1, int k1) {
+        int l1 = ai[plane][regionX][regionY];
+        int i2 = ai[plane][regionX + 1][regionY];
+        int j2 = ai[plane][regionX + 1][regionY + 1];
+        int k2 = ai[plane][regionX][regionY + 1];
         int l2 = l1 + i2 + j2 + k2 >> 2;
-        ObjectDefinition class46 = ObjectDefinition.lookup(j1);
-        int i3 = i1 + (j << 7) + (j1 << 14) + 0x40000000;
-        if (!class46.isInteractive)
-            i3 += 0x80000000;
-        byte byte1 = (byte) ((i << 6) + k);
-        if (k == 22) {
+        ObjectDefinition definition = ObjectDefinition.lookup(j1);
+
+        long key = (long) ((long) rotation << 20 | (long) type << 14 | ((long) regionY << 7 | regionX) + 0x40000000);
+        if (!definition.isInteractive)
+            key |= ~0x7fffffffffffffffL;
+
+        if(definition.supportItems == 1) {
+            key |= 0x400000L;
+        }
+        key |= (long) j1 << 32;
+        byte byte1 = (byte) ((rotation << 6) + type);
+        if (type == 22) {
             Object obj;
-            if (class46.animation == -1 && class46.configs == null)
-                obj = class46.modelAt(22, i, l1, i2, j2, k2, -1);
-            else
-                obj = new SceneObject(j1, i, 22, i2, j2, l1, k2, class46.animation, true);
-            worldController.addGroundDecoration(k1, l2, j, ((Renderable) (obj)), byte1, i3, i1);
-            if (class46.interactType && class46.isInteractive)
-                class11.block(i1, j);
+            if (definition.animation == -1 && definition.configs == null) {
+                obj = definition.modelAt(22, rotation, l1, i2, j2, k2, -1);
+            } else {
+                obj = new SceneObject(j1, rotation, 22, i2, j2, l1, k2, definition.animation, true);
+            }
+            worldController.addGroundDecoration(k1, l2, regionY, ((Renderable) (obj)), byte1, key, regionX);
+            if (definition.occludes && definition.isInteractive) {
+                class11.block(regionX, regionY);
+            }
             return;
         }
-        if (k == 10 || k == 11) {
+        if (type == 10 || type == 11) {
             Object obj1;
-            if (class46.animation == -1 && class46.configs == null)
-                obj1 = class46.modelAt(10, i, l1, i2, j2, k2, -1);
-            else
-                obj1 = new SceneObject(j1, i, 10, i2, j2, l1, k2, class46.animation, true);
+            if (definition.animation == -1 && definition.configs == null) {
+                obj1 = definition.modelAt(10, rotation, l1, i2, j2, k2, -1);
+            } else {
+                obj1 = new SceneObject(j1, rotation, 10, i2, j2, l1, k2, definition.animation, true);
+            }
             if (obj1 != null) {
                 int j5 = 0;
-                if (k == 11)
+                if (type == 11) {
                     j5 += 256;
+                }
                 int k4;
                 int i5;
-                if (i == 1 || i == 3) {
-                    k4 = class46.sizeY;
-                    i5 = class46.sizeX;
+                if (rotation == 1 || rotation == 3) {
+                    k4 = definition.sizeY;
+                    i5 = definition.sizeX;
                 } else {
-                    k4 = class46.sizeX;
-                    i5 = class46.sizeY;
+                    k4 = definition.sizeX;
+                    i5 = definition.sizeY;
                 }
-                worldController.addTiledObject(i3, byte1, l2, i5, ((Renderable) (obj1)), k4, k1, j5, j, i1);
+                worldController.addTiledObject(key, byte1, l2, i5, ((Renderable) (obj1)), k4, k1, j5, regionY, regionX);
             }
-            if (class46.interactType)
-                class11.method212(class46.blocksProjectile, class46.sizeX, class46.sizeY, i1, j, i);
+            if (definition.occludes) {
+                class11.method212(definition.blocksProjectile, definition.sizeX, definition.sizeY, regionX, regionY, rotation);
+            }
             return;
         }
-        if (k >= 12) {
+        if (type >= 12) {
             Object obj2;
-            if (class46.animation == -1 && class46.configs == null)
-                obj2 = class46.modelAt(k, i, l1, i2, j2, k2, -1);
-            else
-                obj2 = new SceneObject(j1, i, k, i2, j2, l1, k2, class46.animation, true);
-            worldController.addTiledObject(i3, byte1, l2, 1, ((Renderable) (obj2)), 1, k1, 0, j, i1);
-            if (class46.interactType)
-                class11.method212(class46.blocksProjectile, class46.sizeX, class46.sizeY, i1, j, i);
+            if (definition.animation == -1 && definition.configs == null) {
+                obj2 = definition.modelAt(type, rotation, l1, i2, j2, k2, -1);
+            } else {
+                obj2 = new SceneObject(j1, rotation, type, i2, j2, l1, k2, definition.animation, true);
+            }
+            worldController.addTiledObject(key, byte1, l2, 1, ((Renderable) (obj2)), 1, k1, 0, regionY, regionX);
+            if (definition.occludes) {
+                class11.method212(definition.blocksProjectile, definition.sizeX, definition.sizeY, regionX, regionY, rotation);
+            }
             return;
         }
-        if (k == 0) {
+        if (type == 0) {
             Object obj3;
-            if (class46.animation == -1 && class46.configs == null)
-                obj3 = class46.modelAt(0, i, l1, i2, j2, k2, -1);
-            else
-                obj3 = new SceneObject(j1, i, 0, i2, j2, l1, k2, class46.animation, true);
-            worldController.addWallObject(anIntArray152[i], ((Renderable) (obj3)), i3, j, byte1, i1, null, l2, 0, k1);
-            if (class46.interactType)
-                class11.method211(j, i, i1, k, class46.blocksProjectile);
+            if (definition.animation == -1 && definition.configs == null) {
+                obj3 = definition.modelAt(0, rotation, l1, i2, j2, k2, -1);
+            } else {
+                obj3 = new SceneObject(j1, rotation, 0, i2, j2, l1, k2, definition.animation, true);
+            }
+            worldController.addWallObject(anIntArray152[rotation], ((Renderable) (obj3)), key, regionY, byte1, regionX, null,
+                    l2, 0, k1);
+            if (definition.occludes) {
+                class11.method211(regionY, rotation, regionX, type, definition.blocksProjectile);
+            }
             return;
         }
-        if (k == 1) {
+        if (type == 1) {
             Object obj4;
-            if (class46.animation == -1 && class46.configs == null)
-                obj4 = class46.modelAt(1, i, l1, i2, j2, k2, -1);
-            else
-                obj4 = new SceneObject(j1, i, 1, i2, j2, l1, k2, class46.animation, true);
-            worldController.addWallObject(anIntArray140[i], ((Renderable) (obj4)), i3, j, byte1, i1, null, l2, 0, k1);
-            if (class46.interactType)
-                class11.method211(j, i, i1, k, class46.blocksProjectile);
+            if (definition.animation == -1 && definition.configs == null) {
+                obj4 = definition.modelAt(1, rotation, l1, i2, j2, k2, -1);
+            } else {
+                obj4 = new SceneObject(j1, rotation, 1, i2, j2, l1, k2, definition.animation, true);
+            }
+            worldController.addWallObject(anIntArray140[rotation], ((Renderable) (obj4)), key, regionY, byte1, regionX, null,
+                    l2, 0, k1);
+            if (definition.occludes) {
+                class11.method211(regionY, rotation, regionX, type, definition.blocksProjectile);
+            }
             return;
         }
-        if (k == 2) {
-            int j3 = i + 1 & 3;
+        if (type == 2) {
+            int j3 = rotation + 1 & 3;
             Object obj11;
             Object obj12;
-            if (class46.animation == -1 && class46.configs == null) {
-                obj11 = class46.modelAt(2, 4 + i, l1, i2, j2, k2, -1);
-                obj12 = class46.modelAt(2, j3, l1, i2, j2, k2, -1);
+            if (definition.animation == -1 && definition.configs == null) {
+                obj11 = definition.modelAt(2, 4 + rotation, l1, i2, j2, k2, -1);
+                obj12 = definition.modelAt(2, j3, l1, i2, j2, k2, -1);
             } else {
-                obj11 = new SceneObject(j1, 4 + i, 2, i2, j2, l1, k2, class46.animation, true);
-                obj12 = new SceneObject(j1, j3, 2, i2, j2, l1, k2, class46.animation, true);
+                obj11 = new SceneObject(j1, 4 + rotation, 2, i2, j2, l1, k2, definition.animation, true);
+                obj12 = new SceneObject(j1, j3, 2, i2, j2, l1, k2, definition.animation, true);
             }
-            worldController.addWallObject(anIntArray152[i], ((Renderable) (obj11)), i3, j, byte1, i1, ((Renderable) (obj12)), l2, anIntArray152[j3], k1);
-            if (class46.interactType)
-                class11.method211(j, i, i1, k, class46.blocksProjectile);
+            worldController.addWallObject(anIntArray152[rotation], ((Renderable) (obj11)), key, regionY, byte1, regionX,
+                    ((Renderable) (obj12)), l2, anIntArray152[j3], k1);
+            if (definition.occludes) {
+                class11.method211(regionY, rotation, regionX, type, definition.blocksProjectile);
+            }
             return;
         }
-        if (k == 3) {
+        if (type == 3) {
             Object obj5;
-            if (class46.animation == -1 && class46.configs == null)
-                obj5 = class46.modelAt(3, i, l1, i2, j2, k2, -1);
-            else
-                obj5 = new SceneObject(j1, i, 3, i2, j2, l1, k2, class46.animation, true);
-            worldController.addWallObject(anIntArray140[i], ((Renderable) (obj5)), i3, j, byte1, i1, null, l2, 0, k1);
-            if (class46.interactType)
-                class11.method211(j, i, i1, k, class46.blocksProjectile);
+            if (definition.animation == -1 && definition.configs == null) {
+                obj5 = definition.modelAt(3, rotation, l1, i2, j2, k2, -1);
+            } else {
+                obj5 = new SceneObject(j1, rotation, 3, i2, j2, l1, k2, definition.animation, true);
+            }
+            worldController.addWallObject(anIntArray140[rotation], ((Renderable) (obj5)), key, regionY, byte1, regionX, null,
+                    l2, 0, k1);
+            if (definition.occludes) {
+                class11.method211(regionY, rotation, regionX, type, definition.blocksProjectile);
+            }
             return;
         }
-        if (k == 9) {
+        if (type == 9) {
             Object obj6;
-            if (class46.animation == -1 && class46.configs == null)
-                obj6 = class46.modelAt(k, i, l1, i2, j2, k2, -1);
-            else
-                obj6 = new SceneObject(j1, i, k, i2, j2, l1, k2, class46.animation, true);
-            worldController.addTiledObject(i3, byte1, l2, 1, ((Renderable) (obj6)), 1, k1, 0, j, i1);
-            if (class46.interactType)
-                class11.method212(class46.blocksProjectile, class46.sizeX, class46.sizeY, i1, j, i);
+            if (definition.animation == -1 && definition.configs == null) {
+                obj6 = definition.modelAt(type, rotation, l1, i2, j2, k2, -1);
+            } else {
+                obj6 = new SceneObject(j1, rotation, type, i2, j2, l1, k2, definition.animation, true);
+            }
+            worldController.addTiledObject(key, byte1, l2, 1, ((Renderable) (obj6)), 1, k1, 0, regionY, regionX);
+            if (definition.occludes) {
+                class11.method212(definition.blocksProjectile, definition.sizeX, definition.sizeY, regionX, regionY, rotation);
+            }
             return;
         }
-        if (class46.contouredGround)
-            if (i == 1) {
+        if (definition.contouredGround) {
+            if (rotation == 1) {
                 int k3 = k2;
                 k2 = j2;
                 j2 = i2;
                 i2 = l1;
                 l1 = k3;
-            } else if (i == 2) {
+            } else if (rotation == 2) {
                 int l3 = k2;
                 k2 = i2;
                 i2 = l3;
                 l3 = j2;
                 j2 = l1;
                 l1 = l3;
-            } else if (i == 3) {
+            } else if (rotation == 3) {
                 int i4 = k2;
                 k2 = l1;
                 l1 = i2;
                 i2 = j2;
                 j2 = i4;
             }
-        if (k == 4) {
+        }
+        if (type == 4) {
             Object obj7;
-            if (class46.animation == -1 && class46.configs == null)
-                obj7 = class46.modelAt(4, 0, l1, i2, j2, k2, -1);
-            else
-                obj7 = new SceneObject(j1, 0, 4, i2, j2, l1, k2, class46.animation, true);
-            worldController.addWallDecoration(i3, j, i * 512, k1, 0, l2, ((Renderable) (obj7)), i1, byte1, 0, anIntArray152[i]);
+            if (definition.animation == -1 && definition.configs == null) {
+                obj7 = definition.modelAt(4, 0, l1, i2, j2, k2, -1);
+            } else {
+                obj7 = new SceneObject(j1, 0, 4, i2, j2, l1, k2, definition.animation, true);
+            }
+            worldController.addWallDecoration(key, regionY, rotation * 512, k1, 0, l2, ((Renderable) (obj7)), regionX, byte1,
+                    0, anIntArray152[rotation]);
             return;
         }
-        if (k == 5) {
+        if (type == 5) {
             int j4 = 16;
-            long l4 = worldController.getWallObjectUid(k1, i1, j);
-            if (l4 > 0)
+            long l4 = worldController.getWallObjectUid(k1, regionX, regionY);
+            if (l4 > 0) {
                 j4 = ObjectDefinition.lookup(ObjectKeyUtil.getObjectId(l4)).decorDisplacement;
+            }
             Object obj13;
-            if (class46.animation == -1 && class46.configs == null)
-                obj13 = class46.modelAt(4, 0, l1, i2, j2, k2, -1);
-            else
-                obj13 = new SceneObject(j1, 0, 4, i2, j2, l1, k2, class46.animation, true);
-            worldController.addWallDecoration(i3, j, i * 512, k1, COSINE_VERTICES[i] * j4, l2, ((Renderable) (obj13)), i1, byte1, SINE_VERTICIES[i] * j4, anIntArray152[i]);
+            if (definition.animation == -1 && definition.configs == null) {
+                obj13 = definition.modelAt(4, 0, l1, i2, j2, k2, -1);
+            } else {
+                obj13 = new SceneObject(j1, 0, 4, i2, j2, l1, k2, definition.animation, true);
+            }
+            worldController.addWallDecoration(key, regionY, rotation * 512, k1, COSINE_VERTICES[rotation] * j4, l2,
+                    ((Renderable) (obj13)), regionX, byte1, SINE_VERTICIES[rotation] * j4, anIntArray152[rotation]);
             return;
         }
-        if (k == 6) {
+        if (type == 6) {
             Object obj8;
-            if (class46.animation == -1 && class46.configs == null)
-                obj8 = class46.modelAt(4, 0, l1, i2, j2, k2, -1);
-            else
-                obj8 = new SceneObject(j1, 0, 4, i2, j2, l1, k2, class46.animation, true);
-            worldController.addWallDecoration(i3, j, i, k1, 0, l2, ((Renderable) (obj8)), i1, byte1, 0, 256);
+            if (definition.animation == -1 && definition.configs == null) {
+                obj8 = definition.modelAt(4, 0, l1, i2, j2, k2, -1);
+            } else {
+                obj8 = new SceneObject(j1, 0, 4, i2, j2, l1, k2, definition.animation, true);
+            }
+            worldController.addWallDecoration(key, regionY, rotation, k1, 0, l2, ((Renderable) (obj8)), regionX, byte1, 0,
+                    256);
             return;
         }
-        if (k == 7) {
+        if (type == 7) {
             Object obj9;
-            if (class46.animation == -1 && class46.configs == null)
-                obj9 = class46.modelAt(4, 0, l1, i2, j2, k2, -1);
-            else
-                obj9 = new SceneObject(j1, 0, 4, i2, j2, l1, k2, class46.animation, true);
-            worldController.addWallDecoration(i3, j, i, k1, 0, l2, ((Renderable) (obj9)), i1, byte1, 0, 512);
+            if (definition.animation == -1 && definition.configs == null) {
+                obj9 = definition.modelAt(4, 0, l1, i2, j2, k2, -1);
+            } else {
+                obj9 = new SceneObject(j1, 0, 4, i2, j2, l1, k2, definition.animation, true);
+            }
+            worldController.addWallDecoration(key, regionY, rotation, k1, 0, l2, ((Renderable) (obj9)), regionX, byte1, 0,
+                    512);
             return;
         }
-        if (k == 8) {
+        if (type == 8) {
             Object obj10;
-            if (class46.animation == -1 && class46.configs == null)
-                obj10 = class46.modelAt(4, 0, l1, i2, j2, k2, -1);
-            else
-                obj10 = new SceneObject(j1, 0, 4, i2, j2, l1, k2, class46.animation, true);
-            worldController.addWallDecoration(i3, j, i, k1, 0, l2, ((Renderable) (obj10)), i1, byte1, 0, 768);
+            if (definition.animation == -1 && definition.configs == null) {
+                obj10 = definition.modelAt(4, 0, l1, i2, j2, k2, -1);
+            } else {
+                obj10 = new SceneObject(j1, 0, 4, i2, j2, l1, k2, definition.animation, true);
+            }
+            worldController.addWallDecoration(key, regionY, rotation, k1, 0, l2, ((Renderable) (obj10)), regionX, byte1, 0,
+                    768);
         }
     }
 

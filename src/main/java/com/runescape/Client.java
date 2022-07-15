@@ -8888,7 +8888,7 @@ public class Client extends GameApplet implements RSClient {
                             super.mouseX, 207 + yOffset, super.mouseY, 0);
                 }
             }
-        } else if (stackSideStones) {
+        } else if (stackSideStones && frameMode != ScreenMode.FIXED) {
             final int yOffset = frameWidth >= 1000 ? 37 : 74;
             if (super.mouseX > frameWidth - 197 && super.mouseY > frameHeight - yOffset - 267
                     && super.mouseX < frameWidth - 7
