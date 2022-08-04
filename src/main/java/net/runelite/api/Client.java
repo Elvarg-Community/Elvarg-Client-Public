@@ -232,7 +232,7 @@ public interface Client extends GameEngine
 	AccountType getAccountType();
 
 	@Override
-	Component getCanvas();
+	Canvas getCanvas();
 
 	/**
 	 * Gets the current FPS (frames per second).

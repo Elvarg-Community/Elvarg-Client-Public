@@ -169,7 +169,7 @@ public class HdPlugin extends Plugin implements DrawCallbacks
 
 	private ComputeMode computeMode = ComputeMode.OPENGL;
 
-	private Component canvas;
+	private Canvas canvas;
 	private AWTContext awtContext;
 	private Callback debugCallback;
 

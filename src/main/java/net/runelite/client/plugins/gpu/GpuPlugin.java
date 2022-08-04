@@ -127,7 +127,7 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 
 	private ComputeMode computeMode = ComputeMode.NONE;
 
-	private Component canvas;
+	private Canvas canvas;
 	private AWTContext awtContext;
 	private Callback debugCallback;
 
