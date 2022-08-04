@@ -2,9 +2,7 @@ package com.runescape.cache.graphics.widget;
 
 import com.runescape.Client;
 import com.runescape.Configuration;
-import com.runescape.Client.ScreenMode;
 import com.runescape.cache.graphics.Dropdown;
-import com.runescape.cache.graphics.GameFont;
 import com.runescape.cache.graphics.Slider;
 import com.runescape.model.content.Keybinding;
 
@@ -233,10 +231,10 @@ public class SettingsWidget extends Widget {
                 switchSettings(button);
                 break;
             case FIXED_MODE:
-                Client.instance.frameMode(Client.ScreenMode.FIXED);
+                Client.instance.frameMode(false);
                 break;
             case RESIZABLE_MODE:
-                Client.instance.frameMode(Client.ScreenMode.RESIZABLE);
+                Client.instance.frameMode(true);
                 break;
             case SHIFT_CLICK_DROP:
                 Configuration.enableShiftClickDrop = !Configuration.enableShiftClickDrop;
@@ -261,7 +259,7 @@ public class SettingsWidget extends Widget {
                 Client.changeChatArea = !Client.changeChatArea;
                 break;
             case SIDE_STONES_ARRANGEMENT:
-            	if (Client.frameMode == ScreenMode.FIXED) {
+            	if (!Client.instance.isResized()) {
             		return;
             	}
             	Client.stackSideStones = !Client.stackSideStones;

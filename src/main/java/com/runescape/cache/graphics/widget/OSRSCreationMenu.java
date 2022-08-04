@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.runescape.Client;
-import com.runescape.Client.ScreenMode;
 import com.runescape.cache.def.ItemDefinition;
 import com.runescape.cache.graphics.GameFont;
 import com.runescape.cache.graphics.sprite.Sprite;
 import com.runescape.draw.Rasterizer2D;
+import com.runescape.engine.impl.MouseHandler;
 
 public class OSRSCreationMenu {
 
@@ -28,10 +28,10 @@ public class OSRSCreationMenu {
     }
 
     public static void draw(int x, int y) {
-        boolean fixed = Client.frameMode == ScreenMode.FIXED;
-        int mouseX = Client.instance.mouseX;
-        int mouseY = Client.instance.mouseY - y - (fixed ? 338 : 0);
-        boolean click = Client.instance.clickMode3 == 1;
+        boolean fixed = !Client.instance.isResized();
+        int mouseX = MouseHandler.mouseX;
+        int mouseY = MouseHandler.mouseY - y - (fixed ? 338 : 0);
+        boolean click = MouseHandler.clickMode3 == 1;
 
         // Titles
         Client.instance.boldText.drawCenteredText(Widget.interfaceCache[31104].defaultText, x + 145, y + 30, 0x403020, false);

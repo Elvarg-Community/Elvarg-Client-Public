@@ -18,6 +18,7 @@ import com.runescape.Client;
 import com.runescape.cache.FileArchive;
 import com.runescape.cache.graphics.IndexedImage;
 import com.runescape.draw.Rasterizer2D;
+import com.runescape.engine.impl.MouseHandler;
 import com.runescape.io.Buffer;
 import com.runescape.sign.SignLink;
 import com.runescape.util.FileUtils;
@@ -231,8 +232,8 @@ public final class Sprite extends Rasterizer2D implements RSSpritePixels {
             return;
         }
         this.drawSprite(x, y);
-        if (Client.instance.mouseX >= offsetX + x && Client.instance.mouseX <= offsetX + x + this.myWidth
-                && Client.instance.mouseY >= offsetY + y && Client.instance.mouseY <= offsetY + y + this.myHeight) {
+        if (MouseHandler.mouseX >= offsetX + x && MouseHandler.mouseX <= offsetX + x + this.myWidth
+                && MouseHandler.mouseY >= offsetY + y && MouseHandler.mouseY <= offsetY + y + this.myHeight) {
             hover.drawSprite(x, y);
         }
     }

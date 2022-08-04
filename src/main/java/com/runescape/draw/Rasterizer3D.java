@@ -906,7 +906,7 @@ public final class Rasterizer3D extends Rasterizer2D {
     }
 
     public static void drawGouraudScanline(int var0[], int var1, int var2, int var3, int var4, int var5, int var6, int var7) {
-        if (Client.instance.frameMode == Client.ScreenMode.FIXED
+        if (!Client.instance.isResized()
                 && world && var1 <= 259086) { //(512+4)+(334+4)*765
             var1 += 3064; //4+4*765
         }
@@ -1322,7 +1322,7 @@ public final class Rasterizer3D extends Rasterizer2D {
     }
 
     private static void drawFlatTexturedScanline(int dest[], int dest_off, int loops, int start_x, int end_x) {
-        if (Client.instance.frameMode == Client.ScreenMode.FIXED && world && dest_off <= 259086) {
+        if (!Client.instance.isResized() && world && dest_off <= 259086) {
             dest_off += 3064; //4+4*765
         }
 
@@ -1986,7 +1986,7 @@ public final class Rasterizer3D extends Rasterizer2D {
     }
 
     static void drawTexturedLine(int[] var0, int[] var1, int var2, int var3, int var4, int var5, int var6, int var7, int var8, int var9, int var10, int var11, int var12, int var13, int var14) {
-        if (Client.instance.frameMode == Client.ScreenMode.FIXED && world && var4 <= 259086) {
+        if (!Client.instance.isResized() && world && var4 <= 259086) {
             var4 += 3064; //4+4*765
         }
 

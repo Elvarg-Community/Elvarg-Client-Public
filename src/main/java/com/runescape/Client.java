@@ -1,5 +1,6 @@
 package com.runescape;
 
+import com.google.common.primitives.Doubles;
 import com.runescape.cache.FileArchive;
 import com.runescape.cache.FileStore;
 import com.runescape.cache.Resource;
@@ -22,11 +23,15 @@ import com.runescape.cache.graphics.widget.SettingsWidget;
 import com.runescape.cache.graphics.widget.Widget;
 import com.runescape.collection.Deque;
 import com.runescape.collection.Linkable;
+import com.runescape.draw.AbstractRasterProvider;
 import com.runescape.draw.ProducingGraphicsBuffer;
 import com.runescape.draw.Rasterizer2D;
 import com.runescape.draw.Rasterizer3D;
 import com.runescape.draw.skillorbs.SkillOrbs;
 import com.runescape.draw.teleports.TeleportChatBox;
+import com.runescape.engine.impl.KeyHandler;
+import com.runescape.engine.impl.MouseHandler;
+import com.runescape.engine.impl.MouseWheelHandler;
 import com.runescape.entity.GameObject;
 import com.runescape.entity.Item;
 import com.runescape.entity.Player;
@@ -41,6 +46,7 @@ import com.runescape.model.ChatCrown;
 import com.runescape.model.ChatMessage;
 import com.runescape.model.EffectTimer;
 import com.runescape.model.content.Keybinding;
+import com.runescape.engine.GameEngine;
 import com.runescape.net.BufferedConnection;
 import com.runescape.net.IsaacCipher;
 import com.runescape.scene.Projectile;
@@ -50,7 +56,6 @@ import com.runescape.scene.object.SpawnedObject;
 import com.runescape.scene.object.WallDecoration;
 import com.runescape.scene.object.WallObject;
 import com.runescape.sign.SignLink;
-import com.runescape.sound.SoundConstants;
 import com.runescape.sound.SoundPlayer;
 import com.runescape.sound.Track;
 import com.runescape.util.*;
@@ -61,7 +66,7 @@ import net.runelite.api.Point;
 import net.runelite.api.clan.ClanRank;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
-import net.runelite.api.events.CanvasSizeChanged;
+import net.runelite.api.events.BeforeRender;
 import net.runelite.api.events.ClientTick;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.ResizeableChanged;
@@ -94,8 +99,33 @@ import java.util.zip.CRC32;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 
+import static com.runescape.scene.SceneGraph.pitchRelaxEnabled;
+
 @Slf4j
-public class Client extends GameApplet implements RSClient {
+public class Client extends GameEngine implements RSClient {
+
+    public final void init() {
+        System.out.println("Init");
+        nodeID = 10;
+        portOffset = 0;
+        isMembers = true;
+        if (SignLink.mainapp == null) {
+            SignLink.init(this);
+        }
+        frameMode(false);
+        instance = this;
+        startThread(765, 503, 206, 1);
+        setMaxCanvasSize(765, 503);
+    }
+
+    @Override
+    protected void vmethod1099() {
+
+    }
+
+    protected final void resizeGame() {
+        Client.setBounds();
+    }
 
     public static final int TOTAL_ARCHIVES = 9;
     public static final int TITLE_ARCHIVE = 1;
@@ -187,11 +217,7 @@ public class Client extends GameApplet implements RSClient {
     private static final String validUserPassChars =
             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!\"\243$%^&*()-_=+[{]};:'@#~,<.>/?\\| ";
     public static final SpriteCache spriteCache = new SpriteCache();
-    public static ScreenMode frameMode = ScreenMode.FIXED;
-    public static int frameWidth = 765;
-    public static int frameHeight = 503;
-    public static int screenAreaWidth = 512;
-    public static int screenAreaHeight = 334;
+
     public static int cameraZoom = 600;
     public static double brightnessState = 0.8;
     public static boolean showChatComponents = true;
@@ -219,7 +245,7 @@ public class Client extends GameApplet implements RSClient {
     public static com.runescape.draw.Console console = new com.runescape.draw.Console();
     public static boolean shiftDown;
     public static boolean enableGridOverlay;
-    static int anInt1211;
+    public static int anInt1211;
     private static int anInt849;
     private static int anInt854;
     private static int anInt924;
@@ -562,7 +588,7 @@ public class Client extends GameApplet implements RSClient {
     private int member;
     private boolean maleCharacter;
     private int anInt1048;
-    private String aString1049;
+    private String loadingText;
     private int flashingSidebarId;
     private int multicombat;
     private Deque incompleteAnimables;
@@ -580,7 +606,7 @@ public class Client extends GameApplet implements RSClient {
     private Sprite mapDotFriend;
     private Sprite mapDotTeam;
     private Sprite mapDotClan;
-    private int anInt1079;
+    private int loadingPercent;
     private boolean loadingMap;
     private String[] friendsList;
     private Buffer incoming;
@@ -616,7 +642,7 @@ public class Client extends GameApplet implements RSClient {
     private Sprite[] minimapHint;
     private boolean inTutorialIsland;
     private int runEnergy;
-    boolean continuedDialogue;
+    public boolean continuedDialogue;
     private Sprite[] crosses;
     private IndexedImage[] titleIndexedImages;
     private int unreadMessages;
@@ -824,6 +850,7 @@ public class Client extends GameApplet implements RSClient {
         continuedDialogue = false;
         crosses = new Sprite[8];
         loggedIn = false;
+        setGameState(GameState.STARTING);
         canMute = false;
         requestMapReconstruct = false;
         inCutScene = false;
@@ -860,42 +887,20 @@ public class Client extends GameApplet implements RSClient {
         bigY = new int[4000];
     }
 
-
-    public void refreshFrameSize() {
-        if (frameMode == ScreenMode.RESIZABLE) {
-            if (frameWidth != (appletClient() ? getGameComponent().getWidth()
-                    : gameFrame.getFrameWidth())) {
-                frameWidth = (appletClient() ? getGameComponent().getWidth()
-                        : gameFrame.getFrameWidth());
-                screenAreaWidth = frameWidth;
-                setBounds();
-                getCallbacks().post(CanvasSizeChanged.INSTANCE);
-            }
-            if (frameHeight != (appletClient() ? getGameComponent().getHeight()
-                    : gameFrame.getFrameHeight())) {
-                frameHeight = (appletClient() ? getGameComponent().getHeight()
-                        : gameFrame.getFrameHeight());
-                screenAreaHeight = frameHeight;
-                setBounds();
-                getCallbacks().post(CanvasSizeChanged.INSTANCE);
-            }
-        }
-    }
-
-    private static void setBounds() {
-        Rasterizer3D.reposition(frameWidth, frameHeight);
+    public static void setBounds() {
+        Rasterizer3D.reposition(canvasWidth, canvasHeight);
         fullScreenTextureArray = Rasterizer3D.scanOffsets;
         anIntArray1180 = Rasterizer3D.scanOffsets;
         anIntArray1181 = Rasterizer3D.scanOffsets;
-        Rasterizer3D.scanOffsets = new int[frameHeight];
-        for (int x = 0; x < frameHeight; x++) {
-            Rasterizer3D.scanOffsets[x] = frameWidth * x;
+        Rasterizer3D.scanOffsets = new int[canvasHeight];
+        for (int x = 0; x < canvasHeight; x++) {
+            Rasterizer3D.scanOffsets[x] = canvasWidth * x;
         }
         anIntArray1182 = Rasterizer3D.scanOffsets;
-        Rasterizer3D.originViewX = screenAreaWidth / 2;
-        Rasterizer3D.originViewY = screenAreaHeight / 2;
+        Rasterizer3D.originViewX = instance.getViewportWidth() / 2;
+        Rasterizer3D.originViewY = instance.getViewportHeight() / 2;
 
-        Rasterizer3D.fieldOfView = screenAreaWidth * screenAreaHeight / 85504 << 1;
+        Rasterizer3D.fieldOfView = instance.getViewportWidth() * instance.getViewportHeight() / 85504 << 1;
 
         if(!Client.processGpuPlugin()) {
             int ai[] = new int[9];
@@ -905,20 +910,11 @@ public class Client extends GameApplet implements RSClient {
                 int i9 = Rasterizer3D.anIntArray1470[k8];
                 ai[i8] = l8 * i9 >> 16;
             }
-            SceneGraph.buildVisibilityMap(500, 800, screenAreaWidth, screenAreaHeight, ai);
+            SceneGraph.buildVisibilityMap(500, 800, instance.getViewportWidth(), instance.getViewportHeight(), ai);
         }
 
-        if (frameMode == ScreenMode.RESIZABLE && (frameWidth >= 765) && (frameWidth <= 1025)
-                && (frameHeight >= 503) && (frameHeight <= 850)) {
-            cameraZoom = 575;
-        } else if (frameMode == ScreenMode.FIXED) {
-            cameraZoom = 600;
-        } else if (frameMode == ScreenMode.RESIZABLE) {
-            cameraZoom = 600;
-        }
-
-        gameScreenImageProducer = new ProducingGraphicsBuffer(frameWidth, frameHeight);
     }
+
 
     private static String intToKOrMilLongName(int i) {
         String s = String.valueOf(i);
@@ -1179,67 +1175,27 @@ public class Client extends GameApplet implements RSClient {
         array[offset + 3] = (byte) n;
     }
 
-    @Override
-    public void init() {
-        try {
-            nodeID = 10;
-            portOffset = 0;
-            setHighMem();
-            isMembers = true;
-            if (SignLink.mainapp == null) {
-                SignLink.init(this);
-            }
-            frameMode(ScreenMode.FIXED);
-            instance = this;
-            initClientFrame(503, 765);
-        } catch (Exception e) {
-            e.printStackTrace();
+    public void frameMode(boolean resizable) {
+        if(isResized() == resizable) {
+            return;
         }
-    }
 
-    public void frameMode(ScreenMode screenMode) {
-        if (frameMode != screenMode) {
-            frameMode = screenMode;
-            if (screenMode == ScreenMode.FIXED) {
-                frameWidth = 765;
-                frameHeight = 503;
-                cameraZoom = 600;
+        setResized(resizable);
 
-            } else if (screenMode == ScreenMode.RESIZABLE) {
-                frameWidth = 766;
-                frameHeight = 529;
-                cameraZoom = 850;
+        Bounds bounds = getFrameContentBounds();
+        canvasWidth = !isResized() ? 765 : bounds.highX;
+        canvasHeight = !isResized() ? 503 : bounds.highY;
+        cameraZoom = !isResized() ? 600 : 850;
 
-            } else if (screenMode == ScreenMode.FULLSCREEN) {
-                cameraZoom = 600;
+        setMaxCanvasSize(canvasWidth, canvasHeight);
+        ResizeableChanged event = new ResizeableChanged();
+        event.setResized(resizable);
+        callbacks.post(event);
 
-                frameWidth = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
-                frameHeight = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight();
-            }
-            rebuildFrameSize(screenMode, frameWidth, frameHeight);
-            ResizeableChanged resizeableChanged = new ResizeableChanged();
-            resizeableChanged.setResized(Client.instance.isResized());
-            Client.instance.getCallbacks().post(resizeableChanged);
-            setBounds();
-        }
-        showChatComponents = screenMode == ScreenMode.FIXED || showChatComponents;
-        showTabComponents = screenMode == ScreenMode.FIXED || showTabComponents;
-    }
+        setBounds();
 
-    public static void rebuildFrameSize(ScreenMode screenMode, int screenWidth,
-                                        int screenHeight) {
-        try {
-            screenAreaWidth = (screenMode == ScreenMode.FIXED) ? 512 : screenWidth;
-            screenAreaHeight = (screenMode == ScreenMode.FIXED) ? 334 : screenHeight;
-            frameWidth = screenWidth;
-            frameHeight = screenHeight;
-            instance.refreshFrameSize(screenMode == ScreenMode.FULLSCREEN, screenWidth,
-                    screenHeight, screenMode == ScreenMode.RESIZABLE,
-                    screenMode != ScreenMode.FIXED);
-            setBounds();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        showChatComponents = !isResized() || showChatComponents;
+        showTabComponents = !isResized() || showTabComponents;
     }
 
     public boolean compareCrc(byte[] buffer, int expectedCrc) {
@@ -1388,8 +1344,8 @@ public class Client extends GameApplet implements RSClient {
     }
 
     public void drawEffectTimers() {
-        int yDraw = frameHeight - 195;
-        int xDraw = frameWidth - 330;
+        int yDraw = canvasHeight - 195;
+        int xDraw = canvasWidth - 330;
         for (EffectTimer timer : effects_list) {
             if (timer.getSecondsTimer().finished()) {
                 effects_list.remove(timer);
@@ -1628,42 +1584,42 @@ public class Client extends GameApplet implements RSClient {
     }
 
     public boolean getMousePositions() {
-        if (mouseInRegion(frameWidth - (frameWidth <= 1000 ? 240 : 420),
-                frameWidth, frameHeight - (frameWidth <= 1000 ? 90 : 37), frameHeight)) {
+        if (mouseInRegion(canvasWidth - (canvasWidth <= 1000 ? 240 : 420),
+                canvasWidth, canvasHeight - (canvasWidth <= 1000 ? 90 : 37), canvasHeight)) {
             return false;
         }
         if (showChatComponents) {
-            if (changeChatArea && frameMode != ScreenMode.FIXED) {
-                if (chatStateCheck() && super.mouseX > 0 && super.mouseX < 494
-                        && super.mouseY > frameHeight - 175
-                        && super.mouseY < frameHeight) {
+            if (changeChatArea && isResized()) {
+                if (chatStateCheck() && MouseHandler.mouseX > 0 && MouseHandler.mouseX < 494
+                        && MouseHandler.mouseY > canvasHeight - 175
+                        && MouseHandler.mouseY < canvasHeight) {
                     return false;
-                } else if (!chatStateCheck() && super.mouseX > 0 && super.mouseX < 494
-                        && super.mouseY > frameHeight - 175
-                        && super.mouseY < frameHeight) {
+                } else if (!chatStateCheck() && MouseHandler.mouseX > 0 && MouseHandler.mouseX < 494
+                        && MouseHandler.mouseY > canvasHeight - 175
+                        && MouseHandler.mouseY < canvasHeight) {
                     return true;
                 } else {
-                    if (super.mouseX > 494 && super.mouseX < 515
-                            && super.mouseY > frameHeight - 175
-                            && super.mouseY < frameHeight) {
+                    if (MouseHandler.mouseX > 494 && MouseHandler.mouseX < 515
+                            && MouseHandler.mouseY > canvasHeight - 175
+                            && MouseHandler.mouseY < canvasHeight) {
                         return false;
                     }
                 }
             } else if (!changeChatArea) {
-                if (super.mouseX > 0 && super.mouseX < 519
-                        && super.mouseY > frameHeight - 175
-                        && super.mouseY < frameHeight) {
+                if (MouseHandler.mouseX > 0 && MouseHandler.mouseX < 519
+                        && MouseHandler.mouseY > canvasHeight - 175
+                        && MouseHandler.mouseY < canvasHeight) {
                     return false;
                 }
             }
         }
-        if (mouseInRegion(frameWidth - 216, frameWidth, 0, 172)) {
+        if (mouseInRegion(canvasWidth - 216, canvasWidth, 0, 172)) {
             return false;
         }
         if (!stackSideStones) {
-            if (super.mouseX > 0 && super.mouseY > 0 && super.mouseY < frameWidth
-                    && super.mouseY < frameHeight) {
-                if (super.mouseX >= frameWidth - 242 && super.mouseY >= frameHeight - 335) {
+            if (MouseHandler.mouseX > 0 && MouseHandler.mouseY > 0 && MouseHandler.mouseY < canvasWidth
+                    && MouseHandler.mouseY < canvasHeight) {
+                if (MouseHandler.mouseX >= canvasWidth - 242 && MouseHandler.mouseY >= canvasHeight - 335) {
                     return false;
                 }
                 return true;
@@ -1671,22 +1627,22 @@ public class Client extends GameApplet implements RSClient {
             return false;
         }
         if (showTabComponents) {
-            if (frameWidth > 1000) {
-                if (super.mouseX >= frameWidth - 420 && super.mouseX <= frameWidth
-                        && super.mouseY >= frameHeight - 37
-                        && super.mouseY <= frameHeight
-                        || super.mouseX > frameWidth - 225 && super.mouseX < frameWidth
-                        && super.mouseY > frameHeight - 37 - 274
-                        && super.mouseY < frameHeight) {
+            if (canvasWidth > 1000) {
+                if (MouseHandler.mouseX >= canvasWidth - 420 && MouseHandler.mouseX <= canvasWidth
+                        && MouseHandler.mouseY >= canvasHeight - 37
+                        && MouseHandler.mouseY <= canvasHeight
+                        || MouseHandler.mouseX > canvasWidth - 225 && MouseHandler.mouseX < canvasWidth
+                        && MouseHandler.mouseY > canvasHeight - 37 - 274
+                        && MouseHandler.mouseY < canvasHeight) {
                     return false;
                 }
             } else {
-                if (super.mouseX >= frameWidth - 210 && super.mouseX <= frameWidth
-                        && super.mouseY >= frameHeight - 74
-                        && super.mouseY <= frameHeight
-                        || super.mouseX > frameWidth - 225 && super.mouseX < frameWidth
-                        && super.mouseY > frameHeight - 74 - 274
-                        && super.mouseY < frameHeight) {
+                if (MouseHandler.mouseX >= canvasWidth - 210 && MouseHandler.mouseX <= canvasWidth
+                        && MouseHandler.mouseY >= canvasHeight - 74
+                        && MouseHandler.mouseY <= canvasHeight
+                        || MouseHandler.mouseX > canvasWidth - 225 && MouseHandler.mouseX < canvasWidth
+                        && MouseHandler.mouseY > canvasHeight - 74 - 274
+                        && MouseHandler.mouseY < canvasHeight) {
                     return false;
                 }
             }
@@ -1695,32 +1651,42 @@ public class Client extends GameApplet implements RSClient {
     }
 
     public boolean mouseInRegion(int x1, int x2, int y1, int y2) {
-        if (super.mouseX >= x1 && super.mouseX <= x2 && super.mouseY >= y1 && super.mouseY <= y2) {
+        if (MouseHandler.mouseX >= x1 && MouseHandler.mouseX <= x2 && MouseHandler.mouseY >= y1 && MouseHandler.mouseY <= y2) {
             return true;
         }
         return false;
     }
 
     public boolean mouseMapPosition() {
-        if (super.mouseX >= frameWidth - 21 && super.mouseX <= frameWidth && super.mouseY >= 0
-                && super.mouseY <= 21) {
+        if (MouseHandler.mouseX >= canvasWidth - 21 && MouseHandler.mouseX <= canvasWidth && MouseHandler.mouseY >= 0
+                && MouseHandler.mouseY <= 21) {
             return false;
         }
         return true;
     }
 
-    private void drawLoadingMessages(int used, String s, String s1) {
-        int width = regularText.getTextWidth(used == 1 ? s : s1);
-        int height = s1 == null ? 25 : 38;
-        Rasterizer2D.drawBox(1, 1, width + 6, height, 0);
-        Rasterizer2D.drawBox(1, 1, width + 6, 1, 0xffffff);
-        Rasterizer2D.drawBox(1, 1, 1, height, 0xffffff);
-        Rasterizer2D.drawBox(1, height, width + 6, 1, 0xffffff);
-        Rasterizer2D.drawBox(width + 6, 1, 1, height, 0xffffff);
-        regularText.drawText(0xffffff, s, 18, width / 2 + 5);
-        if (s1 != null) {
-            regularText.drawText(0xffffff, s1, 31, width / 2 + 5);
+    private void drawLoadingMessage(String messages) {
+        int width = 0;
+        for (String message : messages.split("<br>")) {
+            int size = regularText.getTextWidth(message);
+            if(width <= regularText.getTextWidth(message)) {
+                width = size;
+            }
         }
+
+        int offset = isResized() ? 3 : 6;
+
+        int height =  (12 * messages.split("<br>").length) + 4;
+
+        Rasterizer2D.drawBox(offset,offset, width + 16, height + 6,0x000000);
+        Rasterizer2D.drawBoxOutline(offset,offset, width + 16, height + 6,0xFFFFFF);
+
+        int offsetY = 0;
+        for (String message : messages.split("<br>")) {
+            regularText.drawCenteredText(message, offset + (width + 16) / 2, offset + 15 + offsetY,0xffffff,true);
+            offsetY += 12;
+        }
+
     }
 
     public final String formatCoins(int coins) {
@@ -1748,8 +1714,8 @@ public class Client extends GameApplet implements RSClient {
     private void clearHistory(int chatType) {
 
         // Stops the opening of the tab
-        super.saveClickX = 0;
-        super.saveClickY = 0;
+        MouseHandler.saveClickX = 0;
+        MouseHandler.saveClickY = 0;
 
         // Go through each message, compare its type..
         outerLoop:
@@ -1773,7 +1739,7 @@ public class Client extends GameApplet implements RSClient {
     }
 
     public void drawChannelButtons() {
-        int yOffset = frameMode == ScreenMode.FIXED ? 338 : frameHeight - 165;
+        int yOffset = !isResized() ? 338 : canvasHeight - 165;
         spriteCache.draw(49, 0, 143 + yOffset);
         String text[] = {"On", "Friends", "Off", "Hide"};
         int textColor[] = {65280, 0xffff00, 0xff0000, 65535};
@@ -1831,7 +1797,7 @@ public class Client extends GameApplet implements RSClient {
     }
 
     private void drawChatArea() {
-        int yOffset = frameMode == ScreenMode.FIXED ? 338 : frameHeight - 165;
+        int yOffset = !isResized() ? 338 : canvasHeight - 165;
 
         Rasterizer3D.scanOffsets = anIntArray1180;
         if (chatStateCheck()) {
@@ -1839,7 +1805,7 @@ public class Client extends GameApplet implements RSClient {
             spriteCache.draw(20, 0, yOffset);
         }
         if (showChatComponents) {
-            if ((changeChatArea && frameMode != ScreenMode.FIXED) && !chatStateCheck()) {
+            if ((changeChatArea && isResized()) && !chatStateCheck()) {
                 Rasterizer2D.drawHorizontalLine(7, 7 + yOffset, 506, 0x575757);
                 Rasterizer2D.drawTransparentGradientBox(7, 7 + yOffset, 510, 130, 0x00000000, 0x5A000000,20);
             } else {
@@ -1881,7 +1847,7 @@ public class Client extends GameApplet implements RSClient {
         } else if (showChatComponents) {
             int j77 = -3;
             int j = 0;
-            int shadow = (changeChatArea && frameMode != ScreenMode.FIXED) ? 0 : -1;
+            int shadow = (changeChatArea && isResized()) ? 0 : -1;
             Rasterizer2D.setDrawingArea(122 + yOffset, 8, 497, 7 + yOffset);
             for (int k = 0; k < 500; k++) {
                 if (chatMessages[k] != null) {
@@ -1896,7 +1862,7 @@ public class Client extends GameApplet implements RSClient {
                     if (type == 0) {
                         if (chatTypeView == 5 || chatTypeView == 0) {
                             newRegularFont.drawBasicString(message, 11,
-                                    yPos + yOffset, (changeChatArea && frameMode != ScreenMode.FIXED) ? 0xFFFFFF : 0, shadow);
+                                    yPos + yOffset, (changeChatArea && isResized()) ? 0xFFFFFF : 0, shadow);
                             j++;
                             j77++;
                         }
@@ -1916,11 +1882,11 @@ public class Client extends GameApplet implements RSClient {
 							}
 
                             newRegularFont.drawBasicString(name + ":", xPos,
-                                    yPos + yOffset, (changeChatArea && frameMode != ScreenMode.FIXED) ? 0xFFFFFF : 0, shadow);
+                                    yPos + yOffset, (changeChatArea && isResized()) ? 0xFFFFFF : 0, shadow);
                             xPos += font.getTextWidth(name) + 8;
                             newRegularFont.drawBasicString(message, xPos,
                                     yPos + yOffset,
-                                    (changeChatArea && frameMode != ScreenMode.FIXED) ? 0x7FA9FF : 255, shadow);
+                                    (changeChatArea && isResized()) ? 0x7FA9FF : 255, shadow);
                             j++;
                             j77++;
                         }
@@ -1933,7 +1899,7 @@ public class Client extends GameApplet implements RSClient {
                         if (chatTypeView == 2 || chatTypeView == 0) {
                             int k1 = 11;
                             newRegularFont.drawBasicString("From", k1, yPos + yOffset,
-                                    (changeChatArea && frameMode != ScreenMode.FIXED) ? 0xFFFFFF : 0, shadow);
+                                    (changeChatArea && isResized()) ? 0xFFFFFF : 0, shadow);
                             k1 += font.getTextWidth("From ");
 
                             for (ChatCrown c : crowns) {
@@ -1945,7 +1911,7 @@ public class Client extends GameApplet implements RSClient {
 							}
 
                             newRegularFont.drawBasicString(name + ":", k1,
-                                    yPos + yOffset, (changeChatArea && frameMode != ScreenMode.FIXED) ? 0xFFFFFF : 0, shadow);
+                                    yPos + yOffset, (changeChatArea && isResized()) ? 0xFFFFFF : 0, shadow);
                             k1 += font.getTextWidth(name) + 8;
                             newRegularFont.drawBasicString(message, k1,
                                     yPos + yOffset, 0x800000, shadow);
@@ -1974,7 +1940,7 @@ public class Client extends GameApplet implements RSClient {
                             && privateChatMode < 2) {
                         if (chatTypeView == 2 || chatTypeView == 0) {
                             newRegularFont.drawBasicString("To " + name + ":", 11,
-                                    yPos + yOffset, (changeChatArea && frameMode != ScreenMode.FIXED) ? 0xFFFFFF : 0,
+                                    yPos + yOffset, (changeChatArea && isResized()) ? 0xFFFFFF : 0,
                                     shadow);
                             newRegularFont.drawBasicString(message,
                                     15 + font.getTextWidth("To :" + name),
@@ -2026,12 +1992,12 @@ public class Client extends GameApplet implements RSClient {
                     }
                 }
             }
-            gameScreenImageProducer.initDrawingArea();
+            rasterProvider.setRaster();
             anInt1211 = j * 14 + 7 + 5;
             if (anInt1211 < 111) {
                 anInt1211 = 111;
             }
-            drawScrollbar(114, anInt1211 - anInt1089 - 113, 7 + yOffset, 496, anInt1211, (changeChatArea && frameMode != ScreenMode.FIXED));
+            drawScrollbar(114, anInt1211 - anInt1089 - 113, 7 + yOffset, 496, anInt1211, (changeChatArea && isResized()));
             String s;
             if (localPlayer != null && localPlayer.name != null) {
                 s = localPlayer.name;
@@ -2050,26 +2016,18 @@ public class Client extends GameApplet implements RSClient {
 			}
 			
             newRegularFont.drawBasicString(s + ":", xOffset, 133 + yOffset,
-                    (changeChatArea && frameMode != ScreenMode.FIXED) ? 0xFFFFFF : 0, shadow);
+                    (changeChatArea && isResized()) ? 0xFFFFFF : 0, shadow);
             newRegularFont.drawBasicString(inputString + "*",
                     xOffset + font.getTextWidth(s + ": "), 133 + yOffset,
-                    (changeChatArea && frameMode != ScreenMode.FIXED) ? 0x7FA9FF : 255, shadow);
-            Rasterizer2D.drawHorizontalLine(7, 121 + yOffset, 506, (changeChatArea && frameMode != ScreenMode.FIXED) ? 0x575757 : 0x807660);
-            gameScreenImageProducer.initDrawingArea();
+                    (changeChatArea && isResized()) ? 0x7FA9FF : 255, shadow);
+            Rasterizer2D.drawHorizontalLine(7, 121 + yOffset, 506, (changeChatArea && isResized()) ? 0x575757 : 0x807660);
+            rasterProvider.setRaster();
         }
 
 
         Rasterizer3D.scanOffsets = anIntArray1182;
     }
     
-    public Thread startRunnable(Runnable runnable, int priority) {
-        if (priority < 1)
-            priority = 1;
-        if (priority > 10)
-            priority = 10;
-        return super.startRunnable(runnable, priority);
-    }
-
     public Socket openSocket(int port) throws IOException {
         return new Socket(InetAddress.getByName(server), port);
     }
@@ -2077,14 +2035,14 @@ public class Client extends GameApplet implements RSClient {
     private void processMenuClick() {
         if (activeInterfaceType != 0)
             return;
-        int j = super.clickMode3;
-        if (spellSelected == 1 && super.saveClickX >= 516 && super.saveClickY >= 160
-                && super.saveClickX <= 765 && super.saveClickY <= 205)
+        int j = MouseHandler.clickMode3;
+        if (spellSelected == 1 && MouseHandler.saveClickX >= 516 && MouseHandler.saveClickY >= 160
+                && MouseHandler.saveClickX <= 765 && MouseHandler.saveClickY <= 205)
             j = 0;
         if (menuOpen) {
             if (j != 1) {
-                int k = super.mouseX;
-                int j1 = super.mouseY;
+                int k = MouseHandler.mouseX;
+                int j1 = MouseHandler.mouseY;
                 if (menuScreenArea == 0) {
                     k -= 4;
                     j1 -= 4;
@@ -2115,8 +2073,8 @@ public class Client extends GameApplet implements RSClient {
                 int l = menuOffsetX;
                 int k1 = menuOffsetY;
                 int i2 = menuWidth;
-                int k2 = super.saveClickX;
-                int l2 = super.saveClickY;
+                int k2 = MouseHandler.saveClickX;
+                int l2 = MouseHandler.saveClickY;
                 switch (menuScreenArea) {
                     case 0:
                         k2 -= 4;
@@ -2165,8 +2123,8 @@ public class Client extends GameApplet implements RSClient {
                         anInt1084 = j2;
                         anInt1085 = l1;
                         activeInterfaceType = 2;
-                        anInt1087 = super.saveClickX;
-                        anInt1088 = super.saveClickY;
+                        anInt1087 = MouseHandler.saveClickX;
+                        anInt1088 = MouseHandler.saveClickY;
                         if (Widget.interfaceCache[j2].parent == openInterfaceId)
                             activeInterfaceType = 1;
                         if (Widget.interfaceCache[j2].parent == backDialogueId)
@@ -2334,7 +2292,7 @@ public class Client extends GameApplet implements RSClient {
             exception.printStackTrace();
         }
         ObjectDefinition.baseModels.clear();
-        if (GameWindow.getInstance() != null) {
+        if (hasFrame()) {
             packetSender.sendRegionChange();
         }
         if (lowMemory && SignLink.cache_dat != null) {
@@ -2417,7 +2375,7 @@ public class Client extends GameApplet implements RSClient {
 
         }
 
-        gameScreenImageProducer.initDrawingArea();
+        rasterProvider.setRaster();
         anInt1071 = 0;
 
         for (int x = 0; x < 104; x++) {
@@ -3145,48 +3103,48 @@ public class Client extends GameApplet implements RSClient {
 
     public void processChatModeClick() {
 
-        final int yOffset = frameMode == ScreenMode.FIXED ? 0 : frameHeight - 503;
-        if (super.mouseX >= 5 && super.mouseX <= 61 && super.mouseY >= yOffset + 482
-                && super.mouseY <= yOffset + 503) {
+        final int yOffset = !isResized() ? 0 : canvasHeight - 503;
+        if (MouseHandler.mouseX >= 5 && MouseHandler.mouseX <= 61 && MouseHandler.mouseY >= yOffset + 482
+                && MouseHandler.mouseY <= yOffset + 503) {
             cButtonHPos = 0;
             updateChatbox = true;
-        } else if (super.mouseX >= 69 && super.mouseX <= 125 && super.mouseY >= yOffset + 482
-                && super.mouseY <= yOffset + 503) {
+        } else if (MouseHandler.mouseX >= 69 && MouseHandler.mouseX <= 125 && MouseHandler.mouseY >= yOffset + 482
+                && MouseHandler.mouseY <= yOffset + 503) {
             cButtonHPos = 1;
             updateChatbox = true;
-        } else if (super.mouseX >= 133 && super.mouseX <= 189 && super.mouseY >= yOffset + 482
-                && super.mouseY <= yOffset + 503) {
+        } else if (MouseHandler.mouseX >= 133 && MouseHandler.mouseX <= 189 && MouseHandler.mouseY >= yOffset + 482
+                && MouseHandler.mouseY <= yOffset + 503) {
             cButtonHPos = 2;
             updateChatbox = true;
-        } else if (super.mouseX >= 197 && super.mouseX <= 253 && super.mouseY >= yOffset + 482
-                && super.mouseY <= yOffset + 503) {
+        } else if (MouseHandler.mouseX >= 197 && MouseHandler.mouseX <= 253 && MouseHandler.mouseY >= yOffset + 482
+                && MouseHandler.mouseY <= yOffset + 503) {
             cButtonHPos = 3;
             updateChatbox = true;
-        } else if (super.mouseX >= 261 && super.mouseX <= 317 && super.mouseY >= yOffset + 482
-                && super.mouseY <= yOffset + 503) {
+        } else if (MouseHandler.mouseX >= 261 && MouseHandler.mouseX <= 317 && MouseHandler.mouseY >= yOffset + 482
+                && MouseHandler.mouseY <= yOffset + 503) {
             cButtonHPos = 4;
             updateChatbox = true;
-        } else if (super.mouseX >= 325 && super.mouseX <= 381 && super.mouseY >= yOffset + 482
-                && super.mouseY <= yOffset + 503) {
+        } else if (MouseHandler.mouseX >= 325 && MouseHandler.mouseX <= 381 && MouseHandler.mouseY >= yOffset + 482
+                && MouseHandler.mouseY <= yOffset + 503) {
             cButtonHPos = 5;
             updateChatbox = true;
-        } else if (super.mouseX >= 389 && super.mouseX <= 445 && super.mouseY >= yOffset + 482
-                && super.mouseY <= yOffset + 503) {
+        } else if (MouseHandler.mouseX >= 389 && MouseHandler.mouseX <= 445 && MouseHandler.mouseY >= yOffset + 482
+                && MouseHandler.mouseY <= yOffset + 503) {
             cButtonHPos = 6;
             updateChatbox = true;
-        } else if (super.mouseX >= 453 && super.mouseX <= 509 && super.mouseY >= yOffset + 482
-                && super.mouseY <= yOffset + 503) {
+        } else if (MouseHandler.mouseX >= 453 && MouseHandler.mouseX <= 509 && MouseHandler.mouseY >= yOffset + 482
+                && MouseHandler.mouseY <= yOffset + 503) {
             cButtonHPos = 7;
             updateChatbox = true;
         } else {
             cButtonHPos = -1;
             updateChatbox = true;
         }
-        if (super.clickMode3 == 1) {
-            if (super.saveClickX >= 5 && super.saveClickX <= 61
-                    && super.saveClickY >= yOffset + 482
-                    && super.saveClickY <= yOffset + 505) {
-                if (frameMode != ScreenMode.FIXED) {
+        if (MouseHandler.clickMode3 == 1) {
+            if (MouseHandler.saveClickX >= 5 && MouseHandler.saveClickX <= 61
+                    && MouseHandler.saveClickY >= yOffset + 482
+                    && MouseHandler.saveClickY <= yOffset + 505) {
+                if (isResized()) {
                     if (setChannel != 0) {
                         cButtonCPos = 0;
                         chatTypeView = 0;
@@ -3201,11 +3159,11 @@ public class Client extends GameApplet implements RSClient {
                     updateChatbox = true;
                     setChannel = 0;
                 }
-            } else if (super.saveClickX >= 69 && super.saveClickX <= 125
-                    && super.saveClickY >= yOffset + 482
-                    && super.saveClickY <= yOffset + 505) {
-                if (frameMode != ScreenMode.FIXED) {
-                    if (setChannel != 1 && frameMode != ScreenMode.FIXED) {
+            } else if (MouseHandler.saveClickX >= 69 && MouseHandler.saveClickX <= 125
+                    && MouseHandler.saveClickY >= yOffset + 482
+                    && MouseHandler.saveClickY <= yOffset + 505) {
+                if (isResized()) {
+                    if (setChannel != 1 && isResized()) {
                         cButtonCPos = 1;
                         chatTypeView = 5;
                         updateChatbox = true;
@@ -3219,11 +3177,11 @@ public class Client extends GameApplet implements RSClient {
                     updateChatbox = true;
                     setChannel = 1;
                 }
-            } else if (super.saveClickX >= 133 && super.saveClickX <= 189
-                    && super.saveClickY >= yOffset + 482
-                    && super.saveClickY <= yOffset + 505) {
-                if (frameMode != ScreenMode.FIXED) {
-                    if (setChannel != 2 && frameMode != ScreenMode.FIXED) {
+            } else if (MouseHandler.saveClickX >= 133 && MouseHandler.saveClickX <= 189
+                    && MouseHandler.saveClickY >= yOffset + 482
+                    && MouseHandler.saveClickY <= yOffset + 505) {
+                if (isResized()) {
+                    if (setChannel != 2 && isResized()) {
                         cButtonCPos = 2;
                         chatTypeView = 1;
                         updateChatbox = true;
@@ -3237,11 +3195,11 @@ public class Client extends GameApplet implements RSClient {
                     updateChatbox = true;
                     setChannel = 2;
                 }
-            } else if (super.saveClickX >= 197 && super.saveClickX <= 253
-                    && super.saveClickY >= yOffset + 482
-                    && super.saveClickY <= yOffset + 505) {
-                if (frameMode != ScreenMode.FIXED) {
-                    if (setChannel != 3 && frameMode != ScreenMode.FIXED) {
+            } else if (MouseHandler.saveClickX >= 197 && MouseHandler.saveClickX <= 253
+                    && MouseHandler.saveClickY >= yOffset + 482
+                    && MouseHandler.saveClickY <= yOffset + 505) {
+                if (isResized()) {
+                    if (setChannel != 3 && isResized()) {
                         cButtonCPos = 3;
                         chatTypeView = 2;
                         updateChatbox = true;
@@ -3255,11 +3213,11 @@ public class Client extends GameApplet implements RSClient {
                     updateChatbox = true;
                     setChannel = 3;
                 }
-            } else if (super.saveClickX >= 261 && super.saveClickX <= 317
-                    && super.saveClickY >= yOffset + 482
-                    && super.saveClickY <= yOffset + 505) {
-                if (frameMode != ScreenMode.FIXED) {
-                    if (setChannel != 4 && frameMode != ScreenMode.FIXED) {
+            } else if (MouseHandler.saveClickX >= 261 && MouseHandler.saveClickX <= 317
+                    && MouseHandler.saveClickY >= yOffset + 482
+                    && MouseHandler.saveClickY <= yOffset + 505) {
+                if (isResized()) {
+                    if (setChannel != 4 && isResized()) {
                         cButtonCPos = 4;
                         chatTypeView = 11;
                         updateChatbox = true;
@@ -3273,11 +3231,11 @@ public class Client extends GameApplet implements RSClient {
                     updateChatbox = true;
                     setChannel = 4;
                 }
-            } else if (super.saveClickX >= 325 && super.saveClickX <= 381
-                    && super.saveClickY >= yOffset + 482
-                    && super.saveClickY <= yOffset + 505) {
-                if (frameMode != ScreenMode.FIXED) {
-                    if (setChannel != 5 && frameMode != ScreenMode.FIXED) {
+            } else if (MouseHandler.saveClickX >= 325 && MouseHandler.saveClickX <= 381
+                    && MouseHandler.saveClickY >= yOffset + 482
+                    && MouseHandler.saveClickY <= yOffset + 505) {
+                if (isResized()) {
+                    if (setChannel != 5 && isResized()) {
                         cButtonCPos = 5;
                         chatTypeView = 3;
                         updateChatbox = true;
@@ -3291,11 +3249,11 @@ public class Client extends GameApplet implements RSClient {
                     updateChatbox = true;
                     setChannel = 5;
                 }
-            } else if (super.saveClickX >= 389 && super.saveClickX <= 445
-                    && super.saveClickY >= yOffset + 482
-                    && super.saveClickY <= yOffset + 505) {
-                if (frameMode != ScreenMode.FIXED) {
-                    if (setChannel != 6 && frameMode != ScreenMode.FIXED) {
+            } else if (MouseHandler.saveClickX >= 389 && MouseHandler.saveClickX <= 445
+                    && MouseHandler.saveClickY >= yOffset + 482
+                    && MouseHandler.saveClickY <= yOffset + 505) {
+                if (isResized()) {
+                    if (setChannel != 6 && isResized()) {
                         cButtonCPos = 6;
                         chatTypeView = 12;
                         updateChatbox = true;
@@ -3815,9 +3773,9 @@ public class Client extends GameApplet implements RSClient {
     }
 
     public void drawSideIcons() {
-        final int xOffset = frameMode == ScreenMode.FIXED ? 516 : frameWidth - 247;
-        final int yOffset = frameMode == ScreenMode.FIXED ? 168 : frameHeight - 336;
-        if (frameMode == ScreenMode.FIXED || frameMode != ScreenMode.FIXED && !stackSideStones) {
+        final int xOffset = !isResized() ? 516 : canvasWidth - 247;
+        final int yOffset = !isResized() ? 168 : canvasHeight - 336;
+        if (!isResized() || isResized() && !stackSideStones) {
             for (int i = 0; i < sideIconsTab.length; i++) {
                 if (tabInterfaceIDs[sideIconsTab[i]] != -1) {
                     if (sideIconsId[i] != -1) {
@@ -3831,7 +3789,7 @@ public class Client extends GameApplet implements RSClient {
                     }
                 }
             }
-        } else if (stackSideStones && frameWidth < 1000) {
+        } else if (stackSideStones && canvasWidth < 1000) {
             int[] iconId = {0, 1, 2, 3, 4, 5, 6, -1, 8, 9, 7, 11, 12, 13};
             int[] iconX = {219, 189, 156, 126, 94, 62, 30, 219, 189, 156, 124, 92, 59, 28};
             int[] iconY = {67, 69, 67, 69, 72, 72, 69, 32, 29, 29, 32, 30, 33, 31, 32};
@@ -3840,14 +3798,14 @@ public class Client extends GameApplet implements RSClient {
                     if (iconId[i] != -1) {
                         Sprite sprite = sideIcons[iconId[i]];
                         if (i == 13) {
-                            spriteCache.draw(360, frameWidth - iconX[i] + 2, frameHeight - iconY[i] + 1, true);
+                            spriteCache.draw(360, canvasWidth - iconX[i] + 2, canvasHeight - iconY[i] + 1, true);
                         } else {
-                        	sprite.drawSprite(frameWidth - iconX[i], frameHeight - iconY[i]);
+                        	sprite.drawSprite(canvasWidth - iconX[i], canvasHeight - iconY[i]);
                         }
                     }
                 }
             }
-        } else if (stackSideStones && frameWidth >= 1000) {
+        } else if (stackSideStones && canvasWidth >= 1000) {
             int[] iconId = {0, 1, 2, 3, 4, 5, 6, -1, 8, 9, 7, 11, 12, 13};
             int[] iconX =
                     {50, 80, 114, 143, 176, 208, 240, 242, 273, 306, 338, 370, 404, 433};
@@ -3857,9 +3815,9 @@ public class Client extends GameApplet implements RSClient {
                     if (iconId[i] != -1) {
                         Sprite sprite = sideIcons[iconId[i]];
                         if (i == 13) {
-                            spriteCache.draw(360, frameWidth - 461 + iconX[i] + 2, frameHeight - iconY[i] + 1, true);
+                            spriteCache.draw(360, canvasWidth - 461 + iconX[i] + 2, canvasHeight - iconY[i] + 1, true);
                         } else {
-                        	sprite.drawSprite(frameWidth - 461 + iconX[i], frameHeight - iconY[i]);
+                        	sprite.drawSprite(canvasWidth - 461 + iconX[i], canvasHeight - iconY[i]);
                         }
                     }
                 }
@@ -3874,29 +3832,29 @@ public class Client extends GameApplet implements RSClient {
                 redStonesY = {0, 0, 0, 0, 0, 0, 0, 298, 298, 298, 298, 298, 298, 298},
                 redStonesId = {35, 39, 39, 39, 39, 39, 36, 37, 39, 39, 39, 39, 39, 38};
 
-        final int xOffset = frameMode == ScreenMode.FIXED ? 516 : frameWidth - 247;
-        final int yOffset = frameMode == ScreenMode.FIXED ? 168 : frameHeight - 336;
+        final int xOffset = !isResized() ? 516 : canvasWidth - 247;
+        final int yOffset = !isResized() ? 168 : canvasHeight - 336;
 
-        if (frameMode == ScreenMode.FIXED || frameMode != ScreenMode.FIXED && !stackSideStones) {
+        if (!isResized() || isResized() && !stackSideStones) {
             if (tabInterfaceIDs[tabId] != -1 && tabId != 15) {
                 spriteCache.draw(redStonesId[tabId], redStonesX[tabId] + xOffset,
                         redStonesY[tabId] + yOffset);
             }
-        } else if (stackSideStones && frameWidth < 1000) {
+        } else if (stackSideStones && canvasWidth < 1000) {
             int[] stoneX = {226, 194, 162, 130, 99, 65, 34, 219, 195, 161, 130, 98, 65, 33};
             int[] stoneY = {73, 73, 73, 73, 73, 73, 73, -1, 37, 37, 37, 37, 37, 37, 37};
             if (tabInterfaceIDs[tabId] != -1 && tabId != 10 && showTabComponents) {
                 if (tabId == 7) {
-                    spriteCache.draw(39, frameWidth - 130, frameHeight - 37);
+                    spriteCache.draw(39, canvasWidth - 130, canvasHeight - 37);
                 }
-                spriteCache.draw(39, frameWidth - stoneX[tabId],
-                        frameHeight - stoneY[tabId]);
+                spriteCache.draw(39, canvasWidth - stoneX[tabId],
+                        canvasHeight - stoneY[tabId]);
             }
-        } else if (stackSideStones && frameWidth >= 1000) {
+        } else if (stackSideStones && canvasWidth >= 1000) {
             int[] stoneX =
                     {417, 385, 353, 321, 289, 256, 224, 129, 193, 161, 130, 98, 65, 33};
             if (tabInterfaceIDs[tabId] != -1 && tabId != 10 && showTabComponents) {
-                spriteCache.draw(39, frameWidth - stoneX[tabId], frameHeight - 37);
+                spriteCache.draw(39, canvasWidth - stoneX[tabId], canvasHeight - 37);
             }
         }
     }
@@ -3936,33 +3894,33 @@ public class Client extends GameApplet implements RSClient {
     }
 
     private void drawTabArea() {
-        final int xOffset = frameMode == ScreenMode.FIXED ? 516 : frameWidth - 241;
-        final int yOffset = frameMode == ScreenMode.FIXED ? 168 : frameHeight - 336;
+        final int xOffset = !isResized() ? 516 : canvasWidth - 241;
+        final int yOffset = !isResized() ? 168 : canvasHeight - 336;
 
 		Rasterizer3D.scanOffsets = anIntArray1181;
-		if (frameMode == ScreenMode.FIXED) {
+		if (!isResized()) {
 		    spriteCache.draw(21, xOffset, yOffset);
-		} else if (frameMode != ScreenMode.FIXED && !stackSideStones) {
-            Rasterizer2D.drawTransparentBox(frameWidth - 217, frameHeight - 304, 195, 270, 0x3E3529, transparentTabArea ? 80 : 256);
+		} else if (isResized() && !stackSideStones) {
+            Rasterizer2D.drawTransparentBox(canvasWidth - 217, canvasHeight - 304, 195, 270, 0x3E3529, transparentTabArea ? 80 : 256);
             spriteCache.draw(47, xOffset, yOffset);
 		} else {
-			if (frameWidth >= 1000) {
+			if (canvasWidth >= 1000) {
 				if (showTabComponents) {
-                    Rasterizer2D.drawTransparentBox(frameWidth - 197, frameHeight - 304, 197, 265, 0x3E3529, transparentTabArea ? 80 : 256);
-                    spriteCache.draw(50, frameWidth - 204, frameHeight - 311);
+                    Rasterizer2D.drawTransparentBox(canvasWidth - 197, canvasHeight - 304, 197, 265, 0x3E3529, transparentTabArea ? 80 : 256);
+                    spriteCache.draw(50, canvasWidth - 204, canvasHeight - 311);
 				}
-				for (int x = frameWidth - 417, y = frameHeight - 37, index = 0; x <= frameWidth - 30 && index < 13; x += 32, index++) {
+				for (int x = canvasWidth - 417, y = canvasHeight - 37, index = 0; x <= canvasWidth - 30 && index < 13; x += 32, index++) {
 				    spriteCache.draw(46, x, y);
 				}
-			} else if (frameWidth < 1000) {
+			} else if (canvasWidth < 1000) {
 				if (showTabComponents) {
-                    Rasterizer2D.drawTransparentBox(frameWidth - 197, frameHeight - 341, 195, 265, 0x3E3529, transparentTabArea ? 80 : 256);
-                    spriteCache.draw(50, frameWidth - 204, frameHeight - 348);
+                    Rasterizer2D.drawTransparentBox(canvasWidth - 197, canvasHeight - 341, 195, 265, 0x3E3529, transparentTabArea ? 80 : 256);
+                    spriteCache.draw(50, canvasWidth - 204, canvasHeight - 348);
 				}
-				for (int x = frameWidth - 226, y = frameHeight - 73, index = 0; x <= frameWidth - 32 && index < 7; x += 32, index++) {
+				for (int x = canvasWidth - 226, y = canvasHeight - 73, index = 0; x <= canvasWidth - 32 && index < 7; x += 32, index++) {
 				    spriteCache.draw(46, x, y);
 				}
-				for (int x = frameWidth - 226, y = frameHeight - 37, index = 0; x <= frameWidth - 32 && index < 7; x += 32, index++) {
+				for (int x = canvasWidth - 226, y = canvasHeight - 37, index = 0; x <= canvasWidth - 32 && index < 7; x += 32, index++) {
 				    spriteCache.draw(46, x, y);
 				}
 			}
@@ -3972,11 +3930,11 @@ public class Client extends GameApplet implements RSClient {
 			drawSideIcons();
 		}
         if (showTabComponents) {
-            int x = frameMode == ScreenMode.FIXED ? xOffset + 31 : frameWidth - 215;
-            int y = frameMode == ScreenMode.FIXED ? yOffset + 37 : frameHeight - 299;
-            if (stackSideStones && frameMode != ScreenMode.FIXED) {
-                x = frameWidth - 197;
-                y = frameWidth >= 1000 ? frameHeight - 303 : frameHeight - 340;
+            int x = !isResized() ? xOffset + 31 : canvasWidth - 215;
+            int y = !isResized() ? yOffset + 37 : canvasHeight - 299;
+            if (stackSideStones && isResized()) {
+                x = canvasWidth - 197;
+                y = canvasWidth >= 1000 ? canvasHeight - 303 : canvasHeight - 340;
             }
             try {
                 if (overlayInterfaceId != -1) {
@@ -4112,8 +4070,8 @@ public class Client extends GameApplet implements RSClient {
         Rasterizer2D.drawBox(xPos + 1, yPos + 1, w - 2, 16, 0);
         Rasterizer2D.drawBoxOutline(xPos + 1, yPos + 18, w - 2, h - 19, 0);
         boldText.render(menuColor, "Choose Option", yPos + 14, xPos + 3);
-        int mouseX = super.mouseX - (x);
-        int mouseY = (-y) + super.mouseY;
+        int mouseX = MouseHandler.mouseX - (x);
+        int mouseY = (-y) + MouseHandler.mouseY;
         for (int i = 0; i < menuActionRow; i++) {
             int textY = yPos + 31 + (menuActionRow - 1 - i) * 15;
             int textColor = 0xffffff;
@@ -4210,7 +4168,7 @@ public class Client extends GameApplet implements RSClient {
         currentSong = -1;
         nextSong = -1;
         prevSong = 0;
-        frameMode(ScreenMode.FIXED);
+        frameMode(false);
         savePlayerData();
     }
 
@@ -4262,6 +4220,9 @@ public class Client extends GameApplet implements RSClient {
     }
 
     public void processGameLoop() {
+        getCallbacks().tick();
+        getCallbacks().post(ClientTick.INSTANCE);
+
         if (rsAlreadyLoaded || loadingError || genericLoadingError)
             return;
         tick++;
@@ -4272,8 +4233,9 @@ public class Client extends GameApplet implements RSClient {
         }
         processOnDemandQueue();
     }
-    
-    void startUp() {
+
+    protected void startUp() {
+        setGameState(GameState.LOADING);
 
         drawLoadingText(20, "Starting up");
         if (SignLink.cache_dat != null) {
@@ -4463,23 +4425,19 @@ public class Client extends GameApplet implements RSClient {
             setBounds();
             MessageCensor.load(wordencArchive);
             mouseDetection = new MouseDetection(this);
-            startRunnable(mouseDetection, 10);
+            GameEngine.taskHandler.newThreadTask(mouseDetection,10);
             SceneObject.clientInstance = this;
             ObjectDefinition.clientInstance = this;
             NpcDefinition.clientInstance = this;
 
             loadPlayerData();
-            //resourceProvider.writeAll();
-            
-            /*repackCacheIndex(1);
-            repackCacheIndex(2);
-            repackCacheIndex(3);
-            repackCacheIndex(4);*/
+
+            setGameState(GameState.LOGIN_SCREEN);
             
             return;
         } catch (Exception exception) {
             exception.printStackTrace();
-            System.out.println("loaderror " + aString1049 + " " + anInt1079);
+            System.out.println("loaderror " + loadingText + " " + loadingPercent);
         }
         loadingError = true;
     }
@@ -4960,15 +4918,13 @@ public class Client extends GameApplet implements RSClient {
         if (drawnSprite == null) {
             return false;
         }
-        return super.mouseX >= x1 && super.mouseX <= x1 + drawnSprite.myWidth && super.mouseY >= y1 && super.mouseY <= y1 + drawnSprite.myHeight;
+        return MouseHandler.mouseX >= x1 && MouseHandler.mouseX <= x1 + drawnSprite.myWidth && MouseHandler.mouseY >= y1 && MouseHandler.mouseY <= y1 + drawnSprite.myHeight;
     }
 
     private void loadingStages() {
         if (lowMemory && loadingStage == 2 && MapRegion.anInt131 != plane) {
+            setGameState(GameState.LOADING);
 
-            drawLoadingMessages(1, "Loading - please wait.", null);
-            gameScreenImageProducer.drawGraphics(0,
-                    super.graphics, 0);
             loadingStage = 1;
             loadingStartTime = System.currentTimeMillis();
         }
@@ -5070,14 +5026,6 @@ public class Client extends GameApplet implements RSClient {
             }
 
     }
-
-    public AppletContext getAppletContext() {
-        if (SignLink.mainapp != null)
-            return SignLink.mainapp.getAppletContext();
-        else
-            return super.getAppletContext();
-    }
-
     private void calcFlamesPosition() {
         char c = '\u0100';
         for (int j = 10; j < 117; j++) {
@@ -5168,10 +5116,7 @@ public class Client extends GameApplet implements RSClient {
     private void mainGameProcessor() {
         callbacks.tick();
         callbacks.post(new ClientTick());
-        refreshFrameSize();
-        if (getGameComponent().getFocusTraversalKeysEnabled()) {
-            getGameComponent().setFocusTraversalKeysEnabled(false);
-        }
+       
         if (systemUpdateTime > 1) {
             systemUpdateTime--;
         }
@@ -5192,7 +5137,7 @@ public class Client extends GameApplet implements RSClient {
 
         synchronized (mouseDetection.syncObject) {
             if (flagged) {
-                if (super.clickMode3 != 0 || mouseDetection.coordsIndex >= 40) {
+                if (MouseHandler.clickMode3 != 0 || mouseDetection.coordsIndex >= 40) {
                     // botting
 					/* outgoing.writeOpcode(PacketConstants.FLAG_ACCOUNT);
                               outgoing.writeByte(0);
@@ -5264,24 +5209,24 @@ public class Client extends GameApplet implements RSClient {
                 mouseDetection.coordsIndex = 0;
             }
         }
-        if (super.clickMode3 != 0) {
-            long l = (super.aLong29 - aLong1220) / 50L;
+        if (MouseHandler.clickMode3 != 0) {
+            long l = (MouseHandler.lastPressed - aLong1220) / 50L;
             if (l > 4095L)
                 l = 4095L;
-            aLong1220 = super.aLong29;
-            int k2 = super.saveClickY;
+            aLong1220 = MouseHandler.lastPressed;
+            int k2 = MouseHandler.saveClickY;
             if (k2 < 0)
                 k2 = 0;
             else if (k2 > 502)
                 k2 = 502;
-            int k3 = super.saveClickX;
+            int k3 = MouseHandler.saveClickX;
             if (k3 < 0)
                 k3 = 0;
             else if (k3 > 764)
                 k3 = 764;
             int k4 = k2 * 765 + k3;
             int j5 = 0;
-            if (super.clickMode3 == 2)
+            if (MouseHandler.clickMode3 == 2)
                 j5 = 1;
             int l5 = (int) l;
 			/* outgoing.writeOpcode(PacketConstants.MOUSE_CLICK);
@@ -5292,8 +5237,8 @@ public class Client extends GameApplet implements RSClient {
             anInt1016--;
         }
 
-        if (super.keyArray[1] == 1 || super.keyArray[2] == 1 || super.keyArray[3] == 1
-                || super.keyArray[4] == 1)
+        if (KeyHandler.instance.keyArray[1] == 1 || KeyHandler.instance.keyArray[2] == 1 || KeyHandler.instance.keyArray[3] == 1
+                || KeyHandler.instance.keyArray[4] == 1)
             aBoolean1017 = true;
         if (aBoolean1017 && anInt1016 <= 0) {
             anInt1016 = 20;
@@ -5302,11 +5247,11 @@ public class Client extends GameApplet implements RSClient {
                   outgoing.writeShort(anInt1184);
                   outgoing.writeShortA(cameraHorizontal);*/
         }
-        if (super.awtFocus && !aBoolean954) {
+        if (super.canvas.hasFocus() && !aBoolean954) {
             aBoolean954 = true;
             //  sendPacket(new ClientFocused(false));
         }
-        if (!super.awtFocus && aBoolean954) {
+        if (!super.canvas.hasFocus() && aBoolean954) {
             aBoolean954 = false;
             //   sendPacket(new ClientFocused(false));
         }
@@ -5337,10 +5282,10 @@ public class Client extends GameApplet implements RSClient {
         }
         if (activeInterfaceType != 0) {
             dragItemDelay++;
-            if (super.mouseX > anInt1087 + 5 || super.mouseX < anInt1087 - 5
-                    || super.mouseY > anInt1088 + 5 || super.mouseY < anInt1088 - 5)
+            if (MouseHandler.mouseX > anInt1087 + 5 || MouseHandler.mouseX < anInt1087 - 5
+                    || MouseHandler.mouseY > anInt1088 + 5 || MouseHandler.mouseY < anInt1088 - 5)
                 aBoolean1242 = true;
-            if (super.clickMode2 == 0) {
+            if (MouseHandler.instance.clickMode2 == 0) {
                 if (activeInterfaceType == 2) {
                 }
                 if (activeInterfaceType == 3)
@@ -5392,7 +5337,7 @@ public class Client extends GameApplet implements RSClient {
                 else if (menuActionRow > 0)
                     processMenuActions(menuActionRow - 1);
                 atInventoryLoopCycle = 10;
-                super.clickMode3 = 0;
+                MouseHandler.clickMode3 = 0;
             }
         }
         if (SceneGraph.clickedTileX != -1) {
@@ -5402,19 +5347,19 @@ public class Client extends GameApplet implements RSClient {
                     localPlayer.pathX[0], true, k);
             SceneGraph.clickedTileX = -1;
             if (flag) {
-                crossX = super.saveClickX;
-                crossY = super.saveClickY;
+                crossX = MouseHandler.saveClickX;
+                crossY = MouseHandler.saveClickY;
                 crossType = 1;
                 crossIndex = 0;
             }
         }
-        if (super.clickMode3 == 1 && clickToContinueString != null) {
+        if (MouseHandler.clickMode3 == 1 && clickToContinueString != null) {
             clickToContinueString = null;
             updateChatbox = true;
-            super.clickMode3 = 0;
+            MouseHandler.clickMode3 = 0;
         }
         processMenuClick();
-        if (super.clickMode2 == 1 || super.clickMode3 == 1)
+        if (MouseHandler.instance.clickMode2 == 1 || MouseHandler.clickMode3 == 1)
             anInt1213++;
         if (anInt1500 != 0 || anInt1044 != 0 || anInt1129 != 0) {
             if(tooltipTimer <= tooltipDelay) {
@@ -5446,9 +5391,12 @@ public class Client extends GameApplet implements RSClient {
 
         manageTextInputs();
 
-        if (super.idleTime++ > 9000) {
+        ++MouseHandler.idleCycles;
+        ++KeyHandler.idleCycles;
+
+        if (MouseHandler.idleCycles++ > 9000) {
             anInt1011 = 250;
-            super.idleTime = 0;
+            MouseHandler.idleCycles = 0;
             packetSender.sendPlayerInactive();
         }
 
@@ -5483,14 +5431,12 @@ public class Client extends GameApplet implements RSClient {
 
     }
 
-
-
-    public static ProducingGraphicsBuffer gameScreenImageProducer;
-
-    public int getPixelAmt(int current, int pixels) {
-        return (int) (pixels * .01 * current);
+    public void drawLoadingText(int loadingPercent, String loadingText) {
+        this.loadingPercent = loadingPercent;
+        this.loadingText = loadingText;
     }
 
+    public static AbstractRasterProvider rasterProvider;
 
     private void method65(int i, int j, int k, int l, Widget class9, int i1, boolean flag,
                           int j1) {
@@ -5546,8 +5492,8 @@ public class Client extends GameApplet implements RSClient {
         } else {
             doWalkTo(2, orientation, 0, objectType + 1, localPlayer.pathY[0], 0, 0, j, localPlayer.pathX[0], false, k);
         }
-        crossX = super.saveClickX;
-        crossY = super.saveClickY;
+        crossX = MouseHandler.saveClickX;
+        crossY = MouseHandler.saveClickY;
         crossType = 2;
         crossIndex = 0;
         return true;
@@ -5637,13 +5583,7 @@ public class Client extends GameApplet implements RSClient {
             resetLogout();
             return;
         }
-        Rasterizer2D.drawBoxOutline(2, 2, 229, 39, 0xffffff); // white box around
-        Rasterizer2D.drawBox(3, 3, 227, 37, 0); // black fill
-        regularText.drawText(0, "Connection lost.", 19, 120);
-        regularText.drawText(0xffffff, "Connection lost.", 18, 119);
-        regularText.drawText(0, "Please wait - attempting to reestablish.", 34, 117);
-        regularText.drawText(0xffffff, "Please wait - attempting to reestablish.", 34, 116);
-        gameScreenImageProducer.drawGraphics(0, super.graphics, 0);
+
         minimapState = 0;
         destinationX = 0;
         BufferedConnection rsSocket = socketStream;
@@ -5855,8 +5795,8 @@ public class Client extends GameApplet implements RSClient {
             if (npc != null) {
                 doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0, npc.pathY[0],
                         localPlayer.pathX[0], false, npc.pathX[0]);
-                crossX = super.saveClickX;
-                crossY = super.saveClickY;
+                crossX = MouseHandler.saveClickX;
+                crossY = MouseHandler.saveClickY;
                 crossType = 2;
                 crossIndex = 0;
                 packetSender.sendUseItemOnNPC(anInt1285, clicked, anInt1283, anInt1284);
@@ -5870,8 +5810,8 @@ public class Client extends GameApplet implements RSClient {
             if (!flag1)
                 flag1 = doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0, button,
                         localPlayer.pathX[0], false, first);
-            crossX = super.saveClickX;
-            crossY = super.saveClickY;
+            crossX = MouseHandler.saveClickX;
+            crossY = MouseHandler.saveClickY;
             crossType = 2;
             crossIndex = 0;
             // pickup ground item
@@ -5890,8 +5830,8 @@ public class Client extends GameApplet implements RSClient {
             if (!flag2)
                 flag2 = doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0, button,
                         localPlayer.pathX[0], false, first);
-            crossX = super.saveClickX;
-            crossY = super.saveClickY;
+            crossX = MouseHandler.saveClickX;
+            crossY = MouseHandler.saveClickY;
             crossType = 2;
             crossIndex = 0;
             // item on ground item
@@ -6006,8 +5946,8 @@ public class Client extends GameApplet implements RSClient {
             if (player != null) {
                 doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0, player.pathY[0],
                         localPlayer.pathX[0], false, player.pathX[0]);
-                crossX = super.saveClickX;
-                crossY = super.saveClickY;
+                crossX = MouseHandler.saveClickX;
+                crossY = MouseHandler.saveClickY;
                 crossType = 2;
                 crossIndex = 0;
                 anInt1188 += clicked;
@@ -6027,8 +5967,8 @@ public class Client extends GameApplet implements RSClient {
                 doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0,
                         npc.pathY[0], localPlayer.pathX[0],
                         false, npc.pathX[0]);
-                crossX = super.saveClickX;
-                crossY = super.saveClickY;
+                crossX = MouseHandler.saveClickX;
+                crossY = MouseHandler.saveClickY;
                 crossType = 2;
                 crossIndex = 0;
                 packetSender.sendNPCOption1(clicked);
@@ -6042,8 +5982,8 @@ public class Client extends GameApplet implements RSClient {
                 doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0,
                         player.pathY[0], localPlayer.pathX[0],
                         false, player.pathX[0]);
-                crossX = super.saveClickX;
-                crossY = super.saveClickY;
+                crossX = MouseHandler.saveClickX;
+                crossY = MouseHandler.saveClickY;
                 crossType = 2;
                 crossIndex = 0;
                 packetSender.sendAttackPlayer(clicked);
@@ -6053,7 +5993,7 @@ public class Client extends GameApplet implements RSClient {
         // clicking tiles
         if (action == 519) {
             if (!menuOpen) {
-                scene.clickTile(super.saveClickY - 4, super.saveClickX - 4);
+                scene.clickTile(MouseHandler.saveClickY - 4, MouseHandler.saveClickX - 4);
             } else {
                 scene.clickTile(button - 4, first - 4);
             }
@@ -6275,8 +6215,8 @@ public class Client extends GameApplet implements RSClient {
                 doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0,
                         player.pathY[0], localPlayer.pathX[0],
                         false, player.pathX[0]);
-                crossX = super.saveClickX;
-                crossY = super.saveClickY;
+                crossX = MouseHandler.saveClickX;
+                crossY = MouseHandler.saveClickY;
                 crossType = 2;
                 crossIndex = 0;
                 anInt986 += clicked;
@@ -6298,8 +6238,8 @@ public class Client extends GameApplet implements RSClient {
             if (!flag3)
                 flag3 = doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0, button,
                         localPlayer.pathX[0], false, first);
-            crossX = super.saveClickX;
-            crossY = super.saveClickY;
+            crossX = MouseHandler.saveClickX;
+            crossY = MouseHandler.saveClickY;
             crossType = 2;
             crossIndex = 0;
             // light item
@@ -6497,8 +6437,8 @@ public class Client extends GameApplet implements RSClient {
             if (!flag4)
                 flag4 = doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0, button,
                         localPlayer.pathX[0], false, first);
-            crossX = super.saveClickX;
-            crossY = super.saveClickY;
+            crossX = MouseHandler.saveClickX;
+            crossY = MouseHandler.saveClickY;
             crossType = 2;
             crossIndex = 0;
             //unknown (non-anti bot)
@@ -6514,8 +6454,8 @@ public class Client extends GameApplet implements RSClient {
             if (!flag5)
                 flag5 = doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0, button,
                         localPlayer.pathX[0], false, first);
-            crossX = super.saveClickX;
-            crossY = super.saveClickY;
+            crossX = MouseHandler.saveClickX;
+            crossY = MouseHandler.saveClickY;
             crossType = 2;
             crossIndex = 0;
             packetSender.sendUseMagicOnGroundItem(button + regionBaseY, clicked, first + regionBaseX, anInt1137);
@@ -6572,8 +6512,8 @@ public class Client extends GameApplet implements RSClient {
                 doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0,
                         npc.pathY[0], localPlayer.pathX[0],
                         false, npc.pathX[0]);
-                crossX = super.saveClickX;
-                crossY = super.saveClickY;
+                crossX = MouseHandler.saveClickX;
+                crossY = MouseHandler.saveClickY;
                 crossType = 2;
                 crossIndex = 0;
                 anInt1226 += clicked;
@@ -6593,8 +6533,8 @@ public class Client extends GameApplet implements RSClient {
             Npc npc = npcs[clicked];
             if (npc != null) {
                 doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0, npc.pathY[0], localPlayer.pathX[0], false, npc.pathX[0]);
-                crossX = super.saveClickX;
-                crossY = super.saveClickY;
+                crossX = MouseHandler.saveClickX;
+                crossY = MouseHandler.saveClickY;
                 crossType = 2;
                 crossIndex = 0;
                 anInt1134++;
@@ -6615,8 +6555,8 @@ public class Client extends GameApplet implements RSClient {
             if (npc != null) {
                 doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0, npc.pathY[0],
                         localPlayer.pathX[0], false, npc.pathX[0]);
-                crossX = super.saveClickX;
-                crossY = super.saveClickY;
+                crossX = MouseHandler.saveClickX;
+                crossY = MouseHandler.saveClickY;
                 crossType = 2;
                 crossIndex = 0;
                 // magic on npc
@@ -6655,8 +6595,8 @@ public class Client extends GameApplet implements RSClient {
                 doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0,
                         npc.pathY[0], localPlayer.pathX[0],
                         false, npc.pathX[0]);
-                crossX = super.saveClickX;
-                crossY = super.saveClickY;
+                crossX = MouseHandler.saveClickX;
+                crossY = MouseHandler.saveClickY;
                 crossType = 2;
                 crossIndex = 0;
                 packetSender.sendAttackNPC(clicked);
@@ -6669,8 +6609,8 @@ public class Client extends GameApplet implements RSClient {
             if (player != null) {
                 doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0, player.pathY[0],
                         localPlayer.pathX[0], false, player.pathX[0]);
-                crossX = super.saveClickX;
-                crossY = super.saveClickY;
+                crossX = MouseHandler.saveClickX;
+                crossY = MouseHandler.saveClickY;
                 crossType = 2;
                 crossIndex = 0;
                 // spells on plr
@@ -6684,8 +6624,8 @@ public class Client extends GameApplet implements RSClient {
                 doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0,
                         player.pathY[0], localPlayer.pathX[0],
                         false, player.pathX[0]);
-                crossX = super.saveClickX;
-                crossY = super.saveClickY;
+                crossX = MouseHandler.saveClickX;
+                crossY = MouseHandler.saveClickY;
                 crossType = 2;
                 crossIndex = 0;
                 packetSender.sendTradePlayer(clicked);
@@ -6698,8 +6638,8 @@ public class Client extends GameApplet implements RSClient {
                 doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0,
                         player.pathY[0], localPlayer.pathX[0],
                         false, player.pathX[0]);
-                crossX = super.saveClickX;
-                crossY = super.saveClickY;
+                crossX = MouseHandler.saveClickX;
+                crossY = MouseHandler.saveClickY;
                 crossType = 2;
                 crossIndex = 0;
                 packetSender.sendTradePlayer(clicked);
@@ -6719,8 +6659,8 @@ public class Client extends GameApplet implements RSClient {
             if (!flag6)
                 flag6 = doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0, button,
                         localPlayer.pathX[0], false, first);
-            crossX = super.saveClickX;
-            crossY = super.saveClickY;
+            crossX = MouseHandler.saveClickX;
+            crossY = MouseHandler.saveClickY;
             crossType = 2;
             crossIndex = 0;
             //anti-cheat)
@@ -6790,8 +6730,8 @@ public class Client extends GameApplet implements RSClient {
                 doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0,
                         player.pathY[0], localPlayer.pathX[0],
                         false, player.pathX[0]);
-                crossX = super.saveClickX;
-                crossY = super.saveClickY;
+                crossX = MouseHandler.saveClickX;
+                crossY = MouseHandler.saveClickY;
                 crossType = 2;
                 crossIndex = 0;
                 packetSender.sendUseItemOnPlayer(anInt1284, clicked, anInt1285, anInt1283);
@@ -6847,8 +6787,8 @@ public class Client extends GameApplet implements RSClient {
                 doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0,
                         npc.pathY[0], localPlayer.pathX[0],
                         false, npc.pathX[0]);
-                crossX = super.saveClickX;
-                crossY = super.saveClickY;
+                crossX = MouseHandler.saveClickX;
+                crossY = MouseHandler.saveClickY;
                 crossType = 2;
                 crossIndex = 0;
 
@@ -6930,8 +6870,8 @@ public class Client extends GameApplet implements RSClient {
             if (!flag7)
                 flag7 = doWalkTo(2, 0, 1, 0, localPlayer.pathY[0], 1, 0, button,
                         localPlayer.pathX[0], false, first);
-            crossX = super.saveClickX;
-            crossY = super.saveClickY;
+            crossX = MouseHandler.saveClickX;
+            crossY = MouseHandler.saveClickY;
             crossType = 2;
             crossIndex = 0;
             packetSender.sendGroundItemOption1(button + regionBaseY, clicked, first + regionBaseX);
@@ -6955,10 +6895,6 @@ public class Client extends GameApplet implements RSClient {
 
     }
 
-    public void run() {
-        super.run();
-    }
-
     private void createMenu() {
         if (openInterfaceId == 15244) { // TODO: change to fullscreen?
             return;
@@ -6966,8 +6902,8 @@ public class Client extends GameApplet implements RSClient {
         if (itemSelected == 0 && spellSelected == 0) {
             menuActionText[menuActionRow] = shiftTeleport() ? "Teleport here" : "Walk here";
             menuActionTypes[menuActionRow] = 519;
-            firstMenuAction[menuActionRow] = super.mouseX;
-            secondMenuAction[menuActionRow] = super.mouseY;
+            firstMenuAction[menuActionRow] = MouseHandler.mouseX;
+            secondMenuAction[menuActionRow] = MouseHandler.mouseY;
             menuActionRow++;
         }
 
@@ -7210,7 +7146,7 @@ public class Client extends GameApplet implements RSClient {
         bigX = null;
         bigY = null;
         aByteArray912 = null;
-        gameScreenImageProducer = null;
+        rasterProvider = null;
 		/* Null pointers for custom sprites */
         mapBack = null;
         sideIcons = null;
@@ -7265,7 +7201,6 @@ public class Client extends GameApplet implements RSClient {
         Graphic.cache = null;
         Graphic.models = null;
         VariablePlayer.variables = null;
-        super.fullGameScreen = null;
         Player.models = null;
         Rasterizer3D.clear();
         SceneGraph.destructor();
@@ -7274,19 +7209,9 @@ public class Client extends GameApplet implements RSClient {
         System.gc();
     }
 
-    public Component getGameComponent() {
-        if (SignLink.mainapp != null)
-            return SignLink.mainapp;
-        if (super.gameFrame != null)
-            return super.gameFrame;
-        else
-            return this;
-    }
-
-
     private void manageTextInputs() {
         do {
-            int key = readChar(-796);
+            int key = KeyHandler.instance.readChar();
             if (key == -1)
                 break;
             if (key == 96 || key == 167) {
@@ -7833,7 +7758,7 @@ public class Client extends GameApplet implements RSClient {
                 break;
             }
             if (chatTypeView == 12) {
-                buildYellChat(mouseY);
+                buildYellChat(MouseHandler.mouseY);
                 break;
             }
             if (chatTypeView == 5) {
@@ -7900,7 +7825,7 @@ public class Client extends GameApplet implements RSClient {
                 l++;
             }
             if (chatType == 21 && (yellMode == 0 || yellMode == 1 && isFriendOrSelf(chatName))) {
-                if (mouseY > k1 - 14 && mouseY <= k1 && !chatName.equals(localPlayer.name)) {
+                if (MouseHandler.mouseY > k1 - 14 && MouseHandler.mouseY <= k1 && !chatName.equals(localPlayer.name)) {
                     if (myPrivilege >= 1) {
                         menuActionText[menuActionRow] = "Report abuse @whi@" + chatName;
                         menuActionTypes[menuActionRow] = 606;
@@ -8269,8 +8194,8 @@ public class Client extends GameApplet implements RSClient {
                 if ((k == 3 || k == 7) && (k == 7 || privateChatMode == 0
                         || privateChatMode == 1 && isFriendOrSelf(s))) {
                     int l = 329 - i * 13;
-                    if (frameMode != ScreenMode.FIXED) {
-                        l = frameHeight - 170 - i * 13;
+                    if (isResized()) {
+                        l = canvasHeight - 170 - i * 13;
                     }
                     int k1 = 4;
                     textDrawingArea.render(0, "From", l, k1);
@@ -8291,8 +8216,8 @@ public class Client extends GameApplet implements RSClient {
                 }
                 if (k == 5 && privateChatMode < 2) {
                     int i1 = 329 - i * 13;
-                    if (frameMode != ScreenMode.FIXED) {
-                        i1 = frameHeight - 170 - i * 13;
+                    if (isResized()) {
+                        i1 = canvasHeight - 170 - i * 13;
                     }
                     textDrawingArea.render(0, chatMessages[j].getMessage(), i1, 4);
                     textDrawingArea.render(65535, chatMessages[j].getMessage(), i1 - 1, 4);
@@ -8302,8 +8227,8 @@ public class Client extends GameApplet implements RSClient {
                 }
                 if (k == 6 && privateChatMode < 2) {
                     int j1 = 329 - i * 13;
-                    if (frameMode != ScreenMode.FIXED) {
-                        j1 = frameHeight - 170 - i * 13;
+                    if (isResized()) {
+                        j1 = canvasHeight - 170 - i * 13;
                     }
                     textDrawingArea.render(0, "To " + s + ": " + chatMessages[j], j1, 4);
                     textDrawingArea.render(65535, "To " + s + ": " + chatMessages[j],
@@ -8337,7 +8262,7 @@ public class Client extends GameApplet implements RSClient {
 		
         if (type == 0 && dialogueId != -1) {
             clickToContinueString = message;
-            super.clickMode3 = 0;
+            MouseHandler.clickMode3 = 0;
         }
 
         if (backDialogueId == -1) {
@@ -8357,38 +8282,38 @@ public class Client extends GameApplet implements RSClient {
     }
 
     private final void minimapHovers() {
-        final boolean fixed = frameMode == ScreenMode.FIXED;
+        final boolean fixed = !isResized();
         final boolean specOrb = Configuration.enableSpecOrb;
 
-        hpHover = fixed ? mouseInRegion(520, 569, 47, 72) : mouseInRegion(frameWidth - 213, frameWidth - 164, 45, 71);
+        hpHover = fixed ? mouseInRegion(520, 569, 47, 72) : mouseInRegion(canvasWidth - 213, canvasWidth - 164, 45, 71);
 
         int yOffset = specOrb ? 0 : 11;
-        prayHover = fixed ? mouseInRegion(520, 569, 81 + yOffset, 105 + yOffset) : mouseInRegion(frameWidth - 213, frameWidth - 164, 78 + yOffset, 105 + yOffset);
+        prayHover = fixed ? mouseInRegion(520, 569, 81 + yOffset, 105 + yOffset) : mouseInRegion(canvasWidth - 213, canvasWidth - 164, 78 + yOffset, 105 + yOffset);
 
         int xOffset = specOrb ? 0 : 13;
         yOffset = specOrb ? 0 : 15;
         runHover = fixed ? mouseInRegion(530 + xOffset, 580 + xOffset, 110 + yOffset, 138 + yOffset) :
-                mouseInRegion(frameWidth - 203 + xOffset, frameWidth - 154 + xOffset, 112 + yOffset, 136 + yOffset);
+                mouseInRegion(canvasWidth - 203 + xOffset, canvasWidth - 154 + xOffset, 112 + yOffset, 136 + yOffset);
 
-        worldHover = fixed ? mouseInRegion(716, 737, 130, 152) : mouseInRegion(frameWidth - 30, frameWidth - 9, 143, 164);
+        worldHover = fixed ? mouseInRegion(716, 737, 130, 152) : mouseInRegion(canvasWidth - 30, canvasWidth - 9, 143, 164);
 
-        specialHover = fixed ? mouseInRegion(563, 612, 131, 163) : mouseInRegion(frameWidth - 170, frameWidth - 121, 135, 161);
+        specialHover = fixed ? mouseInRegion(563, 612, 131, 163) : mouseInRegion(canvasWidth - 170, canvasWidth - 121, 135, 161);
 
-        expCounterHover = fixed ? mouseInRegion(519, 536, 20, 46) : mouseInRegion(frameWidth - 216, frameWidth - 190, 22, 47);
+        expCounterHover = fixed ? mouseInRegion(519, 536, 20, 46) : mouseInRegion(canvasWidth - 216, canvasWidth - 190, 22, 47);
     }
 
     private void processTabClick() {
-        if (super.clickMode3 == 1) {
-            if (frameMode == ScreenMode.FIXED
-                    || frameMode != ScreenMode.FIXED && !stackSideStones) {
-                int xOffset = frameMode == ScreenMode.FIXED ? 0 : frameWidth - 765;
-                int yOffset = frameMode == ScreenMode.FIXED ? 0 : frameHeight - 503;
+        if (MouseHandler.clickMode3 == 1) {
+            if (!isResized()
+                    || isResized() && !stackSideStones) {
+                int xOffset = !isResized() ? 0 : canvasWidth - 765;
+                int yOffset = !isResized() ? 0 : canvasHeight - 503;
                 for (int i = 0; i < tabClickX.length; i++) {
-                    if (super.mouseX >= tabClickStart[i] + xOffset
-                            && super.mouseX <= tabClickStart[i] + tabClickX[i]
+                    if (MouseHandler.mouseX >= tabClickStart[i] + xOffset
+                            && MouseHandler.mouseX <= tabClickStart[i] + tabClickX[i]
                             + xOffset
-                            && super.mouseY >= tabClickY[i] + yOffset
-                            && super.mouseY < tabClickY[i] + 37 + yOffset
+                            && MouseHandler.mouseY >= tabClickY[i] + yOffset
+                            && MouseHandler.mouseY < tabClickY[i] + 37 + yOffset
                             && tabInterfaceIDs[i] != -1) {
                         tabId = i;
                         tabAreaAltered = true;
@@ -8403,11 +8328,11 @@ public class Client extends GameApplet implements RSClient {
                         break;
                     }
                 }
-            } else if (stackSideStones && frameWidth < 1000) {
-                if (super.saveClickX >= frameWidth - 226
-                        && super.saveClickX <= frameWidth - 195
-                        && super.saveClickY >= frameHeight - 72
-                        && super.saveClickY < frameHeight - 40
+            } else if (stackSideStones && canvasWidth < 1000) {
+                if (MouseHandler.saveClickX >= canvasWidth - 226
+                        && MouseHandler.saveClickX <= canvasWidth - 195
+                        && MouseHandler.saveClickY >= canvasHeight - 72
+                        && MouseHandler.saveClickY < canvasHeight - 40
                         && tabInterfaceIDs[0] != -1) {
                     if (tabId == 0) {
                         showTabComponents = !showTabComponents;
@@ -8418,10 +8343,10 @@ public class Client extends GameApplet implements RSClient {
                     tabAreaAltered = true;
 
                 }
-                if (super.saveClickX >= frameWidth - 194
-                        && super.saveClickX <= frameWidth - 163
-                        && super.saveClickY >= frameHeight - 72
-                        && super.saveClickY < frameHeight - 40
+                if (MouseHandler.saveClickX >= canvasWidth - 194
+                        && MouseHandler.saveClickX <= canvasWidth - 163
+                        && MouseHandler.saveClickY >= canvasHeight - 72
+                        && MouseHandler.saveClickY < canvasHeight - 40
                         && tabInterfaceIDs[1] != -1) {
                     if (tabId == 1) {
                         showTabComponents = !showTabComponents;
@@ -8432,10 +8357,10 @@ public class Client extends GameApplet implements RSClient {
                     tabAreaAltered = true;
 
                 }
-                if (super.saveClickX >= frameWidth - 162
-                        && super.saveClickX <= frameWidth - 131
-                        && super.saveClickY >= frameHeight - 72
-                        && super.saveClickY < frameHeight - 40
+                if (MouseHandler.saveClickX >= canvasWidth - 162
+                        && MouseHandler.saveClickX <= canvasWidth - 131
+                        && MouseHandler.saveClickY >= canvasHeight - 72
+                        && MouseHandler.saveClickY < canvasHeight - 40
                         && tabInterfaceIDs[2] != -1) {
                     if (tabId == 2) {
                         showTabComponents = !showTabComponents;
@@ -8446,10 +8371,10 @@ public class Client extends GameApplet implements RSClient {
                     tabAreaAltered = true;
 
                 }
-                if (super.saveClickX >= frameWidth - 129
-                        && super.saveClickX <= frameWidth - 98
-                        && super.saveClickY >= frameHeight - 72
-                        && super.saveClickY < frameHeight - 40
+                if (MouseHandler.saveClickX >= canvasWidth - 129
+                        && MouseHandler.saveClickX <= canvasWidth - 98
+                        && MouseHandler.saveClickY >= canvasHeight - 72
+                        && MouseHandler.saveClickY < canvasHeight - 40
                         && tabInterfaceIDs[3] != -1) {
                     if (tabId == 3) {
                         showTabComponents = !showTabComponents;
@@ -8460,10 +8385,10 @@ public class Client extends GameApplet implements RSClient {
                     tabAreaAltered = true;
 
                 }
-                if (super.saveClickX >= frameWidth - 97
-                        && super.saveClickX <= frameWidth - 66
-                        && super.saveClickY >= frameHeight - 72
-                        && super.saveClickY < frameHeight - 40
+                if (MouseHandler.saveClickX >= canvasWidth - 97
+                        && MouseHandler.saveClickX <= canvasWidth - 66
+                        && MouseHandler.saveClickY >= canvasHeight - 72
+                        && MouseHandler.saveClickY < canvasHeight - 40
                         && tabInterfaceIDs[4] != -1) {
                     if (tabId == 4) {
                         showTabComponents = !showTabComponents;
@@ -8474,10 +8399,10 @@ public class Client extends GameApplet implements RSClient {
                     tabAreaAltered = true;
 
                 }
-                if (super.saveClickX >= frameWidth - 65
-                        && super.saveClickX <= frameWidth - 34
-                        && super.saveClickY >= frameHeight - 72
-                        && super.saveClickY < frameHeight - 40
+                if (MouseHandler.saveClickX >= canvasWidth - 65
+                        && MouseHandler.saveClickX <= canvasWidth - 34
+                        && MouseHandler.saveClickY >= canvasHeight - 72
+                        && MouseHandler.saveClickY < canvasHeight - 40
                         && tabInterfaceIDs[5] != -1) {
                     if (tabId == 5) {
                         showTabComponents = !showTabComponents;
@@ -8488,9 +8413,9 @@ public class Client extends GameApplet implements RSClient {
                     tabAreaAltered = true;
 
                 }
-                if (super.saveClickX >= frameWidth - 33 && super.saveClickX <= frameWidth
-                        && super.saveClickY >= frameHeight - 72
-                        && super.saveClickY < frameHeight - 40
+                if (MouseHandler.saveClickX >= canvasWidth - 33 && MouseHandler.saveClickX <= canvasWidth
+                        && MouseHandler.saveClickY >= canvasHeight - 72
+                        && MouseHandler.saveClickY < canvasHeight - 40
                         && tabInterfaceIDs[6] != -1) {
                     if (tabId == 6) {
                         showTabComponents = !showTabComponents;
@@ -8502,10 +8427,10 @@ public class Client extends GameApplet implements RSClient {
 
                 }
 
-                if (super.saveClickX >= frameWidth - 194
-                        && super.saveClickX <= frameWidth - 163
-                        && super.saveClickY >= frameHeight - 37
-                        && super.saveClickY < frameHeight - 0
+                if (MouseHandler.saveClickX >= canvasWidth - 194
+                        && MouseHandler.saveClickX <= canvasWidth - 163
+                        && MouseHandler.saveClickY >= canvasHeight - 37
+                        && MouseHandler.saveClickY < canvasHeight - 0
                         && tabInterfaceIDs[8] != -1) {
                     if (tabId == 8) {
                         showTabComponents = !showTabComponents;
@@ -8516,10 +8441,10 @@ public class Client extends GameApplet implements RSClient {
                     tabAreaAltered = true;
 
                 }
-                if (super.saveClickX >= frameWidth - 162
-                        && super.saveClickX <= frameWidth - 131
-                        && super.saveClickY >= frameHeight - 37
-                        && super.saveClickY < frameHeight - 0
+                if (MouseHandler.saveClickX >= canvasWidth - 162
+                        && MouseHandler.saveClickX <= canvasWidth - 131
+                        && MouseHandler.saveClickY >= canvasHeight - 37
+                        && MouseHandler.saveClickY < canvasHeight - 0
                         && tabInterfaceIDs[9] != -1) {
                     if (tabId == 9) {
                         showTabComponents = !showTabComponents;
@@ -8530,10 +8455,10 @@ public class Client extends GameApplet implements RSClient {
                     tabAreaAltered = true;
 
                 }
-                if (super.saveClickX >= frameWidth - 129
-                        && super.saveClickX <= frameWidth - 98
-                        && super.saveClickY >= frameHeight - 37
-                        && super.saveClickY < frameHeight - 0
+                if (MouseHandler.saveClickX >= canvasWidth - 129
+                        && MouseHandler.saveClickX <= canvasWidth - 98
+                        && MouseHandler.saveClickY >= canvasHeight - 37
+                        && MouseHandler.saveClickY < canvasHeight - 0
                         && tabInterfaceIDs[10] != -1) {
                     if (tabId == 7) {
                         showTabComponents = !showTabComponents;
@@ -8544,10 +8469,10 @@ public class Client extends GameApplet implements RSClient {
                     tabAreaAltered = true;
 
                 }
-                if (super.saveClickX >= frameWidth - 97
-                        && super.saveClickX <= frameWidth - 66
-                        && super.saveClickY >= frameHeight - 37
-                        && super.saveClickY < frameHeight - 0
+                if (MouseHandler.saveClickX >= canvasWidth - 97
+                        && MouseHandler.saveClickX <= canvasWidth - 66
+                        && MouseHandler.saveClickY >= canvasHeight - 37
+                        && MouseHandler.saveClickY < canvasHeight - 0
                         && tabInterfaceIDs[11] != -1) {
                     if (tabId == 11) {
                         showTabComponents = !showTabComponents;
@@ -8558,10 +8483,10 @@ public class Client extends GameApplet implements RSClient {
                     tabAreaAltered = true;
 
                 }
-                if (super.saveClickX >= frameWidth - 65
-                        && super.saveClickX <= frameWidth - 34
-                        && super.saveClickY >= frameHeight - 37
-                        && super.saveClickY < frameHeight - 0
+                if (MouseHandler.saveClickX >= canvasWidth - 65
+                        && MouseHandler.saveClickX <= canvasWidth - 34
+                        && MouseHandler.saveClickY >= canvasHeight - 37
+                        && MouseHandler.saveClickY < canvasHeight - 0
                         && tabInterfaceIDs[12] != -1) {
                     if (tabId == 12) {
                         showTabComponents = !showTabComponents;
@@ -8572,9 +8497,9 @@ public class Client extends GameApplet implements RSClient {
                     tabAreaAltered = true;
 
                 }
-                if (super.saveClickX >= frameWidth - 33 && super.saveClickX <= frameWidth
-                        && super.saveClickY >= frameHeight - 37
-                        && super.saveClickY < frameHeight - 0
+                if (MouseHandler.saveClickX >= canvasWidth - 33 && MouseHandler.saveClickX <= canvasWidth
+                        && MouseHandler.saveClickY >= canvasHeight - 37
+                        && MouseHandler.saveClickY < canvasHeight - 0
                         && tabInterfaceIDs[13] != -1) {
                     if (tabId == 13) {
                         showTabComponents = !showTabComponents;
@@ -8585,10 +8510,10 @@ public class Client extends GameApplet implements RSClient {
                     tabAreaAltered = true;
 
                 }
-            } else if (stackSideStones && frameWidth >= 1000) {
-                if (super.mouseY >= frameHeight - 37 && super.mouseY <= frameHeight) {
-                    if (super.mouseX >= frameWidth - 417
-                            && super.mouseX <= frameWidth - 386) {
+            } else if (stackSideStones && canvasWidth >= 1000) {
+                if (MouseHandler.mouseY >= canvasHeight - 37 && MouseHandler.mouseY <= canvasHeight) {
+                    if (MouseHandler.mouseX >= canvasWidth - 417
+                            && MouseHandler.mouseX <= canvasWidth - 386) {
                         if (tabId == 0) {
                             showTabComponents = !showTabComponents;
                         } else {
@@ -8597,8 +8522,8 @@ public class Client extends GameApplet implements RSClient {
                         tabId = 0;
                         tabAreaAltered = true;
                     }
-                    if (super.mouseX >= frameWidth - 385
-                            && super.mouseX <= frameWidth - 354) {
+                    if (MouseHandler.mouseX >= canvasWidth - 385
+                            && MouseHandler.mouseX <= canvasWidth - 354) {
                         if (tabId == 1) {
                             showTabComponents = !showTabComponents;
                         } else {
@@ -8607,8 +8532,8 @@ public class Client extends GameApplet implements RSClient {
                         tabId = 1;
                         tabAreaAltered = true;
                     }
-                    if (super.mouseX >= frameWidth - 353
-                            && super.mouseX <= frameWidth - 322) {
+                    if (MouseHandler.mouseX >= canvasWidth - 353
+                            && MouseHandler.mouseX <= canvasWidth - 322) {
                         if (tabId == 2) {
                             showTabComponents = !showTabComponents;
                         } else {
@@ -8617,8 +8542,8 @@ public class Client extends GameApplet implements RSClient {
                         tabId = 2;
                         tabAreaAltered = true;
                     }
-                    if (super.mouseX >= frameWidth - 321
-                            && super.mouseX <= frameWidth - 290) {
+                    if (MouseHandler.mouseX >= canvasWidth - 321
+                            && MouseHandler.mouseX <= canvasWidth - 290) {
                         if (tabId == 3) {
                             showTabComponents = !showTabComponents;
                         } else {
@@ -8627,8 +8552,8 @@ public class Client extends GameApplet implements RSClient {
                         tabId = 3;
                         tabAreaAltered = true;
                     }
-                    if (super.mouseX >= frameWidth - 289
-                            && super.mouseX <= frameWidth - 258) {
+                    if (MouseHandler.mouseX >= canvasWidth - 289
+                            && MouseHandler.mouseX <= canvasWidth - 258) {
                         if (tabId == 4) {
                             showTabComponents = !showTabComponents;
                         } else {
@@ -8637,8 +8562,8 @@ public class Client extends GameApplet implements RSClient {
                         tabId = 4;
                         tabAreaAltered = true;
                     }
-                    if (super.mouseX >= frameWidth - 257
-                            && super.mouseX <= frameWidth - 226) {
+                    if (MouseHandler.mouseX >= canvasWidth - 257
+                            && MouseHandler.mouseX <= canvasWidth - 226) {
                         if (tabId == 5) {
                             showTabComponents = !showTabComponents;
                         } else {
@@ -8647,8 +8572,8 @@ public class Client extends GameApplet implements RSClient {
                         tabId = 5;
                         tabAreaAltered = true;
                     }
-                    if (super.mouseX >= frameWidth - 225
-                            && super.mouseX <= frameWidth - 194) {
+                    if (MouseHandler.mouseX >= canvasWidth - 225
+                            && MouseHandler.mouseX <= canvasWidth - 194) {
                         if (tabId == 6) {
                             showTabComponents = !showTabComponents;
                         } else {
@@ -8657,8 +8582,8 @@ public class Client extends GameApplet implements RSClient {
                         tabId = 6;
                         tabAreaAltered = true;
                     }
-                    if (super.mouseX >= frameWidth - 193
-                            && super.mouseX <= frameWidth - 163) {
+                    if (MouseHandler.mouseX >= canvasWidth - 193
+                            && MouseHandler.mouseX <= canvasWidth - 163) {
                         if (tabId == 8) {
                             showTabComponents = !showTabComponents;
                         } else {
@@ -8667,8 +8592,8 @@ public class Client extends GameApplet implements RSClient {
                         tabId = 8;
                         tabAreaAltered = true;
                     }
-                    if (super.mouseX >= frameWidth - 162
-                            && super.mouseX <= frameWidth - 131) {
+                    if (MouseHandler.mouseX >= canvasWidth - 162
+                            && MouseHandler.mouseX <= canvasWidth - 131) {
                         if (tabId == 9) {
                             showTabComponents = !showTabComponents;
                         } else {
@@ -8677,8 +8602,8 @@ public class Client extends GameApplet implements RSClient {
                         tabId = 9;
                         tabAreaAltered = true;
                     }
-                    if (super.mouseX >= frameWidth - 130
-                            && super.mouseX <= frameWidth - 99) {
+                    if (MouseHandler.mouseX >= canvasWidth - 130
+                            && MouseHandler.mouseX <= canvasWidth - 99) {
                         if (tabId == 7) {
                             showTabComponents = !showTabComponents;
                         } else {
@@ -8687,8 +8612,8 @@ public class Client extends GameApplet implements RSClient {
                         tabId = 7;
                         tabAreaAltered = true;
                     }
-                    if (super.mouseX >= frameWidth - 98
-                            && super.mouseX <= frameWidth - 67) {
+                    if (MouseHandler.mouseX >= canvasWidth - 98
+                            && MouseHandler.mouseX <= canvasWidth - 67) {
                         if (tabId == 11) {
                             showTabComponents = !showTabComponents;
                         } else {
@@ -8697,8 +8622,8 @@ public class Client extends GameApplet implements RSClient {
                         tabId = 11;
                         tabAreaAltered = true;
                     }
-                    if (super.mouseX >= frameWidth - 66
-                            && super.mouseX <= frameWidth - 45) {
+                    if (MouseHandler.mouseX >= canvasWidth - 66
+                            && MouseHandler.mouseX <= canvasWidth - 45) {
                         if (tabId == 12) {
                             showTabComponents = !showTabComponents;
                         } else {
@@ -8707,7 +8632,7 @@ public class Client extends GameApplet implements RSClient {
                         tabId = 12;
                         tabAreaAltered = true;
                     }
-                    if (super.mouseX >= frameWidth - 31 && super.mouseX <= frameWidth) {
+                    if (MouseHandler.mouseX >= canvasWidth - 31 && MouseHandler.mouseX <= canvasWidth) {
                         if (tabId == 13) {
                             showTabComponents = !showTabComponents;
                         } else {
@@ -8735,18 +8660,18 @@ public class Client extends GameApplet implements RSClient {
     }
 
     public void rightClickChatButtons() {
-        if (mouseY >= frameHeight - 22 && mouseY <= frameHeight) {
-            if (super.mouseX >= 5 && super.mouseX <= 61) {
+        if (MouseHandler.mouseY >= canvasHeight - 22 && MouseHandler.mouseY <= canvasHeight) {
+            if (MouseHandler.mouseX >= 5 && MouseHandler.mouseX <= 61) {
                 menuActionText[1] = "View all";
                 menuActionTypes[1] = 999;
                 menuActionRow = 2;
-            } else if (super.mouseX >= 69 && super.mouseX <= 125) {
+            } else if (MouseHandler.mouseX >= 69 && MouseHandler.mouseX <= 125) {
             	menuActionText[1] = "@yel@Game: @whi@Clear history";
             	menuActionTypes[1] = 1008;
                 menuActionText[2] = "@yel@Game: @whi@Switch tab";
                 menuActionTypes[2] = 998;
                 menuActionRow = 3;
-            } else if (super.mouseX >= 133 && super.mouseX <= 189) {
+            } else if (MouseHandler.mouseX >= 133 && MouseHandler.mouseX <= 189) {
             	menuActionText[1] = "@yel@Public: @whi@Clear history";
             	menuActionTypes[1] = 1009;
                 menuActionText[2] = "@yel@Public: @whi@Hide";
@@ -8760,7 +8685,7 @@ public class Client extends GameApplet implements RSClient {
                 menuActionText[6] = "@yel@Public: @whi@Switch tab";
                 menuActionTypes[6] = 993;
                 menuActionRow = 7;
-            } else if (super.mouseX >= 196 && super.mouseX <= 253) {
+            } else if (MouseHandler.mouseX >= 196 && MouseHandler.mouseX <= 253) {
             	menuActionText[1] = "@yel@Private: @whi@Clear history";
             	menuActionTypes[1] = 1010;
                 menuActionText[2] = "@yel@Private: @whi@Off";
@@ -8772,7 +8697,7 @@ public class Client extends GameApplet implements RSClient {
                 menuActionText[5] = "@yel@Private: @whi@Switch tab";
                 menuActionTypes[5] = 989;
                 menuActionRow = 6;
-            } else if (super.mouseX >= 261 && super.mouseX <= 317) {
+            } else if (MouseHandler.mouseX >= 261 && MouseHandler.mouseX <= 317) {
             	menuActionText[1] = "@yel@Clan: @whi@Clear history";
             	menuActionTypes[1] = 1011;
                 menuActionText[2] = "@yel@Clan: @whi@Off";
@@ -8784,7 +8709,7 @@ public class Client extends GameApplet implements RSClient {
                 menuActionText[5] = "@yel@Clan: @whi@Switch tab";
                 menuActionTypes[5] = 1000;
                 menuActionRow = 6;
-            } else if (super.mouseX >= 325 && super.mouseX <= 381) {
+            } else if (MouseHandler.mouseX >= 325 && MouseHandler.mouseX <= 381) {
             	menuActionText[1] = "@yel@Trade: @whi@Clear history";
             	menuActionTypes[1] = 1012;
                 menuActionText[2] = "@yel@Trade: @whi@Off";
@@ -8796,7 +8721,7 @@ public class Client extends GameApplet implements RSClient {
                 menuActionText[5] = "@yel@Trade: @whi@Switch tab";
                 menuActionTypes[5] = 984;
                 menuActionRow = 6;
-            } else if (super.mouseX >= 389 && super.mouseX <= 445) {
+            } else if (MouseHandler.mouseX >= 389 && MouseHandler.mouseX <= 445) {
             	menuActionText[1] = "@yel@Yell: @whi@Clear history";
             	menuActionTypes[1] = 1013;
                 menuActionText[2] = "@yel@Yell: @whi@Off";
@@ -8806,7 +8731,7 @@ public class Client extends GameApplet implements RSClient {
                 menuActionText[4] = "@yel@Yell: @whi@Switch tab";
                 menuActionTypes[4] = 974;
                 menuActionRow = 5;
-            } else if (super.mouseX >= 453 && super.mouseX <= 509) {
+            } else if (MouseHandler.mouseX >= 453 && MouseHandler.mouseX <= 509) {
                 menuActionText[1] = "Report";
                 menuActionTypes[1] = 606;
                 menuActionRow = 2;
@@ -8826,30 +8751,30 @@ public class Client extends GameApplet implements RSClient {
         }
         anInt886 = 0;
         anInt1315 = 0;
-        if (frameMode == ScreenMode.FIXED) {
-            if (super.mouseX > 4 && super.mouseY > 4 && super.mouseX < 516 && super.mouseY < 338) {
+        if (!isResized()) {
+            if (MouseHandler.mouseX > 4 && MouseHandler.mouseY > 4 && MouseHandler.mouseX < 516 && MouseHandler.mouseY < 338) {
                 if (openInterfaceId != -1) {
-                    buildInterfaceMenu(4, Widget.interfaceCache[openInterfaceId], super.mouseX, 4, super.mouseY, 0);
+                    buildInterfaceMenu(4, Widget.interfaceCache[openInterfaceId], MouseHandler.mouseX, 4, MouseHandler.mouseY, 0);
                 } else {
                     createMenu();
                 }
             }
-        } else if (frameMode != ScreenMode.FIXED) {
+        } else if (isResized()) {
             if (getMousePositions()) {
             	int w = 512, h = 334;
-				int x = (frameWidth / 2) - 256, y = (frameHeight / 2) - 167;
-				int x2 = (frameWidth / 2) + 256, y2 = (frameHeight / 2) + 167;
+				int x = (canvasWidth / 2) - 256, y = (canvasHeight / 2) - 167;
+				int x2 = (canvasWidth / 2) + 256, y2 = (canvasHeight / 2) + 167;
 				int count = stackSideStones ? 3 : 4;
-				if (frameMode != ScreenMode.FIXED) {
+				if (isResized()) {
 					for (int i = 0; i < count; i++) {
-						if (x + w > (frameWidth - 225)) {
+						if (x + w > (canvasWidth - 225)) {
 							x = x - 30;
 							x2 = x2 - 30;
 							if (x < 0) {
 								x = 0;
 							}
 						}
-						if (y + h > (frameHeight - 182)) {
+						if (y + h > (canvasHeight - 182)) {
 							y = y - 30;
 							y2 = y2 - 30;
 							if (y < 0) {
@@ -8858,8 +8783,8 @@ public class Client extends GameApplet implements RSClient {
 						}
 					}
 				}
-				if (openInterfaceId != -1 && super.mouseX > x && super.mouseY > y && super.mouseX < x2 && super.mouseY < y2) {
-					buildInterfaceMenu(x, Widget.interfaceCache[openInterfaceId], super.mouseX, y, super.mouseY, 0);
+				if (openInterfaceId != -1 && MouseHandler.mouseX > x && MouseHandler.mouseY > y && MouseHandler.mouseX < x2 && MouseHandler.mouseY < y2) {
+					buildInterfaceMenu(x, Widget.interfaceCache[openInterfaceId], MouseHandler.mouseX, y, MouseHandler.mouseY, 0);
 				} else {
 					createMenu();
 				}
@@ -8874,33 +8799,33 @@ public class Client extends GameApplet implements RSClient {
         anInt886 = 0;
         anInt1315 = 0;
         if (!stackSideStones) {
-            final int yOffset = frameMode == ScreenMode.FIXED ? 0 : frameHeight - 503;
-            final int xOffset = frameMode == ScreenMode.FIXED ? 0 : frameWidth - 765;
-            if (super.mouseX > 548 + xOffset && super.mouseX < 740 + xOffset
-                    && super.mouseY > 207 + yOffset && super.mouseY < 468 + yOffset) {
+            final int yOffset = !isResized() ? 0 : canvasHeight - 503;
+            final int xOffset = !isResized() ? 0 : canvasWidth - 765;
+            if (MouseHandler.mouseX > 548 + xOffset && MouseHandler.mouseX < 740 + xOffset
+                    && MouseHandler.mouseY > 207 + yOffset && MouseHandler.mouseY < 468 + yOffset) {
                 if (overlayInterfaceId != -1) {
                     buildInterfaceMenu(548 + xOffset,
-                            Widget.interfaceCache[overlayInterfaceId], super.mouseX,
-                            207 + yOffset, super.mouseY, 0);
+                            Widget.interfaceCache[overlayInterfaceId], MouseHandler.mouseX,
+                            207 + yOffset, MouseHandler.mouseY, 0);
                 } else if (tabInterfaceIDs[tabId] != -1) {
                     buildInterfaceMenu(548 + xOffset,
                             Widget.interfaceCache[tabInterfaceIDs[tabId]],
-                            super.mouseX, 207 + yOffset, super.mouseY, 0);
+                            MouseHandler.mouseX, 207 + yOffset, MouseHandler.mouseY, 0);
                 }
             }
-        } else if (stackSideStones && frameMode != ScreenMode.FIXED) {
-            final int yOffset = frameWidth >= 1000 ? 37 : 74;
-            if (super.mouseX > frameWidth - 197 && super.mouseY > frameHeight - yOffset - 267
-                    && super.mouseX < frameWidth - 7
-                    && super.mouseY < frameHeight - yOffset - 7 && showTabComponents) {
+        } else if (stackSideStones && isResized()) {
+            final int yOffset = canvasWidth >= 1000 ? 37 : 74;
+            if (MouseHandler.mouseX > canvasWidth - 197 && MouseHandler.mouseY > canvasHeight - yOffset - 267
+                    && MouseHandler.mouseX < canvasWidth - 7
+                    && MouseHandler.mouseY < canvasHeight - yOffset - 7 && showTabComponents) {
                 if (overlayInterfaceId != -1) {
-                    buildInterfaceMenu(frameWidth - 197,
-                            Widget.interfaceCache[overlayInterfaceId], super.mouseX,
-                            frameHeight - yOffset - 267, super.mouseY, 0);
+                    buildInterfaceMenu(canvasWidth - 197,
+                            Widget.interfaceCache[overlayInterfaceId], MouseHandler.mouseX,
+                            canvasHeight - yOffset - 267, MouseHandler.mouseY, 0);
                 } else if (tabInterfaceIDs[tabId] != -1) {
-                    buildInterfaceMenu(frameWidth - 197,
+                    buildInterfaceMenu(canvasWidth - 197,
                             Widget.interfaceCache[tabInterfaceIDs[tabId]],
-                            super.mouseX, frameHeight - yOffset - 267, super.mouseY,
+                            MouseHandler.mouseX, canvasHeight - yOffset - 267, MouseHandler.mouseY,
                             0);
                 }
             }
@@ -8915,21 +8840,21 @@ public class Client extends GameApplet implements RSClient {
         }
         anInt886 = 0;
         anInt1315 = 0;
-        if (super.mouseX > 0
-                && super.mouseY > (frameMode == ScreenMode.FIXED ? 338 : frameHeight - 165)
-                && super.mouseX < 490
-                && super.mouseY < (frameMode == ScreenMode.FIXED ? 463 : frameHeight - 40)
+        if (MouseHandler.mouseX > 0
+                && MouseHandler.mouseY > (!isResized() ? 338 : canvasHeight - 165)
+                && MouseHandler.mouseX < 490
+                && MouseHandler.mouseY < (!isResized() ? 463 : canvasHeight - 40)
                 && showChatComponents) {
             if (backDialogueId != -1) {
 
 
-                buildInterfaceMenu(20, Widget.interfaceCache[backDialogueId], super.mouseX, (frameMode == ScreenMode.FIXED ? 358 : frameHeight - 145), super.mouseY, 0);
+                buildInterfaceMenu(20, Widget.interfaceCache[backDialogueId], MouseHandler.mouseX, (!isResized() ? 358 : canvasHeight - 145), MouseHandler.mouseY, 0);
 
 
-            } else if (super.mouseY < (frameMode == ScreenMode.FIXED ? 463 : frameHeight - 40)
-                    && super.mouseX < 490) {
-                buildChatAreaMenu(super.mouseY
-                        - (frameMode == ScreenMode.FIXED ? 338 : frameHeight - 165));
+            } else if (MouseHandler.mouseY < (!isResized() ? 463 : canvasHeight - 40)
+                    && MouseHandler.mouseX < 490) {
+                buildChatAreaMenu(MouseHandler.mouseY
+                        - (!isResized() ? 338 : canvasHeight - 165));
             }
         }
         if (backDialogueId != -1 && anInt886 != anInt1039) {
@@ -8940,8 +8865,8 @@ public class Client extends GameApplet implements RSClient {
             updateChatbox = true;
             anInt1500 = anInt1315;
         }
-        if (super.mouseX > 4 && super.mouseY > 480 && super.mouseX < 516
-                && super.mouseY < frameHeight) {
+        if (MouseHandler.mouseX > 4 && MouseHandler.mouseY > 480 && MouseHandler.mouseX < 516
+                && MouseHandler.mouseY < canvasHeight) {
             rightClickChatButtons();
         }
         processMinimapActions();
@@ -9005,8 +8930,7 @@ public class Client extends GameApplet implements RSClient {
             setGameState(GameState.LOGGING_IN);
 
 
-            socketStream = new BufferedConnection(this,
-                    openSocket(Configuration.SERVER_PORT + portOffset));
+            socketStream = new BufferedConnection(openSocket(Configuration.SERVER_PORT + portOffset));
 
             packetSender.getBuffer().resetPosition();
             packetSender.getBuffer().writeByte(14); //REQUEST
@@ -9063,6 +8987,7 @@ public class Client extends GameApplet implements RSClient {
                 return;
             }
             if (response == 2) {
+                setGameState(GameState.LOGGING_IN);
                 myPrivilege = socketStream.read();
                 //flagged = socketStream.read() == 1;
                 poisonType = 0;
@@ -9074,7 +8999,10 @@ public class Client extends GameApplet implements RSClient {
                 totalExp = 0L;
                 aLong1220 = 0L;
                 mouseDetection.coordsIndex = 0;
-                super.awtFocus = true;
+                MouseHandler.idleCycles = 0;
+                KeyHandler.idleCycles = 0;
+                MouseHandler.lastMoved = 0L;
+                MouseHandler.lastPressed = 0L;
                 aBoolean954 = true;
                 loggedIn = true;
                 packetSender = new PacketSender(cipher);
@@ -9090,7 +9018,7 @@ public class Client extends GameApplet implements RSClient {
                 hintIconDrawType = 0;
                 menuActionRow = 0;
                 menuOpen = false;
-                super.idleTime = 0;
+                MouseHandler.idleCycles = 0;
                 for (int index = 0; index < 100; index++)
                     chatMessages[index] = null;
                 itemSelected = 0;
@@ -9146,9 +9074,11 @@ public class Client extends GameApplet implements RSClient {
                 anInt1155 = 0;
                 anInt1226 = 0;
                 SettingsWidget.updateSettings();
-                this.stopMidi();
-                setupGameplayScreen();
-                frameMode(ScreenMode.FIXED);
+                setGameState(GameState.LOGGED_IN);
+                Rasterizer2D.clear();
+                drawChatArea();
+                drawMinimap();
+                drawTabArea();
                 return;
             }
             if (response == 28) {
@@ -9314,16 +9244,6 @@ public class Client extends GameApplet implements RSClient {
         }
         secondLoginMessage = "Error connecting to server.";
     }
-
-    private void setupGameplayScreen() {
-        nullLoader();
-        Rasterizer2D.clear();
-        spriteCache.lookup(19).drawSprite(0, 0);
-        gameScreenImageProducer = new ProducingGraphicsBuffer(frameWidth, frameHeight);// gamescreen
-        Rasterizer2D.clear();
-        welcomeScreenRaised = true;
-    }
-
 
     private void clearRegionalSpawns() {
         for (int plane = 0; plane < 4; plane++) {
@@ -9558,7 +9478,7 @@ public class Client extends GameApplet implements RSClient {
                     packetSender.getBuffer().writeByte(bigY[i_4] - i7);
                 }
                 packetSender.getBuffer().writeLEShort(i7 + regionBaseY);
-                packetSender.getBuffer().writeNegatedByte((super.keyArray[5] != 1 ? 0 : 1));
+                packetSender.getBuffer().writeNegatedByte((KeyHandler.instance.keyArray[5] != 1 ? 0 : 1));
                 return true;
             }
         } catch (Exception e) {
@@ -9933,12 +9853,12 @@ public class Client extends GameApplet implements RSClient {
         if (specialHover) {
             return;
         }
-        if (super.clickMode3 == 1) {
-            int i = super.saveClickX - 25 - 547;
-            int j = super.saveClickY - 5 - 3;
-            if (frameMode != ScreenMode.FIXED) {
-                i = super.saveClickX - (frameWidth - 182 + 24);
-                j = super.saveClickY - 8;
+        if (MouseHandler.clickMode3 == 1) {
+            int i = MouseHandler.saveClickX - 25 - 547;
+            int j = MouseHandler.saveClickY - 5 - 3;
+            if (isResized()) {
+                i = MouseHandler.saveClickX - (canvasWidth - 182 + 24);
+                j = MouseHandler.saveClickY - 8;
             }
             if (inCircle(0, 0, i, j, 76) && mouseMapPosition() && !runHover) {
                 i -= 73;
@@ -10005,16 +9925,16 @@ public class Client extends GameApplet implements RSClient {
 
     private String interfaceIntToString(int j) {
         if (j < 0x3b9ac9ff)
-            return String.valueOf(format.format(j));
+            return format.format(j);
         else
             return "*";
     }
 
     private void showErrorScreen() {
-        Graphics g = getGameComponent().getGraphics();
+        Graphics g = Client.instance.canvas.getGraphics();
         g.setColor(Color.black);
         g.fillRect(0, 0, 765, 503);
-        method4(1);
+
         if (loadingError) {
             aBoolean831 = false;
             g.setFont(new Font("Helvetica", 1, 16));
@@ -10177,7 +10097,7 @@ public class Client extends GameApplet implements RSClient {
 
     private void drawGameScreen() {
         if (fullscreenInterfaceID != -1
-                && (loadingStage == 2 || super.fullGameScreen != null)) {
+                && (loadingStage == 2)) {
             if (loadingStage == 2) {
                 try {
                     processWidgetAnimations(tickDelta, fullscreenInterfaceID);
@@ -10188,8 +10108,7 @@ public class Client extends GameApplet implements RSClient {
 
                 }
                 tickDelta = 0;
-                resetAllImageProducers();
-                super.fullGameScreen.initDrawingArea();
+
                 Rasterizer3D.scanOffsets = fullScreenTextureArray;
                 Rasterizer2D.clear();
                 welcomeScreenRaised = true;
@@ -10226,12 +10145,7 @@ public class Client extends GameApplet implements RSClient {
                 }
             }
             drawCount++;
-            super.fullGameScreen.drawGraphics(0, super.graphics, 0);
             return;
-        } else {
-            if (drawCount != 0) {
-                setupGameplayScreen();
-            }
         }
         if (welcomeScreenRaised) {
             welcomeScreenRaised = false;
@@ -10250,12 +10164,12 @@ public class Client extends GameApplet implements RSClient {
         drawTabArea();
         if (backDialogueId == -1) {
             aClass9_1059.scrollPosition = anInt1211 - anInt1089 - 110;
-            if (super.mouseX >= 496 && super.mouseX <= 511
-                    && super.mouseY > (frameMode == ScreenMode.FIXED ? 345
-                    : frameHeight - 158))
-                method65(494, 110, super.mouseX,
-                        super.mouseY - (frameMode == ScreenMode.FIXED ? 345
-                                : frameHeight - 158),
+            if (MouseHandler.mouseX >= 496 && MouseHandler.mouseX <= 511
+                    && MouseHandler.mouseY > (!isResized() ? 345
+                    : canvasHeight - 158))
+                method65(494, 110, MouseHandler.mouseX,
+                        MouseHandler.mouseY - (!isResized() ? 345
+                                : canvasHeight - 158),
                         aClass9_1059, 0, false, anInt1211);
             int i = anInt1211 - 110 - aClass9_1059.scrollPosition;
             if (i < 0) {
@@ -10493,8 +10407,8 @@ public class Client extends GameApplet implements RSClient {
                                     if (item_icon != null) {
                                         if (activeInterfaceType != 0 && anInt1085 == item && anInt1084 == childInterface.id) {
 
-                                            dragOffsetX = super.mouseX - anInt1087;
-                                            dragOffsetY = super.mouseY - anInt1088;
+                                            dragOffsetX = MouseHandler.mouseX - anInt1087;
+                                            dragOffsetY = MouseHandler.mouseY - anInt1088;
 
                                             if (dragOffsetX < 5 && dragOffsetX > -5)
                                                 dragOffsetX = 0;
@@ -11586,24 +11500,33 @@ public class Client extends GameApplet implements RSClient {
                 anInt1014 += (j - anInt1014) / 16;
             if (anInt1015 != k)
                 anInt1015 += (k - anInt1015) / 16;
-            if (super.keyArray[1] == 1)
+            if (KeyHandler.instance.keyArray[1] == 1)
                 anInt1186 += (-26 - anInt1186) / 2;
-            else if (super.keyArray[2] == 1)
+            else if (KeyHandler.instance.keyArray[2] == 1)
                 anInt1186 += (26 - anInt1186) / 2;
             else
                 anInt1186 /= 2;
-            if (super.keyArray[3] == 1)
+            if (invertYaw) {
+                anInt1186= -anInt1186;
+            }
+            if (KeyHandler.instance.keyArray[3] == 1)
                 anInt1187 += (12 - anInt1187) / 2;
-            else if (super.keyArray[4] == 1)
+            else if (KeyHandler.instance.keyArray[4] == 1)
                 anInt1187 += (-12 - anInt1187) / 2;
             else
                 anInt1187 /= 2;
+            if (invertPitch) {
+                anInt1187 = -anInt1187;
+            }
+
             cameraHorizontal = cameraHorizontal + anInt1186 / 2 & 0x7ff;
             anInt1184 += anInt1187 / 2;
+
             if (anInt1184 < 128)
                 anInt1184 = 128;
             if (anInt1184 > 383)
                 anInt1184 = 383;
+            onCameraPitchTargetChanged(anInt1184);
             int l = anInt1014 >> 7;
             int i1 = anInt1015 >> 7;
             int j1 = getCenterHeight(plane, anInt1015, anInt1014);
@@ -11665,17 +11588,30 @@ public class Client extends GameApplet implements RSClient {
         }
     }
 
-    public void processDrawing() {
+    public int gameState = -1;
+
+    @Override
+    public void draw(boolean redraw) {
         if (rsAlreadyLoaded || loadingError || genericLoadingError) {
             showErrorScreen();
             return;
         }
-        if (!loggedIn)
-            drawLoginScreen();
-        else
-            drawGameScreen();
+        callbacks.frame();
+        updateCamera();
 
-        gameScreenImageProducer.drawGraphics(0, super.graphics, 0);
+        if (gameState == GameState.STARTING.getState()) {
+            this.drawInitial(loadingPercent, loadingText, redraw);
+        } else if (gameState == GameState.LOGIN_SCREEN.getState()) {
+            drawLoginScreen();
+        } else if (gameState == GameState.CONNECTION_LOST.getState()) {
+            drawLoadingMessage("Connection lost" + "<br>" + "Please wait - attempting to reestablish");
+        } else if (gameState == GameState.LOADING.getState()) {
+            drawLoadingMessage("Loading - please wait.");
+        } else if (gameState == GameState.LOGGED_IN.getState()) {
+            drawGameScreen();
+            rasterProvider.drawFull(0, 0);
+        }
+
         anInt1213 = 0;
     }
 
@@ -11700,7 +11636,7 @@ public class Client extends GameApplet implements RSClient {
             drawExpCounter();
         }
         if (crossType == 1) {
-            int offSet = frameMode == ScreenMode.FIXED ? 4 : 0;
+            int offSet = !isResized() ? 4 : 0;
             crosses[crossIndex / 100].drawSprite(crossX - 8 - offSet, crossY - 8 - offSet);
             anInt1142++;
             if (anInt1142 > 67) {
@@ -11709,7 +11645,7 @@ public class Client extends GameApplet implements RSClient {
             }
         }
         if (crossType == 2) {
-            int offSet = frameMode == ScreenMode.FIXED ? 4 : 0;
+            int offSet = !isResized() ? 4 : 0;
             crosses[4 + crossIndex / 100].drawSprite(crossX - 8 - offSet,
                     crossY - 8 - offSet);
         }
@@ -11717,11 +11653,11 @@ public class Client extends GameApplet implements RSClient {
             try {
                 processWidgetAnimations(tickDelta, openWalkableInterface);
                 Widget rsinterface = Widget.interfaceCache[openWalkableInterface];
-                if (frameMode == ScreenMode.FIXED) {
+                if (!isResized()) {
                     drawInterface(0, 0, rsinterface, 0);
                 } else {
                     Widget r = Widget.interfaceCache[openWalkableInterface];
-                    int x = frameWidth - 215;
+                    int x = canvasWidth - 215;
                     x -= r.width;
                     int min_y = Integer.MAX_VALUE;
                     for (int i = 0; i < r.children.length; i++) {
@@ -11736,18 +11672,18 @@ public class Client extends GameApplet implements RSClient {
         	try {
 	        	processWidgetAnimations(tickDelta, openInterfaceId);
 				int w = 512, h = 334;
-				int x = frameMode == ScreenMode.FIXED ? 0 : (frameWidth / 2) - 256;
-				int y = frameMode == ScreenMode.FIXED ? 0 : (frameHeight / 2) - 167;
+				int x = !isResized() ? 0 : (canvasWidth / 2) - 256;
+				int y = !isResized() ? 0 : (canvasHeight / 2) - 167;
 				int count = stackSideStones ? 3 : 4;
-				if (frameMode != ScreenMode.FIXED) {
+				if (isResized()) {
 					for (int i = 0; i < count; i++) {
-						if (x + w > (frameWidth - 225)) {
+						if (x + w > (canvasWidth - 225)) {
 							x = x - 30;
 							if (x < 0) {
 								x = 0;
 							}
 						}
-						if (y + h > (frameHeight - 182)) {
+						if (y + h > (canvasHeight - 182)) {
 							y = y - 30;
 							if (y < 0) {
 								y = 0;
@@ -11774,14 +11710,14 @@ public class Client extends GameApplet implements RSClient {
 
         // Multi sign
         if (multicombat == 1) {
-            multiOverlay.drawSprite(frameMode == ScreenMode.FIXED ? 472 : frameWidth - 255, frameMode == ScreenMode.FIXED ? 296 : 50);
+            multiOverlay.drawSprite(!isResized() ? 472 : canvasWidth - 255, !isResized() ? 296 : 50);
         }
 
         // Effect timers
         drawEffectTimers();
         int x = regionBaseX + (localPlayer.x - 6 >> 7);
         int y = regionBaseY + (localPlayer.y - 6 >> 7);
-        final String screenMode = frameMode == ScreenMode.FIXED ? "Fixed" : "Resizable";
+        final String screenMode = !isResized() ? "Fixed" : "Resizable";
         if (Configuration.displayFps) {
             displayFps();
         }
@@ -11791,11 +11727,11 @@ public class Client extends GameApplet implements RSClient {
             regularText.render(textColour, "Client Zoom: " + cameraZoom, 90, 5);
             regularText.render(textColour, "Brightness: " + brightnessState, 105, 5);
 
-            regularText.render(textColour, "Resize Mouse X: " + (super.mouseX - frameWidth) + " , Resize Mouse Y: " + (super.mouseY - frameHeight), 15, 5);
-            regularText.render(textColour, "Mouse X: " + super.mouseX + " , Mouse Y: " + super.mouseY, 30, 5);
+            regularText.render(textColour, "Resize Mouse X: " + (MouseHandler.mouseX - canvasWidth) + " , Resize Mouse Y: " + (MouseHandler.mouseY - canvasHeight), 15, 5);
+            regularText.render(textColour, "Mouse X: " + MouseHandler.mouseX + " , Mouse Y: " + MouseHandler.mouseY, 30, 5);
             regularText.render(textColour, "Coords: " + x + ", " + y, 45, 5);
             regularText.render(textColour, "Client Mode: " + screenMode + "", 60, 5);
-            regularText.render(textColour, "Client Resolution: " + frameWidth + "x" + frameHeight, 75, 5);
+            regularText.render(textColour, "Client Resolution: " + canvasWidth + "x" + canvasHeight, 75, 5);
 
             regularText.render(textColour, "Object Maps: " + objectMaps, 130, 5);
             regularText.render(textColour, "Floor Maps: " + floorMaps, 145, 5);
@@ -11803,7 +11739,7 @@ public class Client extends GameApplet implements RSClient {
         if (systemUpdateTime != 0) {
             int seconds = systemUpdateTime / 50;
             int minutes = seconds / 60;
-            int yOffset = frameMode == ScreenMode.FIXED ? 0 : frameHeight - 498;
+            int yOffset = !isResized() ? 0 : canvasHeight - 498;
             seconds %= 60;
             if (seconds < 10)
                 regularText.render(0xffff00,
@@ -11826,21 +11762,21 @@ public class Client extends GameApplet implements RSClient {
             return false;
         }
 
-        boolean fixed = frameMode == ScreenMode.FIXED;
+        boolean fixed = !isResized();
         
         int w = 512, h = 334;
-		int x = fixed ? 0 : (frameWidth / 2) - 256;
-		int y = fixed ? 0 : (frameHeight / 2) - 167;
+		int x = fixed ? 0 : (canvasWidth / 2) - 256;
+		int y = fixed ? 0 : (canvasHeight / 2) - 167;
 		int count = stackSideStones ? 3 : 4;
 		if (!fixed) {
 			for (int i = 0; i < count; i++) {
-				if (x + w > (frameWidth - 225)) {
+				if (x + w > (canvasWidth - 225)) {
 					x = x - 30;
 					if (x < 0) {
 						x = 0;
 					}
 				}
-				if (y + h > (frameHeight - 182)) {
+				if (y + h > (canvasHeight - 182)) {
 					y = y - 30;
 					if (y < 0) {
 						y = 0;
@@ -11853,9 +11789,9 @@ public class Client extends GameApplet implements RSClient {
         int offsetY = fixed ? 0 : y;
 
         int[] offsets = {61, 102, 142, 182, 222, 262, 302, 342, 382, 422};
-        if (anInt1084 >= 50300 && anInt1084 < 50312 && super.mouseY >= 40 + offsetY && super.mouseY <= 77 + offsetY) {
+        if (anInt1084 >= 50300 && anInt1084 < 50312 && MouseHandler.mouseY >= 40 + offsetY && MouseHandler.mouseY <= 77 + offsetY) {
             for (int i = 0; i < offsets.length; i++) {
-                if (super.mouseX < offsets[i] + offsetX) {
+                if (MouseHandler.mouseX < offsets[i] + offsetX) {
                     packetSender.sendBankTabCreation(anInt1084, anInt1085, i);
                     return true;
                 }
@@ -11971,17 +11907,17 @@ public class Client extends GameApplet implements RSClient {
         boxLength += 8;
         int offset = 15 * menuActionRow + 21;
 
-        if (super.saveClickX > 0 && super.saveClickY > 0 && super.saveClickX < frameWidth && super.saveClickY < frameHeight) {
-            int xClick = super.saveClickX - boxLength / 2;
-            if (xClick + boxLength > frameWidth - 4) {
-                xClick = frameWidth - 4 - boxLength;
+        if (MouseHandler.saveClickX > 0 && MouseHandler.saveClickY > 0 && MouseHandler.saveClickX < canvasWidth && MouseHandler.saveClickY < canvasHeight) {
+            int xClick = MouseHandler.saveClickX - boxLength / 2;
+            if (xClick + boxLength > canvasWidth - 4) {
+                xClick = canvasWidth - 4 - boxLength;
             }
             if (xClick < 0) {
                 xClick = 0;
             }
-            int yClick = super.saveClickY - 0;
-            if (yClick + offset > frameHeight - 6) {
-                yClick = frameHeight - 6 - offset;
+            int yClick = MouseHandler.saveClickY - 0;
+            if (yClick + offset > canvasHeight - 6) {
+                yClick = canvasHeight - 6 - offset;
             }
             if (yClick < 0) {
                 yClick = 0;
@@ -12400,7 +12336,7 @@ public class Client extends GameApplet implements RSClient {
     
     private void drawHoverMenu(int x, int y) {
 		boolean active = hoverMenuActive;
-		if (Configuration.enableTooltipHovers && menuActionRow > 0 && super.mouseX >= 0 && super.mouseY >= 0) {
+		if (Configuration.enableTooltipHovers && menuActionRow > 0 && MouseHandler.mouseX >= 0 && MouseHandler.mouseY >= 0) {
 			buildHoverMenu(x, y);
 		} else {
 			hoverMenuActive = false;
@@ -12430,16 +12366,16 @@ public class Client extends GameApplet implements RSClient {
 		
 		GameFont font = smallText;
     	
-		int drawX = super.mouseX + 10;
-		int drawY = super.mouseY;
+		int drawX = MouseHandler.mouseX + 10;
+		int drawY = MouseHandler.mouseY;
 		int width = font.getTextWidth(text) + 7;
 		int height = font.verticalSpace + 8;
-		if (drawX < frameWidth && drawY < frameHeight) {
-			if (drawX + width + 3 > frameWidth) {
-				drawX = frameWidth - width - 3;
+		if (drawX < canvasWidth && drawY < canvasHeight) {
+			if (drawX + width + 3 > canvasWidth) {
+				drawX = canvasWidth - width - 3;
 			}
-			if (drawY + height + 3 > frameHeight) {
-				drawY = frameHeight - height - 3;
+			if (drawY + height + 3 > canvasHeight) {
+				drawY = canvasHeight - height - 3;
 			}
 		}
 		drawX -= x;
@@ -12475,48 +12411,48 @@ public class Client extends GameApplet implements RSClient {
         if (l > 6400) {
             return;
         }
-        int xOffset = frameMode == ScreenMode.FIXED ? 516 : 0;
-        int yOffset = frameMode == ScreenMode.FIXED ? 0 : 0;
+        int xOffset = !isResized() ? 516 : 0;
+        int yOffset = !isResized() ? 0 : 0;
         int sineAngle = Model.SINE[angle];
         int cosineAngle = Model.COSINE[angle];
         sineAngle = (sineAngle * 256) / (minimapZoom + 256);
         cosineAngle = (cosineAngle * 256) / (minimapZoom + 256);
         int spriteOffsetX = y * sineAngle + x * cosineAngle >> 16;
         int spriteOffsetY = y * cosineAngle - x * sineAngle >> 16;
-        if (frameMode == ScreenMode.FIXED) {
+        if (!isResized()) {
             sprite.drawSprite(xOffset + ((94 + spriteOffsetX) - sprite.maxWidth / 2) + 4 + 30,
                     yOffset+ 83 - spriteOffsetY - sprite.maxHeight / 2 - 4 + 5);
         } else {
             sprite.drawSprite(
                     xOffset+ ((77 + spriteOffsetX) - sprite.maxWidth / 2) + 4 + 5
-                            + (frameWidth - 167),
+                            + (canvasWidth - 167),
                     yOffset+ 85 - spriteOffsetY - sprite.maxHeight / 2);
         }
     }
 
     private void drawMinimap() {
-        int xOffset = frameMode == ScreenMode.FIXED ? 516 : 0;
+        int xOffset = !isResized() ? 516 : 0;
 
 
         if (minimapState == 2) {
-            if (frameMode == ScreenMode.FIXED) {
+            if (!isResized()) {
                 spriteCache.draw(19, xOffset, 0);
             } else {
-                spriteCache.draw(44, frameWidth - 181, 0);
-                spriteCache.draw(45, frameWidth - 158, 7);
+                spriteCache.draw(44, canvasWidth - 181, 0);
+                spriteCache.draw(45, canvasWidth - 158, 7);
             }
-            if (frameMode != ScreenMode.FIXED && stackSideStones) {
-                if (super.mouseX >= frameWidth - 26 && super.mouseX <= frameWidth - 1
-                        && super.mouseY >= 2 && super.mouseY <= 24 || tabId == 15) {
-                    spriteCache.draw(27, frameWidth - 25, 2);
+            if (isResized() && stackSideStones) {
+                if (MouseHandler.mouseX >= canvasWidth - 26 && MouseHandler.mouseX <= canvasWidth - 1
+                        && MouseHandler.mouseY >= 2 && MouseHandler.mouseY <= 24 || tabId == 15) {
+                    spriteCache.draw(27, canvasWidth - 25, 2);
                 } else {
-                    spriteCache.draw(27, frameWidth - 25, 2, 165, true);
+                    spriteCache.draw(27, canvasWidth - 25, 2, 165, true);
                 }
             }
             loadAllOrbs();
             compass.rotate(33, cameraHorizontal, anIntArray1057, 256, anIntArray968,
-                    (frameMode == ScreenMode.FIXED ? 25 : 24), 4,
-                    (frameMode == ScreenMode.FIXED ? xOffset + 29 : frameWidth - 176), 33, 25);
+                    (!isResized() ? 25 : 24), 4,
+                    (!isResized() ? xOffset + 29 : canvasWidth - 176), 33, 25);
 
 
             return;
@@ -12524,8 +12460,8 @@ public class Client extends GameApplet implements RSClient {
         int angle = cameraHorizontal + minimapRotation & 0x7ff;
         int centreX = 48 + localPlayer.x / 32;
         int centreY = 464 - localPlayer.y / 32;
-        minimapImage.rotate(151, angle, minimapLineWidth, 256 + minimapZoom, minimapLeft, centreY, (frameMode == ScreenMode.FIXED ? 9 : 7),
-                (frameMode == ScreenMode.FIXED ? xOffset + 54 : frameWidth - 158), 146, centreX);
+        minimapImage.rotate(151, angle, minimapLineWidth, 256 + minimapZoom, minimapLeft, centreY, (!isResized() ? 9 : 7),
+                (!isResized() ? xOffset + 54 : canvasWidth - 158), 146, centreX);
         for (int icon = 0; icon < anInt1071; icon++) {
             int mapX = (minimapHintX[icon] * 4 + 2) - localPlayer.x / 32;
             int mapY = (minimapHintY[icon] * 4 + 2) - localPlayer.y / 32;
@@ -12623,22 +12559,22 @@ public class Client extends GameApplet implements RSClient {
             int mapY = (destinationY * 4 + 2) - localPlayer.y / 32;
             markMinimap(mapFlag, mapX, mapY);
         }
-        Rasterizer2D.drawBox((frameMode == ScreenMode.FIXED ? xOffset + 127 : frameWidth - 88), (frameMode == ScreenMode.FIXED ? 83 : 80), 3, 3,
+        Rasterizer2D.drawBox((!isResized() ? xOffset + 127 : canvasWidth - 88), (!isResized() ? 83 : 80), 3, 3,
                 0xffffff);
-        if (frameMode == ScreenMode.FIXED) {
+        if (!isResized()) {
             spriteCache.draw(19, xOffset, 0);
         } else {
-            spriteCache.draw(44, frameWidth - 181, 0);
+            spriteCache.draw(44, canvasWidth - 181, 0);
         }
         compass.rotate(33, cameraHorizontal, anIntArray1057, 256, anIntArray968,
-                (frameMode == ScreenMode.FIXED ? 25 : 24), 4,
-                (frameMode == ScreenMode.FIXED ? xOffset + 29 : frameWidth - 176), 33, 25);
-        if (frameMode != ScreenMode.FIXED && stackSideStones) {
-            if (super.mouseX >= frameWidth - 26 && super.mouseX <= frameWidth - 1
-                    && super.mouseY >= 2 && super.mouseY <= 24 || tabId == 10) {
-                spriteCache.draw(27, frameWidth - 25, 2);
+                (!isResized() ? 25 : 24), 4,
+                (!isResized() ? xOffset + 29 : canvasWidth - 176), 33, 25);
+        if (isResized() && stackSideStones) {
+            if (MouseHandler.mouseX >= canvasWidth - 26 && MouseHandler.mouseX <= canvasWidth - 1
+                    && MouseHandler.mouseY >= 2 && MouseHandler.mouseY <= 24 || tabId == 10) {
+                spriteCache.draw(27, canvasWidth - 25, 2);
             } else {
-                spriteCache.draw(27, frameWidth - 25, 2, 165, true);
+                spriteCache.draw(27, canvasWidth - 25, 2, 165, true);
             }
         }
         loadAllOrbs();
@@ -12647,9 +12583,9 @@ public class Client extends GameApplet implements RSClient {
 
     private void loadAllOrbs() {
 
-        boolean fixed = frameMode == ScreenMode.FIXED;
+        boolean fixed = !isResized();
         boolean specOrb = Configuration.enableSpecOrb;
-        int xOffset = fixed ? 516 : frameWidth - 217;
+        int xOffset = fixed ? 516 : canvasWidth - 217;
 
         if (specOrb) {
             loadSpecialOrb(xOffset);
@@ -12664,11 +12600,11 @@ public class Client extends GameApplet implements RSClient {
         loadRunOrb(specOrb ? xOffset : xOffset + 13, specOrb ? 0 : 15);
 
 		/* World map */
-        spriteCache.draw(worldHover ? 52 : 51, fixed ? xOffset + 196 : frameWidth - 34, fixed ? 126 : 139);
+        spriteCache.draw(worldHover ? 52 : 51, fixed ? xOffset + 196 : canvasWidth - 34, fixed ? 126 : 139);
 		/* Xp counter */
         int offSprite = Configuration.expCounterOpen ? 53 : 22;
         int onSprite = Configuration.expCounterOpen ? 54 : 23;
-        spriteCache.draw(expCounterHover ? onSprite : offSprite, fixed ? xOffset : frameWidth - 216, 21);
+        spriteCache.draw(expCounterHover ? onSprite : offSprite, fixed ? xOffset : canvasWidth - 216, 21);
     }
 
     private void loadHpOrb(int xOffset) {
@@ -12797,18 +12733,18 @@ public class Client extends GameApplet implements RSClient {
               
                 if ((type == 3 || type == 7) && (type == 7 || privateChatMode == 0
                         || privateChatMode == 1 && isFriendOrSelf(name))) {
-                    int offSet = frameMode == ScreenMode.FIXED ? 4 : 0;
+                    int offSet = !isResized() ? 4 : 0;
                     int y = 329 - message * 13;
-                    if (frameMode != ScreenMode.FIXED) {
-                        y = frameHeight - 170 - message * 13;
+                    if (isResized()) {
+                        y = canvasHeight - 170 - message * 13;
                     }
-                    if (super.mouseX > 4 && super.mouseY - offSet > y - 10
-                            && super.mouseY - offSet <= y + 3) {
+                    if (MouseHandler.mouseX > 4 && MouseHandler.mouseY - offSet > y - 10
+                            && MouseHandler.mouseY - offSet <= y + 3) {
                         int i1 = regularText.getTextWidth(
                                 "From:  " + name + chatMessages[index]) + 25;
                         if (i1 > 450)
                             i1 = 450;
-                        if (super.mouseX < 4 + i1) {
+                        if (MouseHandler.mouseX < 4 + i1) {
                             if (!isFriendOrSelf(name)) {
                                 menuActionText[menuActionRow] = "Add ignore @whi@" + name;
                                 menuActionTypes[menuActionRow] = 2042;
@@ -12954,12 +12890,11 @@ public class Client extends GameApplet implements RSClient {
     private boolean rememberMe = true;
 
     private void drawLoginScreen() {
-        setGameState(GameState.LOGIN_SCREEN);
-        resetAllImageProducers();
+
         //Draw bg
         spriteCache.lookup(339).drawAdvancedSprite(0, 0);
 
-        //newBoldFont.drawBasicString("MouseX: "+super.mouseX+", MouseY: "+super.mouseY, 20, 200);
+        //newBoldFont.drawBasicString("MouseX: "+MouseHandler.mouseX+", MouseY: "+MouseHandler.mouseY, 20, 200);
 
         if(registeringAccount) {
 
@@ -13349,8 +13284,8 @@ public class Client extends GameApplet implements RSClient {
     }
 
     public boolean newmouseInRegion(int x1, int y1, Sprite drawnSprite) {
-        if (super.mouseX >= x1 && super.mouseX <= x1 + drawnSprite.myWidth && super.mouseY >= y1
-                && super.mouseY <= y1 + drawnSprite.myHeight)
+        if (MouseHandler.mouseX >= x1 && MouseHandler.mouseX <= x1 + drawnSprite.myWidth && MouseHandler.mouseY >= y1
+                && MouseHandler.mouseY <= y1 + drawnSprite.myHeight)
             return true;
         return false;
     }
@@ -13362,7 +13297,7 @@ public class Client extends GameApplet implements RSClient {
         passwordInputHover = newmouseInRegion(270, 278, spriteCache.lookup(635));
         rememberMeHover = newmouseInRegion(397, 310, spriteCache.lookup(639));
         loginHover = newmouseInRegion(300, 330, spriteCache.lookup(637));
-        if (super.clickMode3 == 1) {
+        if (MouseHandler.clickMode3 == 1) {
             if(usernameInputHover) {
                 loginScreenCursorPos = 0;
             } else if(passwordInputHover) {
@@ -13376,7 +13311,7 @@ public class Client extends GameApplet implements RSClient {
         }
 
         do {
-            int l1 = readChar(-796);
+            int l1 = KeyHandler.instance.readChar();
             if (l1 == -1)
                 break;
             boolean flag1 = false;
@@ -13527,6 +13462,7 @@ public class Client extends GameApplet implements RSClient {
         zCameraPos = i1 - k2;
         yCameraPos = k1 - l2;
         yCameraCurve = k;
+        onCameraPitchChanged(k);
         xCameraCurve = j1;
     }
 
@@ -14097,8 +14033,7 @@ public class Client extends GameApplet implements RSClient {
                 loadingStage = 1;
                 loadingStartTime = System.currentTimeMillis();
 
-                drawLoadingMessages(1, "Loading - please wait.", null);
-                gameScreenImageProducer.drawGraphics(0, super.graphics, 0);
+                setGameState(GameState.LOADING);
                 if (opcode == 73) {
                     int regionCount = 0;
                     for (int x = (currentRegionX - 6) / 8; x <= (currentRegionX + 6) / 8; x++) {
@@ -15198,13 +15133,8 @@ public class Client extends GameApplet implements RSClient {
         int k2 = Rasterizer3D.lastTextureRetrievalCount;
         Model.obj_exists = true;
         Model.obj_loaded = 0;
-        Model.anInt1685 = super.mouseX - (frameMode == ScreenMode.FIXED ? 4 : 0);
-        Model.anInt1686 = super.mouseY - (frameMode == ScreenMode.FIXED ? 4 : 0);
-
-
-        if (Client.processGpuPlugin() && gameState != GameState.LOGGED_IN) {
-            return;
-        }
+        Model.anInt1685 = MouseHandler.mouseX - (!isResized() ? 4 : 0);
+        Model.anInt1686 = MouseHandler.mouseY - (!isResized() ? 4 : 0);
 
         Rasterizer2D.clear();
         if (Rasterizer3D.fieldOfView != cameraZoom) {
@@ -15212,12 +15142,13 @@ public class Client extends GameApplet implements RSClient {
         }
 
         // Cap the buffer
-        Rasterizer2D.setDrawingArea(screenAreaHeight,
-                (frameMode == ScreenMode.FIXED ? 4 : 0),
-                screenAreaWidth,
-                (frameMode == ScreenMode.FIXED ? 4 : 0));
+        Rasterizer2D.setDrawingArea(getViewportHeight(),
+                (!isResized() ? 4 : 0),
+                getViewportWidth(),
+                (!isResized() ? 4 : 0));
+        callbacks.post(BeforeRender.INSTANCE);
         scene.render(xCameraPos, yCameraPos, xCameraCurve, zCameraPos, j, yCameraCurve);
-        gameScreenImageProducer.initDrawingArea();
+        rasterProvider.setRaster();
         scene.clearGameObjectCache();
 
         if (Configuration.enableGroundItemNames) {
@@ -15241,7 +15172,7 @@ public class Client extends GameApplet implements RSClient {
                 drawExpCounterDrops();
             }
         }
-        if(frameMode == ScreenMode.FIXED) {
+        if(!isResized()) {
             leftFrame.method346(0, 4);
             topFrame.method346(0, 0);
         }
@@ -15309,17 +15240,17 @@ public class Client extends GameApplet implements RSClient {
         if (openInterfaceId == 15244) {
             return;
         }
-        final boolean fixed = frameMode == ScreenMode.FIXED;
-        if (fixed ? super.mouseX >= 542 && super.mouseX <= 579 && super.mouseY >= 2
-                && super.mouseY <= 38
-                : super.mouseX >= frameWidth - 180 && super.mouseX <= frameWidth - 139
-                && super.mouseY >= 0 && super.mouseY <= 40) {
+        final boolean fixed = !isResized();
+        if (fixed ? MouseHandler.mouseX >= 542 && MouseHandler.mouseX <= 579 && MouseHandler.mouseY >= 2
+                && MouseHandler.mouseY <= 38
+                : MouseHandler.mouseX >= canvasWidth - 180 && MouseHandler.mouseX <= canvasWidth - 139
+                && MouseHandler.mouseY >= 0 && MouseHandler.mouseY <= 40) {
             menuActionText[1] = "Look North";
             menuActionTypes[1] = 696;
             menuActionRow = 2;
         }
-        if (frameMode != ScreenMode.FIXED && stackSideStones) {
-            if (super.mouseX >= frameWidth - 26 && super.mouseX <= frameWidth - 1 && super.mouseY >= 2 && super.mouseY <= 24) {
+        if (isResized() && stackSideStones) {
+            if (MouseHandler.mouseX >= canvasWidth - 26 && MouseHandler.mouseX <= canvasWidth - 1 && MouseHandler.mouseY >= 2 && MouseHandler.mouseY <= 24) {
                 menuActionText[1] = "Logout";
                 menuActionTypes[1] = 700;
                 menuActionRow = 2;
@@ -15370,8 +15301,8 @@ public class Client extends GameApplet implements RSClient {
     public void drawExpCounter() {
 
         final boolean wilderness = openWalkableInterface == 23300;
-        int xPos = wilderness && frameMode != ScreenMode.FIXED ? frameWidth - 363 : frameWidth - 375;
-        int yPos = wilderness ? (frameMode != ScreenMode.FIXED ? 114 : 100) : 6;
+        int xPos = wilderness && isResized() ? canvasWidth - 363 : canvasWidth - 375;
+        int yPos = wilderness ? (isResized() ? 114 : 100) : 6;
 
         // Draw box
         spriteCache.draw(452, xPos, yPos, true);
@@ -15388,7 +15319,7 @@ public class Client extends GameApplet implements RSClient {
 
         RSFont xp_font = newSmallFont;
         int font_height = 24;
-        int x = frameWidth - 261;
+        int x = canvasWidth - 261;
         int y = wilderness ? -70 : -100;
 
         for (int i = 0; i < xp_added.length; i++) {
@@ -15532,26 +15463,14 @@ public class Client extends GameApplet implements RSClient {
         }
     }
 
-    public void resetAllImageProducers() {
-        gameScreenImageProducer = new ProducingGraphicsBuffer(frameWidth, frameHeight);
-        Rasterizer2D.clear();
-        welcomeScreenRaised = true;
-    }
-
     public void mouseWheelDragged(int i, int j) {
-        if (!mouseWheelDown) {
+        if (!MouseWheelHandler.mouseWheelDown) {
             return;
         }
-        this.anInt1186 += i * 3;
-        this.anInt1187 += (j << 1);
+        anInt1186 += i * 3;
+        anInt1187 += (j << 1);
     }
-
-    float PercentCalc(long Number1, long number2) {
-        float percentage;
-        percentage = (Number1 * 100 / number2);
-        return percentage;
-    }
-
+    
     public int getMyPrivilege() {
         return myPrivilege;
     }
@@ -15563,7 +15482,7 @@ public class Client extends GameApplet implements RSClient {
             fpsColour = 0xff0000;
         }
         
-        int x = frameMode == ScreenMode.FIXED ? 468 : frameWidth - 265;
+        int x = !isResized() ? 468 : canvasWidth - 265;
         int y = 12;
         if (Configuration.expCounterOpen) {
             y += 35;
@@ -15619,8 +15538,8 @@ public class Client extends GameApplet implements RSClient {
             Rasterizer2D.drawTransparentVerticalLine(i, 0, 334, 0x6699ff, 90);
         }
 
-        int x = super.mouseX - 4 - ((super.mouseX - 4) % 10);
-        int y = super.mouseY - 4 - ((super.mouseY - 4) % 10);
+        int x = MouseHandler.mouseX - 4 - ((MouseHandler.mouseX - 4) % 10);
+        int y = MouseHandler.mouseY - 4 - ((MouseHandler.mouseY - 4) % 10);
 
         Rasterizer2D.drawTransparentBoxOutline(x, y, 10, 10, 0xffff00, 255);
         newSmallFont.drawCenteredString("(" + (x + 4) + ", " + (y + 4) + ")", x + 4, y - 1, 0xffff00, 0);
@@ -15729,10 +15648,6 @@ public class Client extends GameApplet implements RSClient {
             e.printStackTrace();
         }
     }
-    
-    public enum ScreenMode {
-        FIXED, RESIZABLE, FULLSCREEN;
-    }
 
     private enum SpawnTabType {
         INVENTORY,
@@ -15745,58 +15660,9 @@ public class Client extends GameApplet implements RSClient {
     public DrawCallbacks drawCallbacks;
     @javax.inject.Inject
     private Callbacks callbacks;
-    private GameState gameState = GameState.STARTING;
-    private TextureManager textureManager = new TextureManager();
+
+    private final TextureManager textureManager = new TextureManager();
     private boolean gpu = false;
-
-
-    @Override
-    public Thread getClientThread() {
-        return clientThread;
-    }
-
-    @Override
-    public boolean isClientThread() {
-        return (this.clientThread == Thread.currentThread());
-    }
-
-    @Override
-    public void resizeCanvas() {
-    }
-
-    @Override
-    public boolean isResizeCanvasNextFrame() {
-        return false;
-    }
-
-    @Override
-    public void setResizeCanvasNextFrame(boolean resize) {
-
-    }
-
-    @Override
-    public boolean isReplaceCanvasNextFrame() {
-        return false;
-    }
-
-    @Override
-    public void setReplaceCanvasNextFrame(boolean replace) {
-    }
-
-    @Override
-    public void setMaxCanvasWidth(int width) {
-
-    }
-
-    @Override
-    public void setMaxCanvasHeight(int height) {
-
-    }
-
-    @Override
-    public void setFullRedraw(boolean fullRedraw) {
-
-    }
 
     @Override
     public Callbacks getCallbacks() {
@@ -15879,6 +15745,11 @@ public class Client extends GameApplet implements RSClient {
     }
 
     @Override
+    public String getUsername() {
+        return myUsername;
+    }
+
+    @Override
     public int getBoostedSkillLevel(Skill skill) {
         return 1;
     }
@@ -15906,17 +15777,17 @@ public class Client extends GameApplet implements RSClient {
 
     @Override
     public GameState getGameState() {
-        return gameState;
+        return GameState.of(gameState);
     }
 
     @Override
     public int getRSGameState() {
-        return loadingStage;
+        return gameState;
     }
 
     @Override
-    public void setRSGameState(int gameState) {
-
+    public void setRSGameState(int state) {
+        gameState = state;
     }
 
     @Override
@@ -15926,35 +15797,23 @@ public class Client extends GameApplet implements RSClient {
 
     @Override
     public void setMouseCanvasHoverPositionX(int x) {
-
+        MouseHandler.mouseX = x;
     }
 
     @Override
     public void setMouseCanvasHoverPositionY(int y) {
-
+        MouseHandler.mouseY = y;
     }
 
     @Override
     public void setGameState(GameState state) {
-        if(gameState.ordinal() == state.ordinal()) {
-            return;
-        }
-
-        gameState = state;
+        gameState = state.getState();
         GameStateChanged event = new GameStateChanged();
         event.setGameState(state);
-        callbacks.post(event);
-
-        switch(state) {
-            case LOADING: //let me check on a git one sec
-                if (processGpuPlugin()) {
-                    //it is a gpu/hd method I think
-                }
-                break;
-            case CONNECTION_LOST:
-                dropClient();
-                break;
+        if(callbacks != null) {
+            callbacks.post(event);
         }
+
     }
 
     @Override
@@ -15967,16 +15826,13 @@ public class Client extends GameApplet implements RSClient {
     }
 
     @Override
-    public String getUsername() {
-        return myUsername;
-    }
-
-    @Override
     public void setUsername(String name) {
+        myUsername = name;
     }
 
     @Override
     public void setPassword(String password) {
+        myPassword = password;
     }
 
     @Override
@@ -15997,16 +15853,6 @@ public class Client extends GameApplet implements RSClient {
     @Override
     public AccountType getAccountType() {
         return AccountType.NORMAL;
-    }
-
-    @Override
-    public Component getCanvas() {
-        return this;
-    }
-
-    @Override
-    public void post(Object canvas) {
-
     }
 
     @Override
@@ -16051,32 +15897,33 @@ public class Client extends GameApplet implements RSClient {
 
     @Override
     public int getCanvasHeight() {
-        return getGameComponent().getHeight();
+        return canvasHeight;
     }
 
     @Override
     public int getCanvasWidth() {
-        return getGameComponent().getWidth();
+        return canvasWidth;
     }
 
     @Override
     public int getViewportHeight() {
-        return screenAreaHeight;
+        return !isResized() ? 334 : canvasHeight;
     }
 
     @Override
     public int getViewportWidth() {
-        return screenAreaWidth;
+        return !isResized() ? 512 : canvasWidth;
+
     }
 
     @Override
     public int getViewportXOffset() {
-        return frameMode == ScreenMode.FIXED ? 4 : 0;
+        return !isResized() ? 4 : 0;
     }
 
     @Override
     public int getViewportYOffset() {
-        return frameMode == ScreenMode.FIXED ? 4 : 0;
+        return !isResized() ? 4 : 0;
     }
 
     @Override
@@ -16086,7 +15933,7 @@ public class Client extends GameApplet implements RSClient {
 
     @Override
     public Point getMouseCanvasPosition() {
-        return new Point(this.mouseX, this.mouseY);
+        return new Point(MouseHandler.mouseX, MouseHandler.mouseY);
     }
 
     @Override
@@ -16379,12 +16226,12 @@ public class Client extends GameApplet implements RSClient {
 
     @Override
     public int getMouseX() {
-        return mouseX;
+        return MouseHandler.mouseX;
     }
 
     @Override
     public int getMouseY() {
-        return mouseY;
+        return MouseHandler.mouseY;
     }
 
     @Override
@@ -16600,9 +16447,15 @@ public class Client extends GameApplet implements RSClient {
 
     }
 
+    public void setResized(boolean resized) {
+        this.resized = resized;
+    }
+
+    private boolean resized = false;
+
     @Override
     public boolean isResized() {
-        return frameMode == ScreenMode.RESIZABLE;
+        return resized;
     }
 
     @Override
@@ -16966,22 +16819,30 @@ public class Client extends GameApplet implements RSClient {
 
     @Override
     public RSAbstractRasterProvider getBufferProvider() {
-        return gameScreenImageProducer;
+        return rasterProvider;
     }
 
     @Override
     public int getMouseIdleTicks() {
-        return 0;
+        return MouseHandler.idleCycles;
     }
 
     @Override
     public long getMouseLastPressedMillis() {
-        return 0;
+        return MouseHandler.lastPressed;
+    }
+
+    public long getClientMouseLastPressedMillis() {
+        return MouseHandler.lastPressed;
+    }
+
+    public void setClientMouseLastPressedMillis(long mills) {
+        MouseHandler.lastPressed = mills;
     }
 
     @Override
     public int getKeyboardIdleTicks() {
-        return 0;
+        return KeyHandler.idleCycles;
     }
 
     @Override
@@ -17184,15 +17045,6 @@ public class Client extends GameApplet implements RSClient {
     @Override
     public void setMouseLastPressedMillis(long time) {
 
-    }
-
-    @Override
-    public long getClientMouseLastPressedMillis() {
-        return 0;
-    }
-
-    @Override
-    public void setClientMouseLastPressedMillis(long time) {
     }
 
     @Override
@@ -17415,19 +17267,36 @@ public class Client extends GameApplet implements RSClient {
         scene.camLeftRightX = v;
     }
 
+    static int lastPitch = 128;
+    static int lastPitchTarget = 128;
+
     @Override
     public void setCameraPitchRelaxerEnabled(boolean enabled) {
-        scene.pitchRelaxEnabled = enabled;
+
+        if (pitchRelaxEnabled == enabled)
+        {
+            return;
+        }
+        pitchRelaxEnabled = enabled;
+        if (!enabled)
+        {
+            int pitch = getCameraPitchTarget();
+            if (pitch > STANDARD_PITCH_MAX)
+            {
+                setCameraPitchTarget(STANDARD_PITCH_MAX);
+            }
+        }
+
     }
 
     @Override
     public void setInvertYaw(boolean state) {
-
+        invertYaw = state;
     }
 
     @Override
     public void setInvertPitch(boolean state) {
-
+        invertPitch = state;
     }
 
     @Override
@@ -17435,57 +17304,173 @@ public class Client extends GameApplet implements RSClient {
         return null;
     }
 
+    private static boolean stretchedEnabled;
+
+    private static boolean stretchedFast;
+
+    private static boolean stretchedIntegerScaling;
+
+    private static boolean stretchedKeepAspectRatio;
+
+    private static double scalingFactor;
+
+    private static Dimension cachedStretchedDimensions;
+
+    private static Dimension cachedRealDimensions;
+
     @Override
-    public boolean isStretchedEnabled() {
-        return frameMode == ScreenMode.RESIZABLE;
+    public boolean isStretchedEnabled()
+    {
+        return stretchedEnabled;
     }
 
     @Override
-    public void setStretchedEnabled(boolean state) {
-
+    public void setStretchedEnabled(boolean state)
+    {
+        stretchedEnabled = state;
     }
 
     @Override
-    public boolean isStretchedFast() {
-        return false;
+    public boolean isStretchedFast()
+    {
+        return stretchedFast;
     }
 
     @Override
-    public void setStretchedFast(boolean state) {
+    public void setStretchedFast(boolean state)
+    {
+        stretchedFast = state;
     }
 
     @Override
-    public void setStretchedIntegerScaling(boolean state) {
-
+    public void setStretchedIntegerScaling(boolean state)
+    {
+        stretchedIntegerScaling = state;
     }
 
     @Override
-    public void setStretchedKeepAspectRatio(boolean state) {
-
+    public void setStretchedKeepAspectRatio(boolean state)
+    {
+        stretchedKeepAspectRatio = state;
     }
 
     @Override
-    public void setScalingFactor(int factor) {
-
+    public void setScalingFactor(int factor)
+    {
+        scalingFactor = 1 + (factor / 100D);
     }
 
     @Override
-    public double getScalingFactor() {
-        return 0;
+    public double getScalingFactor()
+    {
+        return scalingFactor;
     }
 
     @Override
-    public void invalidateStretching(boolean resize) {
+    public Dimension getRealDimensions()
+    {
+        if (!isStretchedEnabled())
+        {
+            return getCanvas().getSize();
+        }
+
+        if (cachedRealDimensions == null)
+        {
+            if (isResized())
+            {
+                Container canvasParent = getCanvas().getParent();
+
+                int parentWidth = canvasParent.getWidth();
+                int parentHeight = canvasParent.getHeight();
+
+                int newWidth = (int) (parentWidth / scalingFactor);
+                int newHeight = (int) (parentHeight / scalingFactor);
+
+                if (newWidth < Constants.GAME_FIXED_WIDTH || newHeight < Constants.GAME_FIXED_HEIGHT)
+                {
+                    double scalingFactorW = (double)parentWidth / Constants.GAME_FIXED_WIDTH;
+                    double scalingFactorH = (double)parentHeight / Constants.GAME_FIXED_HEIGHT;
+                    double scalingFactor = Math.min(scalingFactorW, scalingFactorH);
+
+                    newWidth = (int) (parentWidth / scalingFactor);
+                    newHeight = (int) (parentHeight / scalingFactor);
+                }
+
+                cachedRealDimensions = new Dimension(newWidth, newHeight);
+            }
+            else
+            {
+                cachedRealDimensions = Constants.GAME_FIXED_SIZE;
+            }
+        }
+
+        return cachedRealDimensions;
     }
 
     @Override
-    public Dimension getStretchedDimensions() {
-        return new Dimension(frameWidth, frameHeight);
+    public Dimension getStretchedDimensions()
+    {
+        if (cachedStretchedDimensions == null)
+        {
+            Container canvasParent = getCanvas().getParent();
+
+            int parentWidth = canvasParent.getWidth();
+            int parentHeight = canvasParent.getHeight();
+
+            Dimension realDimensions = getRealDimensions();
+
+            if (stretchedKeepAspectRatio)
+            {
+                double aspectRatio = realDimensions.getWidth() / realDimensions.getHeight();
+
+                int tempNewWidth = (int) (parentHeight * aspectRatio);
+
+                if (tempNewWidth > parentWidth)
+                {
+                    parentHeight = (int) (parentWidth / aspectRatio);
+                }
+                else
+                {
+                    parentWidth = tempNewWidth;
+                }
+            }
+
+            if (stretchedIntegerScaling)
+            {
+                if (parentWidth > realDimensions.width)
+                {
+                    parentWidth = parentWidth - (parentWidth % realDimensions.width);
+                }
+                if (parentHeight > realDimensions.height)
+                {
+                    parentHeight = parentHeight - (parentHeight % realDimensions.height);
+                }
+            }
+
+            cachedStretchedDimensions = new Dimension(parentWidth, parentHeight);
+        }
+
+        return cachedStretchedDimensions;
     }
 
     @Override
-    public Dimension getRealDimensions() {
-        return new Dimension(frameWidth, frameHeight);
+    public void invalidateStretching(boolean resize)
+    {
+        cachedRealDimensions = null;
+        cachedStretchedDimensions = null;
+
+        if (resize && isResized())
+        {
+			/*
+				Tells the game to run resizeCanvas the next frame.
+
+				This is useful when resizeCanvas wouldn't usually run,
+				for example when we've only changed the scaling factor
+				and we still want the game's canvas to resize
+				with regards to the new maximum bounds.
+			 */
+            setResizeCanvasNextFrame(true);
+        }
     }
 
     @Override
@@ -17773,6 +17758,9 @@ public class Client extends GameApplet implements RSClient {
         return true;
     }
 
+    private static boolean invertPitch;
+    private static boolean invertYaw;
+
     @Override
     public RSCollisionMap[] getCollisionMaps() {
         return collisionMaps;
@@ -17947,7 +17935,6 @@ public class Client extends GameApplet implements RSClient {
     @Override
     public void setGpu(boolean gpu) {
         this.gpu = gpu;
-        gameScreenImageProducer = new ProducingGraphicsBuffer(frameWidth, frameHeight);
     }
 
     public static boolean processGpuPlugin() {
@@ -18478,12 +18465,12 @@ public class Client extends GameApplet implements RSClient {
 
     @Override
     public void setMouseIdleTicks(int cycles) {
-
+        MouseHandler.idleCycles = cycles;
     }
 
     @Override
     public void setKeyboardIdleTicks(int cycles) {
-
+        KeyHandler.idleCycles = cycles;
     }
 
     @Override
@@ -18892,22 +18879,118 @@ public class Client extends GameApplet implements RSClient {
 
     @Override
     public boolean getCameraPitchRelaxerEnabled() {
-        return scene.pitchRelaxEnabled;
+        return pitchRelaxEnabled;
     }
+
+    public static boolean unlockedFps;
+    public long delayNanoTime;
+    public long lastNanoTime;
+    public static double tmpCamAngleY;
+    public static double tmpCamAngleX;
 
     @Override
     public boolean isUnlockedFps() {
-        return false;
+        return unlockedFps;
     }
 
     @Override
     public long getUnlockedFpsTarget() {
-        return 0;
+        return delayNanoTime;
+    }
+
+    public void updateCamera()
+    {
+        if (unlockedFps)
+        {
+            long nanoTime = System.nanoTime();
+            long diff = nanoTime - this.lastNanoTime;
+            this.lastNanoTime = nanoTime;
+
+            if (this.getGameState() == GameState.LOGGED_IN)
+            {
+                this.interpolateCamera(diff);
+            }
+        }
+    }
+
+    public static final int STANDARD_PITCH_MIN = 128;
+    public static final int STANDARD_PITCH_MAX = 383;
+    public static final int NEW_PITCH_MAX = 512;
+
+    public void interpolateCamera(long var1)
+    {
+        double angleDX = diffToDangle(getCamAngleDY(), var1);
+        double angleDY = diffToDangle(getCamAngleDX(), var1);
+
+        tmpCamAngleY += angleDX / 2;
+        tmpCamAngleX += angleDY / 2;
+        tmpCamAngleX = Doubles.constrainToRange(tmpCamAngleX, Perspective.UNIT * STANDARD_PITCH_MIN, getCameraPitchRelaxerEnabled() ? Perspective.UNIT * NEW_PITCH_MAX : Perspective.UNIT * STANDARD_PITCH_MAX);
+
+        int yaw = toCameraPos(tmpCamAngleY);
+        int pitch = toCameraPos(tmpCamAngleX);
+
+        setCameraYawTarget(yaw);
+        setCameraPitchTarget(pitch);
+    }
+
+    public static int toCameraPos(double var0)
+    {
+        return (int) (var0 / Perspective.UNIT) & 2047;
+    }
+
+
+    public static double diffToDangle(int var0, long var1)
+    {
+        double var2 = var0 * Perspective.UNIT;
+        double var3 = (double) var1 / 2.0E7D;
+
+        return var2 * var3;
     }
 
     @Override
     public void posToCameraAngle(int var0, int var1) {
+        tmpCamAngleY = var0 * Perspective.UNIT;
+        tmpCamAngleX = var1 * Perspective.UNIT;
+    }
 
+    static void onCameraPitchTargetChanged(int idx)
+    {
+        int newPitch = instance.getCameraPitchTarget();
+        int pitch = newPitch;
+        if (pitchRelaxEnabled)
+        {
+            // This works because the vanilla camera movement code only moves %2
+            if (lastPitchTarget > STANDARD_PITCH_MAX && newPitch == STANDARD_PITCH_MAX)
+            {
+                pitch = lastPitchTarget;
+                if (pitch > NEW_PITCH_MAX)
+                {
+                    pitch = NEW_PITCH_MAX;
+                }
+                instance.setCameraPitchTarget(pitch);
+            }
+        }
+        lastPitchTarget = pitch;
+    }
+
+    static void onCameraPitchChanged(int idx)
+    {
+        int newPitch = instance.getCameraPitch();
+        int pitch = newPitch;
+        if (pitchRelaxEnabled)
+        {
+            // This works because the vanilla camera movement code only moves %2
+            if (lastPitch > STANDARD_PITCH_MAX && newPitch == STANDARD_PITCH_MAX)
+            {
+                pitch = lastPitch;
+                if (pitch > NEW_PITCH_MAX)
+                {
+                    pitch = NEW_PITCH_MAX;
+                }
+                instance.setCameraPitch(pitch);
+            }
+        }
+        lastPitch = pitch;
     }
 
     @Override

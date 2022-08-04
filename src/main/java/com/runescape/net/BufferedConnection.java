@@ -1,6 +1,6 @@
 package com.runescape.net;
 
-import com.runescape.GameApplet;
+import com.runescape.engine.GameEngine;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,7 +10,6 @@ import java.net.Socket;
 public final class BufferedConnection implements Runnable {
 
     private final Socket socket;
-    private final GameApplet rsApplet;
     private InputStream inputStream;
     private OutputStream outputStream;
     private boolean closed;
@@ -20,12 +19,11 @@ public final class BufferedConnection implements Runnable {
     private boolean isWriter;
     private boolean hasIOError;
 
-    public BufferedConnection(GameApplet RSApplet_, Socket socket1)
+    public BufferedConnection(Socket socket1)
             throws IOException {
         closed = false;
         isWriter = false;
         hasIOError = false;
-        rsApplet = RSApplet_;
         socket = socket1;
         socket.setSoTimeout(30000);
         socket.setTcpNoDelay(true);
@@ -99,7 +97,7 @@ public final class BufferedConnection implements Runnable {
 
             if (!isWriter) {
                 isWriter = true;
-                rsApplet.startRunnable(this, 3);
+                GameEngine.taskHandler.newThreadTask(this, 3);
             }
             notify();
         }

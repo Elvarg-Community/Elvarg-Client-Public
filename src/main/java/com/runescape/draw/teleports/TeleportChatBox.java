@@ -4,9 +4,9 @@ import java.awt.Dimension;
 import java.awt.event.KeyEvent;
 
 import com.runescape.Client;
-import com.runescape.Client.ScreenMode;
 import com.runescape.cache.graphics.RSFont;
 import com.runescape.draw.Rasterizer2D;
+import com.runescape.engine.impl.MouseHandler;
 
 public class TeleportChatBox {
 
@@ -22,11 +22,11 @@ public class TeleportChatBox {
 	private static HierarchyOption selectedHierarchy;
 
 	public static void draw(int offsetX, int offsetY) {
-		int mouseX = Client.instance.mouseX;
-		int mouseY = Client.instance.mouseY - (Client.frameHeight - 165) + offsetY;
-		int chatboxWidth = Client.frameMode == ScreenMode.FIXED ? 501 : 498;
+		int mouseX = MouseHandler.mouseX;
+		int mouseY = MouseHandler.mouseY - (Client.canvasHeight - 165) + offsetY;
+		int chatboxWidth = !Client.instance.isResized() ? 501 : 498;
 		int chatboxHeight = 166;
-		boolean click = Client.instance.clickMode3 == 1;
+		boolean click = MouseHandler.clickMode3 == 1;
 		Rasterizer2D.drawHorizontalLine(10, 24 + offsetY, chatboxWidth, 0x847963);
 		Rasterizer2D.drawHorizontalLine(10, 23 + offsetY, chatboxWidth, 0x847963);
 

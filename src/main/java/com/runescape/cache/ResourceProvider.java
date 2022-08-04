@@ -13,6 +13,7 @@ import java.util.zip.GZIPInputStream;
 import com.runescape.Client;
 import com.runescape.collection.Deque;
 import com.runescape.collection.Queue;
+import com.runescape.engine.GameEngine;
 import com.runescape.io.Buffer;
 import com.runescape.sign.SignLink;
 
@@ -231,7 +232,7 @@ public final class ResourceProvider implements Runnable {
 
         clientInstance = client;
         running = true;
-        clientInstance.startRunnable(this, 2);
+        GameEngine.taskHandler.newThreadTask(this,2);
     }
 
     public int remaining() {
