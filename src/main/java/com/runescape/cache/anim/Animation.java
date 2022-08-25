@@ -18,12 +18,18 @@ public final class Animation {
     public boolean stretches;
     public int forcedPriority;
     public int playerOffhand;
+    private int skeletalRangeBegin = -1;
+    private int skeletalRangeEnd = -1;
     public int playerMainhand;
     public int maximumLoops;
     public int animatingPrecedence;
     public int priority;
     public int replayMode;
 
+    private int skeletalId = -1;
+    private int[] skeletalsoundEffect;
+    private int[] unknown;
+    private int[] skeletalsoundRange;
     private Animation() {
         loopOffset = -1;
         stretches = false;
@@ -131,7 +137,27 @@ public final class Animation {
                 for (int i = 0; i < len; i++) {
                     frameSounds[i] = buffer.read24Int();
                 }
+            } else if (opcode == 14) {
+                skeletalId = buffer.readInt();
+            } else if (opcode == 15) {
+                int count = buffer.readUShort();
+                skeletalsoundEffect = new int[count];
+                skeletalsoundRange = new int[count];
+                for (int index = 0; index < count; ++index) {
+                    skeletalsoundEffect[index] = buffer.readUShort();
+                    skeletalsoundRange[index] = buffer.readTriByte();
+                }
+            } else if (opcode == 16) {
+                skeletalRangeBegin = buffer.readUShort();
+                skeletalRangeEnd = buffer.readUShort();
+            } else if (opcode == 17) {
+                int count = buffer.readUnsignedByte();
+                unknown = new int[count];
+                for (int index = 0; index < count; ++index) {
+                    unknown[index] = buffer.readUnsignedByte();
+                }
             }
+
         }
         if (frameCount == 0) {
             frameCount = 1;
