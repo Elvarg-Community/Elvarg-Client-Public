@@ -3,26 +3,33 @@ package com.runescape.cache.graphics;
 import com.runescape.cache.FileArchive;
 import com.runescape.draw.Rasterizer2D;
 import com.runescape.io.Buffer;
+import net.runelite.rs.api.RSIndexedSprite;
 import net.runelite.rs.api.RSNode;
 import net.runelite.rs.api.RSTexture;
 
-public final class IndexedImage extends Rasterizer2D implements RSTexture {
+public final class IndexedImage extends Rasterizer2D implements RSIndexedSprite {
 
     public final int[] palette;
     public byte palettePixels[];
+    public int subWidth;
+    public int subHeight;
+    public int xOffset;
+    public int yOffset;
     public int width;
-    public int height;
-    public int drawOffsetX;
-    public int drawOffsetY;
-    public int resizeWidth;
-    private int resizeHeight;
+    private int height;
+
+    public void setTransparency(int transRed, int transGreen, int transBlue) {
+        for (int index = 0; index < palette.length; index++)
+            if (((palette[index] >> 16) & 255) == transRed && ((palette[index] >> 8) & 255) == transGreen && (palette[index] & 255) == transBlue)
+                palette[index] = 0;
+    }
 
     public IndexedImage(FileArchive archive, String s, int i) {
         Buffer image = new Buffer(archive.readFile(s + ".dat"));
         Buffer meta = new Buffer(archive.readFile("index.dat"));
         meta.currentPosition = image.readUShort();
-        resizeWidth = meta.readUShort();
-        resizeHeight = meta.readUShort();
+        width = meta.readUShort();
+        height = meta.readUShort();
 
         int colorLength = meta.readUnsignedByte();
         palette = new int[colorLength];
@@ -36,12 +43,12 @@ public final class IndexedImage extends Rasterizer2D implements RSTexture {
             image.currentPosition += meta.readUShort() * meta.readUShort();
             meta.currentPosition++;
         }
-        drawOffsetX = meta.readUnsignedByte();
-        drawOffsetY = meta.readUnsignedByte();
-        width = meta.readUShort();
-        height = meta.readUShort();
+        xOffset = meta.readUnsignedByte();
+        yOffset = meta.readUnsignedByte();
+        subWidth = meta.readUShort();
+        subHeight = meta.readUShort();
         int type = meta.readUnsignedByte();
-        int pixels = width * height;
+        int pixels = subWidth * subHeight;
         palettePixels = new byte[pixels];
 
         if (type == 0) {
@@ -49,74 +56,75 @@ public final class IndexedImage extends Rasterizer2D implements RSTexture {
                 palettePixels[index] = image.readSignedByte();
             }
         } else if (type == 1) {
-            for (int x = 0; x < width; x++) {
-                for (int y = 0; y < height; y++) {
-                    palettePixels[x + y * width] = image.readSignedByte();
+            for (int x = 0; x < subWidth; x++) {
+                for (int y = 0; y < subHeight; y++) {
+                    palettePixels[x + y * subWidth] = image.readSignedByte();
                 }
             }
         }
 
     }
 
-    public void downscale() {
-        resizeWidth /= 2;
-        resizeHeight /= 2;
-        byte raster[] = new byte[resizeWidth * resizeHeight];
-        int sourceIndex = 0;
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                raster[(x + drawOffsetX >> 1) + (y + drawOffsetY >> 1) * resizeWidth] = raster[sourceIndex++];
-            }
-        }
-        this.palettePixels = raster;
-        width = resizeWidth;
-        height = resizeHeight;
-        drawOffsetX = 0;
-        drawOffsetY = 0;
-    }
+    public void normalize() {
+        if (subWidth != width || subHeight != height) { // L: 18
+            byte[] pixels = new byte[width * height]; // L: 19
+            int var2 = 0; // L: 20
 
+            for (int var3 = 0; var3 < subHeight; ++var3) { // L: 21
+                for (int var4 = 0; var4 < subWidth; ++var4) { // L: 22
+                    pixels[var4 + (var3 + yOffset) * width + xOffset] = palettePixels[var2++]; // L: 23
+                }
+            }
+
+            palettePixels = pixels; // L: 26
+            subWidth = width; // L: 27
+            subHeight = height; // L: 28
+            xOffset = 0; // L: 29
+            yOffset = 0; // L: 30
+        }
+    }
     public void resize() {
-        if (width == resizeWidth && height == resizeHeight) {
+        if(subWidth == width && subHeight == height) {
             return;
         }
 
-        byte raster[] = new byte[resizeWidth * resizeHeight];
+        byte raster[] = new byte[width * height];
 
         int i = 0;
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                raster[x + drawOffsetX + (y + drawOffsetY) * resizeWidth] = raster[i++];
+        for(int y = 0; y < subHeight; y++) {
+            for(int x = 0; x < subWidth; x++) {
+                raster[x + xOffset + (y + yOffset) * width] = raster[i++];
             }
         }
-        this.palettePixels = raster;
-        width = resizeWidth;
-        height = resizeHeight;
-        drawOffsetX = 0;
-        drawOffsetY = 0;
+        palettePixels = raster;
+        subWidth = width;
+        subHeight = height;
+        xOffset = 0;
+        yOffset = 0;
     }
-
+    
     public void flipHorizontally() {
-        byte raster[] = new byte[width * height];
+        byte raster[] = new byte[subWidth * subHeight];
         int pixel = 0;
-        for (int y = 0; y < height; y++) {
-            for (int x = width - 1; x >= 0; x--) {
-                raster[pixel++] = raster[x + y * width];
+        for (int y = 0; y < subHeight; y++) {
+            for (int x = subWidth - 1; x >= 0; x--) {
+                raster[pixel++] = raster[x + y * subWidth];
             }
         }
-        this.palettePixels = raster;
-        drawOffsetX = resizeWidth - width - drawOffsetX;
+        palettePixels = raster;
+        xOffset = width - subWidth - xOffset;
     }
 
     public void flipVertically() {
-        byte raster[] = new byte[width * height];
+        byte raster[] = new byte[subWidth * subHeight];
         int pixel = 0;
-        for (int y = height - 1; y >= 0; y--) {
-            for (int x = 0; x < width; x++) {
-                raster[pixel++] = raster[x + y * width];
+        for (int y = subHeight - 1; y >= 0; y--) {
+            for (int x = 0; x < subWidth; x++) {
+                raster[pixel++] = raster[x + y * subWidth];
             }
         }
-        this.palettePixels = raster;
-        drawOffsetY = resizeHeight - height - drawOffsetY;
+        palettePixels = raster;
+        yOffset = height - subHeight - yOffset;
     }
 
     public void offsetColor(int redOffset, int greenOffset, int blueOffset) {
@@ -152,12 +160,12 @@ public final class IndexedImage extends Rasterizer2D implements RSTexture {
     }
 
     public void draw(int x, int y) {
-        x += drawOffsetX;
-        y += drawOffsetY;
+        x += xOffset;
+        y += yOffset;
         int destOffset = x + y * Rasterizer2D.width;
         int sourceOffset = 0;
-        int height = this.height;
-        int width = this.width;
+        int height = subHeight;
+        int width = subWidth;
         int destStep = Rasterizer2D.width - width;
         int sourceStep = 0;
 
@@ -242,58 +250,84 @@ public final class IndexedImage extends Rasterizer2D implements RSTexture {
     }
 
 
-    private float textureU;
-    private float textureV;
-
-    public float getU() {
-        return textureU;
-    }
-    public void setU(float u) {
-        textureU = u;
-    }
-
-    public float getV() {
-        return textureV;
-    }
-    public void setV(float v) {
-        textureV = v;
-    }
-
-    public int[] getPixels() {
-        return palette;
-    }
-
-    public int getAnimationSpeed() {
-        return 2;
+    @Override
+    public byte[] getPixels() {
+        return palettePixels;
     }
 
     @Override
-    public boolean isLoaded() {
-        return false;
-    }
-
-    public int getAnimationDirection() {
-        return 1;
-    }
-
-
-    @Override
-    public RSNode getNext() {
-        return null;
+    public void setPixels(byte[] pixels) {
+        palettePixels = pixels;
     }
 
     @Override
-    public long getHash() {
-        return 0;
+    public int[] getPalette() {
+        return pixels;
     }
 
     @Override
-    public RSNode getPrevious() {
-        return null;
+    public void setPalette(int[] palette) {
+        pixels = palette;
     }
 
     @Override
-    public void onUnlink() {
-
+    public int getOriginalWidth() {
+        return subWidth;
     }
+
+    @Override
+    public void setOriginalWidth(int originalWidth) {
+        subWidth = originalWidth;
+    }
+
+    @Override
+    public int getOriginalHeight() {
+        return subHeight;
+    }
+
+    @Override
+    public void setOriginalHeight(int originalHeight) {
+        subHeight = originalHeight;
+    }
+
+    @Override
+    public int getHeight() {
+        return height;
+    }
+
+    @Override
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
+    @Override
+    public int getOffsetX() {
+        return xOffset;
+    }
+
+    @Override
+    public void setOffsetX(int offsetX) {
+        this.xOffset = offsetX;
+    }
+
+    @Override
+    public int getOffsetY() {
+        return yOffset;
+    }
+
+    @Override
+    public void setOffsetY(int offsetY) {
+        this.yOffset = offsetY;
+    }
+
+    @Override
+    public int getWidth() {
+        return width;
+    }
+
+    @Override
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
 }

@@ -205,7 +205,7 @@ public final class MapRegion {
                                         boolean flag = true;
                                         if (l18 == 0 && overlayTypes[z][l6][k17] != 0)
                                             flag = false;
-                                        if (i19 > 0 && !FloorDefinition.overlays[i19 - 1].occlude)
+                                        if (i19 > 0 && !FloorDefinition.overlays[i19 - 1].hideUnderlay)
                                             flag = false;
                                         if (flag && j19 == k19 && j19 == l19 && j19 == i20)
                                             anIntArrayArrayArray135[z][l6][k17] |= 0x924;
@@ -224,35 +224,46 @@ public final class MapRegion {
                                             i19 = FloorDefinition.overlays.length;
                                         }
                                         FloorDefinition overlay_flo = FloorDefinition.overlays[i19 - 1];
-                                        int textureId = overlay_flo.texture;
-                                        int j23;
+                                        int texture = overlay_flo.texture;
+                                        int encodedTile;
                                         int minimapColor;
-
-                                        if (textureId > 50) {
-                                            textureId = -1;
-                                        }
-                                        if (textureId >= 0) {
-                                            minimapColor = Rasterizer3D.getOverallColour(textureId);
-                                            j23 = -1;
-                                        } else if (overlay_flo.rgb == 0xff00ff) {
-                                            minimapColor = 0;
-                                            j23 = -2;
-                                            textureId = -1;
-                                        } else if(overlay_flo.rgb == 0x333333) {
-                                            minimapColor = Rasterizer3D.hslToRgb[checkedLight(overlay_flo.hsl16, mapLight)];
-                                            j23 = -2;
-                                            textureId = -1;
+                                        int encodedMinimap;
+                                        int lightness;
+                                        if (texture >= 0) {
+                                            minimapColor = Rasterizer3D.textureLoader.getAverageTextureRGB(texture);
+                                            encodedTile = -1;
+                                        } else if (overlay_flo.rgb == 16711935) {
+                                            encodedTile = -2;
+                                            texture = -1;
+                                            minimapColor = -2;
                                         } else {
-                                            j23 = encode(overlay_flo.hue, overlay_flo.saturation, overlay_flo.luminance);
-                                            minimapColor = Rasterizer3D.hslToRgb[checkedLight(overlay_flo.hsl16, mapLight)];
+                                            encodedTile = encode(overlay_flo.hue, overlay_flo.saturation, overlay_flo.lightness);
+                                            encodedMinimap = overlay_flo.hue;
+                                            lightness = overlay_flo.lightness;
+                                            if (lightness < 0) {
+                                                lightness = 0;
+                                            } else if (lightness > 255) {
+                                                lightness = 255;
+                                            }
+                                            minimapColor = encode(encodedMinimap, overlay_flo.saturation, lightness);
+                                        }
+                                        encodedMinimap = 0;
+                                        if (minimapColor != -2) {
+                                            encodedMinimap = Rasterizer3D.hslToRgb[checkedLight(minimapColor, 96)];
+                                        }
+                                        if (overlay_flo.secondaryRgb != -1) {
+                                            lightness = overlay_flo.secondaryHue;
+                                            int secondaryLightness = overlay_flo.secondaryLightness;
+                                            if (secondaryLightness < 0) {
+                                                secondaryLightness = 0;
+                                            } else if (secondaryLightness > 255) {
+                                                secondaryLightness = 255;
+                                            }
+                                            minimapColor = encode(lightness, overlay_flo.secondarySaturation, secondaryLightness);
+                                            encodedMinimap = Rasterizer3D.hslToRgb[checkedLight(minimapColor, 96)];
                                         }
 
-                                        if (minimapColor == 0x000000 && overlay_flo.anotherRgb != -1) {
-                                            int newMinimapColor = encode(overlay_flo.anotherHue, overlay_flo.anotherSaturation, overlay_flo.anotherLuminance);
-                                            minimapColor = Rasterizer3D.hslToRgb[checkedLight(newMinimapColor, mapLight)];
-                                        }
-
-                                        scene.addTile(z, l6, k17, k22, byte4, textureId, j19, k19, l19, i20, method187(j21, j20), method187(j21, k20), method187(j21, l20), method187(j21, i21), checkedLight(j23, j20), checkedLight(j23, k20), checkedLight(j23, l20), checkedLight(j23, i21), i22, minimapColor);
+                                        scene.addTile(z, l6, k17, k22, byte4, texture, j19, k19, l19, i20, method187(j21, j20), method187(j21, k20), method187(j21, l20), method187(j21, i21), checkedLight(encodedTile, j20), checkedLight(encodedTile, k20), checkedLight(encodedTile, l20), checkedLight(encodedTile, i21), i22, encodedMinimap);
                                     }
                                 }
                             }

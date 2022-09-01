@@ -23,7 +23,6 @@ import com.runescape.cache.graphics.widget.Widget;
 import com.runescape.collection.Deque;
 import com.runescape.collection.Linkable;
 import com.runescape.draw.AbstractRasterProvider;
-import com.runescape.draw.ProducingGraphicsBuffer;
 import com.runescape.draw.Rasterizer2D;
 import com.runescape.draw.Rasterizer3D;
 import com.runescape.draw.skillorbs.SkillOrbs;
@@ -57,6 +56,7 @@ import com.runescape.scene.object.WallObject;
 import com.runescape.sign.SignLink;
 import com.runescape.sound.SoundPlayer;
 import com.runescape.sound.Track;
+import com.runescape.cache.textures.TextureProvider;
 import com.runescape.util.*;
 import com.runescape.util.zip.BZip2OutputStream;
 import lombok.extern.slf4j.Slf4j;
@@ -77,7 +77,6 @@ import net.runelite.rs.api.*;
 import org.slf4j.Logger;
 
 import javax.imageio.ImageIO;
-import java.applet.AppletContext;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
@@ -2158,7 +2157,6 @@ public class Client extends GameEngine implements RSClient {
             lastKnownPlane = -1;
             incompleteAnimables.clear();
             projectiles.clear();
-            Rasterizer3D.clearTextureCache();
             unlinkCaches();
             scene.initToNull();
             System.gc();
@@ -2304,7 +2302,6 @@ public class Client extends GameEngine implements RSClient {
 
         }
         System.gc();
-        Rasterizer3D.initiateRequestBuffers();
         resourceProvider.clearExtras();
 
         int startRegionX = (currentRegionX - 6) / 8 - 1;
@@ -3954,97 +3951,6 @@ public class Client extends GameEngine implements RSClient {
 		Rasterizer3D.scanOffsets = anIntArray1182;
 	}
 
-    private void writeBackgroundTexture(int j) {
-        if (!lowMemory) {
-            if (Rasterizer3D.textureLastUsed[17] >= j) {
-                IndexedImage background = Rasterizer3D.textures[17];
-                int k = background.width * background.height - 1;
-                int j1 = background.width * tickDelta * 2;
-                byte raster[] = background.palettePixels;
-                byte abyte3[] = aByteArray912;
-                for (int i2 = 0; i2 <= k; i2++)
-                    abyte3[i2] = raster[i2 - j1 & k];
-
-                background.palettePixels = abyte3;
-                aByteArray912 = raster;
-                Rasterizer3D.requestTextureUpdate(17);
-                anInt854++;
-                if (anInt854 > 1235) {
-                    anInt854 = 0;
-					  /*Anticheat?
-					  outgoing.writeOpcode(226);
-					  outgoing.writeByte(0);
-					  int l2 = outgoing.currentPosition;
-					  outgoing.writeShort(58722);
-					  outgoing.writeByte(240);
-					  outgoing.writeShort((int) (Math.random() * 65536D));
-					  outgoing.writeByte((int) (Math.random() * 256D));
-					  if ((int) (Math.random() * 2D) == 0)
-							outgoing.writeShort(51825);
-					  outgoing.writeByte((int) (Math.random() * 256D));
-					  outgoing.writeShort((int) (Math.random() * 65536D));
-					  outgoing.writeShort(7130);
-					  outgoing.writeShort((int) (Math.random() * 65536D));
-					  outgoing.writeShort(61657);
-					  outgoing.writeBytes(outgoing.currentPosition - l2);*/
-                }
-            }
-			/* Moving textures */
-            if (Rasterizer3D.textureLastUsed[24] >= j) {
-                IndexedImage background_1 = Rasterizer3D.textures[24];
-                int l = background_1.width * background_1.height - 1;
-                int k1 = background_1.width * tickDelta * 2;
-                byte abyte1[] = background_1.palettePixels;
-                byte abyte4[] = aByteArray912;
-                for (int j2 = 0; j2 <= l; j2++)
-                    abyte4[j2] = abyte1[j2 - k1 & l];
-
-                background_1.palettePixels = abyte4;
-                aByteArray912 = abyte1;
-                Rasterizer3D.requestTextureUpdate(24);
-            }
-            if (Rasterizer3D.textureLastUsed[34] >= j) {
-                IndexedImage background_2 = Rasterizer3D.textures[34];
-                int i1 = background_2.width * background_2.height - 1;
-                int l1 = background_2.width * tickDelta * 2;
-                byte abyte2[] = background_2.palettePixels;
-                byte abyte5[] = aByteArray912;
-                for (int k2 = 0; k2 <= i1; k2++)
-                    abyte5[k2] = abyte2[k2 - l1 & i1];
-
-                background_2.palettePixels = abyte5;
-                aByteArray912 = abyte2;
-                Rasterizer3D.requestTextureUpdate(34);
-            }
-            if (Rasterizer3D.textureLastUsed[40] >= j) {
-                IndexedImage background_2 = Rasterizer3D.textures[40];
-                int i1 = background_2.width * background_2.height - 1;
-                int l1 = background_2.width * tickDelta * 2;
-                byte abyte2[] = background_2.palettePixels;
-                byte abyte5[] = aByteArray912;
-                for (int k2 = 0; k2 <= i1; k2++)
-                    abyte5[k2] = abyte2[k2 - l1 & i1];
-
-                background_2.palettePixels = abyte5;
-                aByteArray912 = abyte2;
-                Rasterizer3D.requestTextureUpdate(40);
-            }
-            if (Rasterizer3D.textureLastUsed[59] >= j) {
-                IndexedImage background_1 = Rasterizer3D.textures[59];
-                int l = background_1.width * background_1.height - 1;
-                int k1 = background_1.width * tickDelta * 2;
-                byte abyte1[] = background_1.palettePixels;
-                byte abyte4[] = aByteArray912;
-                for (int j2 = 0; j2 <= l; j2++)
-                    abyte4[j2] = abyte1[j2 - k1 & l];
-
-                background_1.palettePixels = abyte4;
-                aByteArray912 = abyte1;
-                Rasterizer3D.requestTextureUpdate(59);
-            }
-        }
-    }
-
     private void processMobChatText() {
         for (int i = -1; i < playerCount; i++) {
             int j;
@@ -4458,9 +4364,10 @@ public class Client extends GameEngine implements RSClient {
             }
 
             drawLoadingText(83, "Unpacking textures");
-            Rasterizer3D.loadTextures(textureArchive);
-            Rasterizer3D.setBrightness(0.80000000000000004D);
-            Rasterizer3D.initiateRequestBuffers();
+            TextureProvider textureProvider = new TextureProvider(textureArchive,configArchive,20,Rasterizer3D.lowMem ? 64 : 128); // L: 1947
+            textureProvider.setBrightness(0.80000000000000004D);
+            Rasterizer3D.setTextureLoader(textureProvider); // L: 1948
+
             drawLoadingText(86, "Unpacking config");
             Animation.init(configArchive);
             ObjectDefinition.init(configArchive);
@@ -4481,7 +4388,7 @@ public class Client extends GameEngine implements RSClient {
                 int k6 = 999;
                 int i7 = 0;
                 for (int k7 = 0; k7 < 34; k7++) {
-                    if (mapBack.palettePixels[k7 + j6 * mapBack.width] == 0) {
+                    if (mapBack.palettePixels[k7 + j6 * mapBack.subWidth] == 0) {
                         if (k6 == 999)
                             k6 = k7;
                         continue;
@@ -4498,7 +4405,7 @@ public class Client extends GameEngine implements RSClient {
                 int j7 = 999;
                 int l7 = 0;
                 for (int j8 = 24; j8 < 177; j8++) {
-                    if (mapBack.palettePixels[j8 + l6 * mapBack.width] == 0 && (j8 > 34 || l6 > 34)) {
+                    if (mapBack.palettePixels[j8 + l6 * mapBack.subWidth] == 0 && (j8 > 34 || l6 > 34)) {
                         if (j7 == 999) {
                             j7 = j8;
                         }
@@ -4816,8 +4723,8 @@ public class Client extends GameEngine implements RSClient {
             ObjectDefinition def = ObjectDefinition.lookup(i5);
             if (def.mapscene != -1) {
                 if (mapScenes[def.mapscene] != null) {
-                    int i6 = (def.sizeX * 4 - mapScenes[def.mapscene].width) / 2;
-                    int j6 = (def.sizeY * 4 - mapScenes[def.mapscene].height) / 2;
+                    int i6 = (def.sizeX * 4 - mapScenes[def.mapscene].subWidth) / 2;
+                    int j6 = (def.sizeY * 4 - mapScenes[def.mapscene].subHeight) / 2;
                     mapScenes[def.mapscene].draw(48 + l * 4 + i6, 48 + (104 - i - def.sizeY) * 4 + j6);
                 }
             } else {
@@ -4889,8 +4796,8 @@ public class Client extends GameEngine implements RSClient {
             ObjectDefinition class46_1 = ObjectDefinition.lookup(l3);
             if (class46_1.mapscene != -1) {
                 if (mapScenes[class46_1.mapscene] != null) {
-                    int j5 = (class46_1.sizeX * 4 - mapScenes[class46_1.mapscene].width) / 2;
-                    int k5 = (class46_1.sizeY * 4 - mapScenes[class46_1.mapscene].height) / 2;
+                    int j5 = (class46_1.sizeX * 4 - mapScenes[class46_1.mapscene].subWidth) / 2;
+                    int k5 = (class46_1.sizeY * 4 - mapScenes[class46_1.mapscene].subHeight) / 2;
                     mapScenes[class46_1.mapscene].draw(48 + l * 4 + j5, 48 + (104 - i - class46_1.sizeY) * 4 + k5);
                 }
             } else if (j3 == 9) {
@@ -4919,8 +4826,8 @@ public class Client extends GameEngine implements RSClient {
             ObjectDefinition class46 = ObjectDefinition.lookup(j2);
             if (class46.mapscene != -1) {
                 if (mapScenes[class46.mapscene] != null) {
-                    int i4 = (class46.sizeX * 4 - mapScenes[class46.mapscene].width) / 2;
-                    int j4 = (class46.sizeY * 4 - mapScenes[class46.mapscene].height) / 2;
+                    int i4 = (class46.sizeX * 4 - mapScenes[class46.mapscene].subWidth) / 2;
+                    int j4 = (class46.sizeY * 4 - mapScenes[class46.mapscene].subHeight) / 2;
                     mapScenes[class46.mapscene].draw(48 + l * 4 + i4, 48 + (104 - i - class46.sizeY) * 4 + j4);
                 }
             }
@@ -11384,11 +11291,11 @@ public class Client extends GameEngine implements RSClient {
         }
         if (background != null) {
             int l1 = 0;
-            for (int j2 = 0; j2 < background.height; j2++) {
-                for (int l2 = 0; l2 < background.width; l2++)
+            for (int j2 = 0; j2 < background.subHeight; j2++) {
+                for (int l2 = 0; l2 < background.subWidth; l2++)
                     if (background.palettePixels[l1++] != 0) {
-                        int i3 = l2 + 16 + background.drawOffsetX;
-                        int j3 = j2 + 16 + background.drawOffsetY;
+                        int i3 = l2 + 16 + background.xOffset;
+                        int j3 = j2 + 16 + background.yOffset;
                         int k3 = i3 + (j3 << 7);
                         anIntArray1190[k3] = 0;
                     }
@@ -11700,9 +11607,9 @@ public class Client extends GameEngine implements RSClient {
             drawLoadingMessage("Loading - please wait.");
         } else if (gameState == GameState.LOGGED_IN.getState()) {
             drawGameScreen();
-            rasterProvider.drawFull(0, 0);
         }
 
+        rasterProvider.drawFull(0, 0);
         anInt1213 = 0;
     }
 
@@ -15221,7 +15128,6 @@ public class Client extends GameEngine implements RSClient {
                         yCameraCurve = 383;
                 }
             }
-        int k2 = Rasterizer3D.lastTextureRetrievalCount;
         Model.obj_exists = true;
         Model.obj_loaded = 0;
         Model.anInt1685 = MouseHandler.mouseX - (!isResized() ? 4 : 0);
@@ -15247,7 +15153,7 @@ public class Client extends GameEngine implements RSClient {
         }
         updateEntities();
         drawHeadIcon();
-        writeBackgroundTexture(k2);
+        ((TextureProvider)Rasterizer3D.textureLoader).animate(tickDelta);
         draw3dScreen();
         console.drawConsole();
         console.drawConsoleArea();
@@ -15752,7 +15658,6 @@ public class Client extends GameEngine implements RSClient {
     @javax.inject.Inject
     private Callbacks callbacks;
 
-    private final TextureManager textureManager = new TextureManager();
     private boolean gpu = false;
 
     @Override
@@ -17269,6 +17174,7 @@ public class Client extends GameEngine implements RSClient {
         MapRegion.lowMem = lowMemory;
         SceneGraph.lowMem = lowMemory;
         Rasterizer3D.lowMem = lowMemory;
+        ((TextureProvider)Rasterizer3D.textureLoader).setTextureSize(Rasterizer3D.lowMem ? 64 : 128);
 
     }
 
@@ -18069,7 +17975,7 @@ public class Client extends GameEngine implements RSClient {
 
     @Override
     public RSTextureProvider getTextureProvider() {
-        return textureManager;
+        return ((TextureProvider)Rasterizer3D.textureLoader);
     }
 
     @Override
