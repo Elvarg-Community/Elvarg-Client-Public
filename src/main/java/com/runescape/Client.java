@@ -15,7 +15,6 @@ import com.runescape.cache.graphics.RSFont;
 import com.runescape.cache.graphics.*;
 import com.runescape.cache.graphics.sprite.Sprite;
 import com.runescape.cache.graphics.sprite.SpriteCache;
-import com.runescape.cache.graphics.textures.AnimatedTextures;
 import com.runescape.cache.graphics.widget.Bank;
 import com.runescape.cache.graphics.widget.Bank.BankTabShow;
 import com.runescape.cache.graphics.widget.OSRSCreationMenu;
@@ -513,7 +512,7 @@ public class Client extends GameEngine implements RSClient {
     private int friendsCount;
     private int friendServerStatus;
     private int[][] anIntArrayArray901;
-    public byte[] aByteArray912;
+    private byte[] aByteArray912;
     private int anInt913;
     private int crossX;
     private int crossY;
@@ -530,7 +529,7 @@ public class Client extends GameEngine implements RSClient {
     private int hintIconLocationArrowHeight;
     private int hintIconLocationArrowRelX;
     private int hintIconLocationArrowRelY;
-    public int tickDelta;
+    private int tickDelta;
     private SceneGraph scene;
     private Sprite[] sideIcons;
     private int menuScreenArea;
@@ -3954,6 +3953,98 @@ public class Client extends GameEngine implements RSClient {
 
 		Rasterizer3D.scanOffsets = anIntArray1182;
 	}
+
+    private void writeBackgroundTexture(int j) {
+        if (!lowMemory) {
+            if (Rasterizer3D.textureLastUsed[17] >= j) {
+                IndexedImage background = Rasterizer3D.textures[17];
+                int k = background.width * background.height - 1;
+                int j1 = background.width * tickDelta * 2;
+                byte raster[] = background.palettePixels;
+                byte abyte3[] = aByteArray912;
+                for (int i2 = 0; i2 <= k; i2++)
+                    abyte3[i2] = raster[i2 - j1 & k];
+
+                background.palettePixels = abyte3;
+                aByteArray912 = raster;
+                Rasterizer3D.requestTextureUpdate(17);
+                anInt854++;
+                if (anInt854 > 1235) {
+                    anInt854 = 0;
+					  /*Anticheat?
+					  outgoing.writeOpcode(226);
+					  outgoing.writeByte(0);
+					  int l2 = outgoing.currentPosition;
+					  outgoing.writeShort(58722);
+					  outgoing.writeByte(240);
+					  outgoing.writeShort((int) (Math.random() * 65536D));
+					  outgoing.writeByte((int) (Math.random() * 256D));
+					  if ((int) (Math.random() * 2D) == 0)
+							outgoing.writeShort(51825);
+					  outgoing.writeByte((int) (Math.random() * 256D));
+					  outgoing.writeShort((int) (Math.random() * 65536D));
+					  outgoing.writeShort(7130);
+					  outgoing.writeShort((int) (Math.random() * 65536D));
+					  outgoing.writeShort(61657);
+					  outgoing.writeBytes(outgoing.currentPosition - l2);*/
+                }
+            }
+			/* Moving textures */
+            if (Rasterizer3D.textureLastUsed[24] >= j) {
+                IndexedImage background_1 = Rasterizer3D.textures[24];
+                int l = background_1.width * background_1.height - 1;
+                int k1 = background_1.width * tickDelta * 2;
+                byte abyte1[] = background_1.palettePixels;
+                byte abyte4[] = aByteArray912;
+                for (int j2 = 0; j2 <= l; j2++)
+                    abyte4[j2] = abyte1[j2 - k1 & l];
+
+                background_1.palettePixels = abyte4;
+                aByteArray912 = abyte1;
+                Rasterizer3D.requestTextureUpdate(24);
+            }
+            if (Rasterizer3D.textureLastUsed[34] >= j) {
+                IndexedImage background_2 = Rasterizer3D.textures[34];
+                int i1 = background_2.width * background_2.height - 1;
+                int l1 = background_2.width * tickDelta * 2;
+                byte abyte2[] = background_2.palettePixels;
+                byte abyte5[] = aByteArray912;
+                for (int k2 = 0; k2 <= i1; k2++)
+                    abyte5[k2] = abyte2[k2 - l1 & i1];
+
+                background_2.palettePixels = abyte5;
+                aByteArray912 = abyte2;
+                Rasterizer3D.requestTextureUpdate(34);
+            }
+            if (Rasterizer3D.textureLastUsed[40] >= j) {
+                IndexedImage background_2 = Rasterizer3D.textures[40];
+                int i1 = background_2.width * background_2.height - 1;
+                int l1 = background_2.width * tickDelta * 2;
+                byte abyte2[] = background_2.palettePixels;
+                byte abyte5[] = aByteArray912;
+                for (int k2 = 0; k2 <= i1; k2++)
+                    abyte5[k2] = abyte2[k2 - l1 & i1];
+
+                background_2.palettePixels = abyte5;
+                aByteArray912 = abyte2;
+                Rasterizer3D.requestTextureUpdate(40);
+            }
+            if (Rasterizer3D.textureLastUsed[59] >= j) {
+                IndexedImage background_1 = Rasterizer3D.textures[59];
+                int l = background_1.width * background_1.height - 1;
+                int k1 = background_1.width * tickDelta * 2;
+                byte abyte1[] = background_1.palettePixels;
+                byte abyte4[] = aByteArray912;
+                for (int j2 = 0; j2 <= l; j2++)
+                    abyte4[j2] = abyte1[j2 - k1 & l];
+
+                background_1.palettePixels = abyte4;
+                aByteArray912 = abyte1;
+                Rasterizer3D.requestTextureUpdate(59);
+            }
+        }
+    }
+
     private void processMobChatText() {
         for (int i = -1; i < playerCount; i++) {
             int j;
@@ -15156,7 +15247,7 @@ public class Client extends GameEngine implements RSClient {
         }
         updateEntities();
         drawHeadIcon();
-        AnimatedTextures.render(k2);
+        writeBackgroundTexture(k2);
         draw3dScreen();
         console.drawConsole();
         console.drawConsoleArea();
