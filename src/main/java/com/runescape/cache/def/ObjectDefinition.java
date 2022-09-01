@@ -212,8 +212,6 @@ public final class ObjectDefinition implements ObjectComposition {
         for (int index = 0; index < 20; index++)
             cache[index] = new ObjectDefinition();
 
-        ObjectDefinition def = lookup(16455);
-        System.out.println(" Area ID: " + def.minimapFunction);
         System.out.println("Loaded: " + TOTAL_OBJECTS + " objects");
     }
 
@@ -556,7 +554,7 @@ public final class ObjectDefinition implements ObjectComposition {
             } else if (opcode == 79) {
                 anInt2112 = buffer.readUShort();
                 anInt2113 = buffer.readUShort();
-                anInt2083 = buffer.readUnsignedByte();
+                anInt2083 = buffer.readUShort();
 
                 int length = buffer.readUnsignedByte();
                 int[] anims = new int[length];
@@ -567,7 +565,7 @@ public final class ObjectDefinition implements ObjectComposition {
                 }
                 ambientSoundIds = anims;
             } else if (opcode == 81) {
-                contouredGround = buffer.readUnsignedByte() == 1;
+                buffer.readUnsignedByte();
             } else if (opcode == 82) {
                 minimapFunction = buffer.readUShort();
             } else if (opcode == 89) {

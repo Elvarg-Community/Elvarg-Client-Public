@@ -2406,7 +2406,7 @@ public final class Rasterizer3D extends Rasterizer2D {
         }
     }
 
-    public static int texture_amt = 106;
+    public static int texture_amt = 94;
     public static boolean lowMem = false;
     public static boolean textureOutOfDrawingBounds;
     private static boolean aBoolean1463;

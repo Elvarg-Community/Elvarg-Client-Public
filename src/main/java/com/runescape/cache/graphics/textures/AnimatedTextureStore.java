@@ -9,8 +9,7 @@ public enum AnimatedTextureStore {
     CRIMSON_LAVA(56, 2,1),
     GRAY_LAVA(57, 2,1),
     INFERNAL_LAVA(59, 1,1),
-    SMOKE(103, 2,4),
-    SMOKE_LOTS(104, 1,4),
+
     NONE(0,0,0);
 
     private final int materialId;

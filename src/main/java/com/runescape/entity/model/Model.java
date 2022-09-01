@@ -2929,17 +2929,17 @@ public class Model extends Renderable implements RSModel {
     public boolean fits_on_single_square;
     public VertexNormal gouraud_vertex[];
     static ModelHeader aClass21Array1661[];
-    static boolean hasAnEdgeToRestrict[] = new boolean[6500];
-    static boolean outOfReach[] = new boolean[6500];
-    static int projected_vertex_x[] = new int[6500];
-    static int projected_vertex_y[] = new int[6500];
-    static int projected_vertex_z[] = new int[6500];
-    static int anIntArray1668[] = new int[6500];
-    static int camera_vertex_y[] = new int[6500];
-    static int camera_vertex_x[] = new int[6500];
-    static int camera_vertex_z[] = new int[6500];
-    static int depthListIndices[] = new int[6000];//1500
-    static int faceLists[][] = new int[6000][512];//1500 / 512 //anIntArrayArray3809 //64
+    static boolean hasAnEdgeToRestrict[] = new boolean[4700];
+    static boolean outOfReach[] = new boolean[4700];
+    static int projected_vertex_x[] = new int[4700];
+    static int projected_vertex_y[] = new int[4700];
+    static int projected_vertex_z[] = new int[4700];
+    static int anIntArray1668[] = new int[4700];
+    static int camera_vertex_y[] = new int[4700];
+    static int camera_vertex_x[] = new int[4700];
+    static int camera_vertex_z[] = new int[4700];
+    static int depthListIndices[] = new int[1600];//1500
+    static int faceLists[][] = new int[1600][512];//1500 / 512 //anIntArrayArray3809 //64
     static int anIntArray1673[] = new int[12];
     static int anIntArrayArray1674[][] = new int[12][2000];//1500
     static int anIntArray1676[] = new int[2000];//1500

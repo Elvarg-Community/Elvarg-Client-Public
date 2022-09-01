@@ -2389,7 +2389,6 @@ public class Client extends GameEngine implements RSClient {
                     if (function >= 0) {
                         int sprite = AreaDefinition.lookup(function).spriteId;
                         if(sprite != -1) {
-
                             minimapHint[anInt1071] = AreaDefinition.getImage(sprite);
                             minimapHintX[anInt1071] = x;
                             minimapHintY[anInt1071] = y;
