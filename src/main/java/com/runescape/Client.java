@@ -72,6 +72,7 @@ import net.runelite.api.events.ResizeableChanged;
 import net.runelite.api.hooks.Callbacks;
 import net.runelite.api.hooks.DrawCallbacks;
 import net.runelite.api.vars.AccountType;
+import net.runelite.api.widgets.WidgetID;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.rs.api.*;
 import org.slf4j.Logger;
@@ -11264,6 +11265,11 @@ public class Client extends GameEngine implements RSClient {
             drawGridOverlay();
         }
         Rasterizer2D.setDrawingArea(clipBottom, clipLeft, clipRight, clipTop);
+        if (!isResized()) {
+            callbacks.drawInterface(WidgetID.FIXED_VIEWPORT_GROUP_ID, Collections.emptyList());
+        } else {
+            callbacks.drawInterface(WidgetID.RESIZABLE_VIEWPORT_OLD_SCHOOL_BOX_GROUP_ID, Collections.emptyList());
+        }
     }
 
     private void randomizeBackground(IndexedImage background) {
@@ -15155,6 +15161,7 @@ public class Client extends GameEngine implements RSClient {
         drawHeadIcon();
         ((TextureProvider)Rasterizer3D.textureLoader).animate(tickDelta);
         draw3dScreen();
+
         console.drawConsole();
         console.drawConsoleArea();
         if (openInterfaceId == -1 && !com.runescape.draw.Console.consoleOpen) {
@@ -16435,12 +16442,12 @@ public class Client extends GameEngine implements RSClient {
 
     @Override
     public int getMapAngle() {
-        return 0;
+        return cameraHorizontal;
     }
 
     @Override
     public void setCameraYawTarget(int cameraYawTarget) {
-
+        cameraHorizontal = cameraYawTarget;
     }
 
     public void setResized(boolean resized) {
@@ -17876,12 +17883,12 @@ public class Client extends GameEngine implements RSClient {
 
     @Override
     public int getOculusOrbFocalPointX() {
-        return 0;
+        return xCameraPos;
     }
 
     @Override
     public int getOculusOrbFocalPointY() {
-        return 0;
+        return yCameraPos;
     }
 
     @Override
@@ -19002,10 +19009,28 @@ public class Client extends GameEngine implements RSClient {
 
     @Override
     public void setUnlockedFps(boolean unlock) {
+        unlockedFps = unlock;
+
+        if (unlock)
+        {
+            posToCameraAngle(getMapAngle(), getCameraPitch());
+        }
+        else
+        {
+            delayNanoTime = 0L;
+        }
     }
 
     @Override
     public void setUnlockedFpsTarget(int fps) {
+        if (fps <= 0)
+        {
+            delayNanoTime = 0L;
+        }
+        else
+        {
+            delayNanoTime = 1000000000L / (long) fps;
+        }
     }
 
     @Override
