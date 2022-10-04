@@ -11157,8 +11157,8 @@ public class Client extends GameEngine implements RSClient {
                         continue;
                     }
 
-                    Rasterizer2D.drawPixels(18, currentY + 1, _x + 1, 0x544834, d.getWidth() - 2);
-                    Rasterizer2D.drawPixels(16, currentY + 2, _x + 2, 0x2e281d, d.getWidth() - 4);
+                    //Rasterizer2D.drawPixels(18, currentY + 1, _x + 1, 0x544834, d.getWidth() - 2);
+                    //Rasterizer2D.drawPixels(16, currentY + 2, _x + 2, 0, d.getWidth() - 4);
                     newRegularFont.drawBasicString(d.getSelected(), _x + 7, currentY + 15, 0xff8a1f, 0);
                     spriteCache.draw(449, _x + d.getWidth() - 18, currentY + 2); // Arrow
 
@@ -13296,9 +13296,8 @@ public class Client extends GameEngine implements RSClient {
 
 
     private void processLoginScreenInput() {
-
-        usernameInputHover = newmouseInRegion(270, 231, spriteCache.lookup(635));
-        passwordInputHover = newmouseInRegion(270, 278, spriteCache.lookup(635));
+        usernameInputHover = mouseInRegion(270, 473, 231, 254);
+        passwordInputHover = mouseInRegion(270, 473, 278, 301);
         rememberMeHover = newmouseInRegion(397, 310, spriteCache.lookup(639));
         loginHover = newmouseInRegion(300, 330, spriteCache.lookup(637));
         if (MouseHandler.clickMode3 == 1) {
@@ -14258,14 +14257,12 @@ public class Client extends GameEngine implements RSClient {
             }
 
             if (opcode == PacketConstants.PLAY_SOUND_EFFECT) {
-                int soundId = incoming.readUShort();
+                int soundId = incoming.readUnsignedShort();
                 int type = incoming.readUnsignedByte();
-                int delay = incoming.readUShort();
-                int volume = incoming.readUShort();
+                int delay = incoming.readUnsignedShort();
                 tracks[trackCount] = soundId;
                 trackLoops[trackCount] = type;
                 soundDelay[trackCount] = delay + Track.delays[soundId];
-                soundVolume[trackCount] = volume;
                 trackCount++;
                 opcode = -1;
                 return true;
@@ -14308,8 +14305,7 @@ public class Client extends GameEngine implements RSClient {
                 for (int plane = 0; plane < 4; plane++) {
                     for (int x = 1; x < 103; x++) {
                         for (int y = 1; y < 103; y++) {
-                            collisionMaps[plane].clipData[x][y] =
-                                    0;
+                            collisionMaps[plane].clipData[x][y] = 0;
                         }
                     }
                 }

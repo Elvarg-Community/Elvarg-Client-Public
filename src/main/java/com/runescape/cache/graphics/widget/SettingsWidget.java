@@ -89,7 +89,7 @@ public class SettingsWidget extends Widget {
         hoverButton(42524, "Configure @lre@Advanced options", 353, 353, "Advanced options", Widget.newFonts[1], 0xff981f, 0xffffff, true);
 		/* Sliders */
         slider(ZOOM_SLIDER, 0, 1200, 354, 481, 1);
-        slider(BRIGHTNESS_SLIDER, 0.6, 1.0, 482, 481, 2);
+        slider(BRIGHTNESS_SLIDER, 0.1, 1.5, 482, 481, 2);
 		/* Brightness */
         addSpriteLoader(42527, 483);
 

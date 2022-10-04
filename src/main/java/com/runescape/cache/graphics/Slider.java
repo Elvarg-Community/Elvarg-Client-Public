@@ -46,7 +46,7 @@ public class Slider {
                 Widget child = Widget.interfaceCache[childId];
                 if (child == null || child.slider == null)
                     continue;
-                child.slider.handleClick(mX, mY, !Client.instance.isResized() ? 519 : 0, !Client.instance.isResized() ? 168 : 0, child.contentType);
+                child.slider.handleClick(mX, mY, 0, 0, child.contentType);
             }
             Client.tabAreaAltered = true;
         }

@@ -49,6 +49,7 @@ public final class KeyHandler implements KeyListener, FocusListener, RSKeyHandle
         int i = event.getKeyCode();
         if(i == KeyEvent.VK_SHIFT) {
             keyPressed = KeyCode.KC_SHIFT;
+            Client.shiftDown = true;
         } else {
             keyPressed = i;
         }
