@@ -323,13 +323,12 @@ public class Rasterizer2D extends Cacheable implements RSRasterizer2D {
         if (posY + height > bottomY) {
             height = bottomY - posY;
         }
-        int k1 = width - width;
-        int l1 = posX + posY * width;
+        int k1 = Rasterizer2D.width - width;
+        int l1 = posX + posY * Rasterizer2D.width;
         for (int i2 = -height; i2 < 0; i2++) {
             for (int j2 = -width; j2 < 0; j2++) {
-                drawAlpha(pixels, l1++, color, 255);
+                pixels[l1++] = color;
             }
-
             l1 += k1;
         }
     }

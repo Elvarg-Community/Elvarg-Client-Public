@@ -28,15 +28,13 @@ public class OSRSCreationMenu {
     }
 
     public static void draw(int x, int y) {
-        boolean fixed = !Client.instance.isResized();
         int mouseX = MouseHandler.mouseX;
-        int mouseY = MouseHandler.mouseY - y - (fixed ? 338 : 0);
+        int mouseY = MouseHandler.mouseY - y;
         boolean click = MouseHandler.clickMode3 == 1;
 
         // Titles
         Client.instance.boldText.drawCenteredText(Widget.interfaceCache[31104].defaultText, x + 145, y + 30, 0x403020, false);
         Client.instance.smallText.drawCenteredText("Choose a quantity, then click an item to begin.", x + 143, y + 45, 0x605048, false);
-
         // Amount buttons
         for (int i = 0, amountButtonX = 310; i < QUANTITIES.length; i++, amountButtonX += 40) {
             boolean hover = (mouseX >= amountButtonX && mouseX <= amountButtonX + 35 && mouseY >= 15 && mouseY <= 45);
@@ -107,9 +105,9 @@ public class OSRSCreationMenu {
                     GameFont font = Client.instance.gameFont;
                     int textWidth = font.getTextWidth(itemName);
                     int hoverX = x + itemX + (boxWidth / 2);
-                    int hoverY = y + 132;          
+                    int hoverY = y + 30;
                     Rasterizer2D.drawBox(hoverX - (textWidth / 2) - 2, hoverY - 1, textWidth + 5, 19, 0x000000);
-                    Rasterizer2D.drawBox(17, hoverY, hoverX - (textWidth / 2) - 1, 0xFFFFA0, textWidth + 3);
+                    Rasterizer2D.drawBox(hoverX - (textWidth / 2) - 1, hoverY, textWidth + 3, 17, 0xFFFFA0);
                     font.drawCenteredText(itemName, hoverX, hoverY + 14, 0x605048, false);
                 }
             }

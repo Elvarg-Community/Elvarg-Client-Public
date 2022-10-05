@@ -464,9 +464,25 @@ public final class NpcDefinition implements RSNPCComposition {
 				rotateRightAnimation = buffer.readUShort();
             } else if (opcode == 17) {
                 walkingAnimation = buffer.readUShort();
-                rotate180AnimIndex = buffer.readUShort();
+				rotate180AnimIndex = buffer.readUShort();
                 rotate90CWAnimIndex = buffer.readUShort();
                 rotate90CCWAnimIndex = buffer.readUShort();
+
+				if (walkingAnimation == 65535) {
+					walkingAnimation = -1;
+				}
+
+				if (rotate180AnimIndex == 65535) {
+					rotate180AnimIndex = -1;
+				}
+
+				if (rotate90CWAnimIndex == 65535) {
+					rotate90CWAnimIndex = -1;
+				}
+
+				if (rotate90CCWAnimIndex == 65535) {
+					rotate90CCWAnimIndex = -1;
+				}
 			} else if (opcode == 18) {
 				category = buffer.readUShort();
             } else if (opcode >= 30 && opcode < 35) {

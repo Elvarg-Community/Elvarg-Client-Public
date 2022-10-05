@@ -173,6 +173,14 @@ public final class Buffer extends Cacheable {
                 + (payload[currentPosition - 1] & 0xff);
     }
 
+    public int readUnsignedShort() {
+        if (currentPosition + 2 > payload.length) {
+            return payload[payload.length - 1];
+        }
+        currentPosition += 2;
+        return ((payload[currentPosition - 2] & 0xFF) << 8) + (payload[currentPosition - 1] & 0xFF);
+    }
+
     public int readShort() {
         currentPosition += 2;
         int value = ((payload[currentPosition - 2] & 0xff) << 8)
