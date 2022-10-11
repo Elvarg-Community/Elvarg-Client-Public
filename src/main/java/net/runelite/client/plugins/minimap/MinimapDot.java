@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Woox <https://github.com/wooxsolo>
+ * Copyright (c) 2018, Dreyri <https://github.com/Dreyri>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,69 +22,54 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.api;
+package net.runelite.client.plugins.minimap;
 
-import net.runelite.api.coords.LocalPoint;
+import java.awt.Color;
+import net.runelite.api.Client;
+import net.runelite.api.SpritePixels;
 
-import javax.annotation.Nullable;
-
-/**
- * Represents a graphics object/spotanim.
- */
-public interface GraphicsObject extends Renderable
+class MinimapDot
 {
-	/**
-	 * The graphics object ID.
-	 *
-	 * @return the ID
-	 */
-	int getId();
+	private static final int MAP_DOT_WIDTH = 4;
+	private static final int MAP_DOT_HEIGHT = 5;
 
-	/**
-	 * The location of the object.
-	 *
-	 * @return the location
-	 */
-	LocalPoint getLocation();
+	private static int[] createPixels(Color color)
+	{
+		int rgb = color.getRGB();
 
-	/**
-	 * Get the time this spotanim starts
-	 *
-	 * @return
-	 */
-	int getStartCycle();
+		int[] pixels = new int[MAP_DOT_HEIGHT * MAP_DOT_WIDTH];
 
-	/**
-	 * The plane the spotanim is on.
-	 *
-	 * @return
-	 */
-	int getLevel();
+		pixels[0] = 0;
+		pixels[1] = rgb;
+		pixels[2] = rgb;
+		pixels[3] = 0;
 
-	/**
-	 * Gets the height of the graphic.
-	 *
-	 * @return the height
-	 */
-	int getHeight();
+		pixels[4] = rgb;
+		pixels[5] = rgb;
+		pixels[6] = rgb;
+		pixels[7] = rgb;
 
-	/**
-	 * Checks if this spotanim is done animating
-	 *
-	 * @return
-	 */
-	boolean finished();
+		pixels[8] = rgb;
+		pixels[9] = rgb;
+		pixels[10] = rgb;
+		pixels[11] = rgb;
 
-	/**
-	 * The animation of the spotanim
-	 * @return
-	 */
-	@Nullable
-	Animation getAnimation();
+		pixels[12] = 1;
+		pixels[13] = rgb;
+		pixels[14] = rgb;
+		pixels[15] = 1;
 
-	/**
-	 * The frame of the current animation
-	 * @return
-	 */
-	int getAnimationFrame();
+		pixels[16] = 0;
+		pixels[17] = 1;
+		pixels[18] = 1;
+		pixels[19] = 0;
+
+		return pixels;
+	}
+
+	static SpritePixels create(Client client, Color color)
+	{
+		int[] pixels = createPixels(color);
+		return client.createSpritePixels(pixels, MAP_DOT_WIDTH, MAP_DOT_HEIGHT);
+	}
 }

@@ -52,12 +52,12 @@ public class ColorPickerManager
 
 	public RuneliteColorPicker create(Window owner, Color previousColor, String title, boolean alphaHidden)
 	{
-		if (currentPicker != null)
+		currentPicker = new RuneliteColorPicker(owner, previousColor, title, alphaHidden, configManager, this);
+		if (currentPicker.isAlwaysOnTopSupported() && owner != null)
 		{
-			currentPicker.dispatchEvent(new WindowEvent(currentPicker, WindowEvent.WINDOW_CLOSING));
+			currentPicker.setAlwaysOnTop(owner.isAlwaysOnTop());
 		}
 
-		currentPicker = new RuneliteColorPicker(owner, previousColor, title, alphaHidden, configManager, this);
 		return currentPicker;
 	}
 }

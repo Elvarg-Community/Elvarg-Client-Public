@@ -378,6 +378,13 @@ public interface Client extends GameEngine
 	int getPlane();
 
 	/**
+	 * Get the max plane being rendered on the scene. This is usually the max plane, 3, unless roofs are hidden,
+	 * where it will be the current plane.
+	 * @return
+	 */
+	int getSceneMaxPlane();
+
+	/**
 	 * Gets the current scene
 	 */
 	Scene getScene();
@@ -2326,4 +2333,41 @@ public interface Client extends GameEngine
 	 * @return
 	 */
 	Deque<AmbientSoundEffect> getAmbientSoundEffects();
+
+	/**
+	 * Set the amount of time until the client automatically logs out due to idle input.
+	 * @param ticks client ticks
+	 */
+	void setIdleTimeout(int ticks);
+
+	/**
+	 * Get the amount of time until the client automatically logs out due to idle input.
+	 * @return client ticks
+	 */
+	int getIdleTimeout();
+
+	/**
+	 * Get whether minimap zoom is enabled
+	 * @return
+	 */
+	boolean isMinimapZoom();
+
+	/**
+	 * Set whether minimap zoom is enabled
+	 * @param minimapZoom
+	 */
+	void setMinimapZoom(boolean minimapZoom);
+
+	/**
+	 * Gets the number of pixels per tile on the minimap. The default is 4.
+	 * @return
+	 */
+	double getMinimapZoom();
+
+	/**
+	 * Set the number of pixels per tile on the minimap. The default is 4.
+	 * @param zoom
+	 */
+	void setMinimapZoom(double zoom);
+
 }

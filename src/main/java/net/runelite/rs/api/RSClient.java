@@ -1562,4 +1562,29 @@ public interface RSClient extends RSGameEngine, Client
 
 	@Construct
 	RSIterableNodeHashTable createIterableNodeHashTable(int size);
+
+
+	@Import("Scene_maxPlane")
+	@Override
+	int getSceneMaxPlane();
+
+	@Import("idleTicks")
+	void setIdleTimeout(int id);
+
+	@Import("idleTicks")
+	int getIdleTimeout();
+
+	@Import("minimapZoom")
+	void setMinimapZoom(boolean minimapZoom);
+
+	@Import("idleTicks")
+	double getMinimapZoom();
+
+
+	@Import("minimapZoom")
+	boolean isMinimapZoom();
+
+	@Import("minimapZoom")
+	void setMinimapZoom(double zoom);
+
 }

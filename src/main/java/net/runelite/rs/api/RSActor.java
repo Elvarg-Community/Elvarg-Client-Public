@@ -201,4 +201,10 @@ public interface RSActor extends RSRenderable, Actor
 
 	@Import("overheadTextCyclesRemaining")
 	void setOverheadCycle(int cycle);
+
+	@Import("poseAnimationFrame")
+	int getPoseAnimationFrame();
+
+	@Import("poseAnimationFrame")
+	void setPoseAnimationFrame(int frame);
 }

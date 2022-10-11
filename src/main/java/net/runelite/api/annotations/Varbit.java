@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Woox <https://github.com/wooxsolo>
+ * Copyright (c) 2022, Adam <Adam@sigterm.info>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,69 +22,17 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.api;
+package net.runelite.api.annotations;
 
-import net.runelite.api.coords.LocalPoint;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import net.runelite.api.Varbits;
+import org.intellij.lang.annotations.MagicConstant;
 
-import javax.annotation.Nullable;
-
-/**
- * Represents a graphics object/spotanim.
- */
-public interface GraphicsObject extends Renderable
+@MagicConstant(valuesFromClass = Varbits.class)
+@Documented
+@Retention(RetentionPolicy.SOURCE)
+public @interface Varbit
 {
-	/**
-	 * The graphics object ID.
-	 *
-	 * @return the ID
-	 */
-	int getId();
-
-	/**
-	 * The location of the object.
-	 *
-	 * @return the location
-	 */
-	LocalPoint getLocation();
-
-	/**
-	 * Get the time this spotanim starts
-	 *
-	 * @return
-	 */
-	int getStartCycle();
-
-	/**
-	 * The plane the spotanim is on.
-	 *
-	 * @return
-	 */
-	int getLevel();
-
-	/**
-	 * Gets the height of the graphic.
-	 *
-	 * @return the height
-	 */
-	int getHeight();
-
-	/**
-	 * Checks if this spotanim is done animating
-	 *
-	 * @return
-	 */
-	boolean finished();
-
-	/**
-	 * The animation of the spotanim
-	 * @return
-	 */
-	@Nullable
-	Animation getAnimation();
-
-	/**
-	 * The frame of the current animation
-	 * @return
-	 */
-	int getAnimationFrame();
 }

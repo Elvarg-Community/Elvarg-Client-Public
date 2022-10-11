@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2016-2017, Cameron Moberg <Moberg@tuta.io>
- * Copyright (c) 2017, Adam <Adam@sigterm.info>
+ * Copyright (c) 2022, Adam <Adam@sigterm.info>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,44 +22,17 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.hdminimap;
+package net.runelite.api.annotations;
 
-import com.google.inject.Inject;
-import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Client;
-import net.runelite.client.callback.ClientThread;
-import net.runelite.client.plugins.Plugin;
-import net.runelite.client.plugins.PluginDescriptor;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import net.runelite.api.VarClientInt;
+import org.intellij.lang.annotations.MagicConstant;
 
-
-@PluginDescriptor(
-	name = "HD Minimap",
-	description = "Shows a hd minimap",
-	tags = { "mini", "hd", "map"},
-	enabledByDefault = false
-)
-@Slf4j
-public class HdMinimapPlugin extends Plugin
+@MagicConstant(valuesFromClass = VarClientInt.class)
+@Documented
+@Retention(RetentionPolicy.SOURCE)
+public @interface VarCInt
 {
-	@Inject
-	private Client client;
-
-	@javax.inject.Inject
-	private ClientThread clientThread;
-
-	@Override
-	protected void shutDown() throws Exception
-	{
-		client.setHdMinimapEnabled(false);
-		client.setGameState(1);
-
-	}
-
-	@Override
-	protected void startUp() throws Exception
-	{
-		client.setHdMinimapEnabled(true);
-		client.setGameState(1);
-	}
-
 }

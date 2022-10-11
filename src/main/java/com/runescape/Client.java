@@ -19179,4 +19179,39 @@ public class Client extends GameEngine implements RSClient {
         return null;
     }
 
+    @Override
+    public int getSceneMaxPlane() {
+        return 0;
+    }
+
+    @Override
+    public void setIdleTimeout(int id) {
+
+    }
+
+    @Override
+    public int getIdleTimeout() {
+        return 0;
+    }
+
+    @Override
+    public void setMinimapZoom(boolean minimapZoom) {
+
+    }
+
+    @Override
+    public double getMinimapZoom() {
+        return 0;
+    }
+
+    @Override
+    public boolean isMinimapZoom() {
+        return false;
+    }
+
+    @Override
+    public void setMinimapZoom(double zoom) {
+
+    }
+
 }

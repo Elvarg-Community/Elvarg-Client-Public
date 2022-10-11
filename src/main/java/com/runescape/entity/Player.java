@@ -794,6 +794,16 @@ public final class Player extends Mob implements RSPlayer {
     }
 
     @Override
+    public int getPoseAnimationFrame() {
+        return 0;
+    }
+
+    @Override
+    public void setPoseAnimationFrame(int frame) {
+
+    }
+
+    @Override
     public RSNode getNext() {
         return null;
     }

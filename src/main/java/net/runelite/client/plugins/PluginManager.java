@@ -26,11 +26,9 @@ package net.runelite.client.plugins;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 import com.google.common.graph.Graph;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.Graphs;
-import java.io.File;
 import com.google.common.graph.MutableGraph;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.ClassPath.ClassInfo;
@@ -39,6 +37,7 @@ import com.google.inject.CreationException;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
+import java.io.File;
 import java.io.IOException;
 import java.lang.invoke.CallSite;
 import java.lang.invoke.LambdaMetafactory;
@@ -106,12 +105,12 @@ public class PluginManager
 	@Inject
 	@VisibleForTesting
 	PluginManager(
-		@Named("developerMode") final boolean developerMode,
-		@Named("safeMode") final boolean safeMode,
-		final EventBus eventBus,
-		final Scheduler scheduler,
-		final ConfigManager configManager,
-		final Provider<GameEventManager> sceneTileManager)
+			@Named("developerMode") final boolean developerMode,
+			@Named("safeMode") final boolean safeMode,
+			final EventBus eventBus,
+			final Scheduler scheduler,
+			final ConfigManager configManager,
+			final Provider<GameEventManager> sceneTileManager)
 	{
 		this.developerMode = developerMode;
 		this.safeMode = safeMode;
@@ -160,45 +159,6 @@ public class PluginManager
 				}
 			}
 		});
-	}
-
-	public void loadSideLoadPlugins()
-	{
-		if (!developerMode)
-		{
-			return;
-		}
-
-		File[] files = SIDELOADED_PLUGINS.listFiles();
-		if (files == null)
-		{
-			return;
-		}
-
-		for (File f : files)
-		{
-			if (f.getName().endsWith(".jar"))
-			{
-				log.info("Side-loading plugin {}", f);
-
-				try
-				{
-					ClassLoader classLoader = new PluginClassLoader(f, getClass().getClassLoader());
-
-					List<Class<?>> plugins = ClassPath.from(classLoader)
-							.getAllClasses()
-							.stream()
-							.map(ClassInfo::load)
-							.collect(Collectors.toList());
-
-					loadPlugins(plugins, null);
-				}
-				catch (PluginInstantiationException | IOException ex)
-				{
-					log.error("error sideloading plugin", ex);
-				}
-			}
-		}
 	}
 
 	public Config getPluginConfigProxy(Plugin plugin)
@@ -302,6 +262,11 @@ public class PluginManager
 			loaded++;
 			SplashScreen.stage(.80, 1, null, "Starting plugins", loaded, scannedPlugins.size(), false);
 		}
+
+		for (Plugin plugin : plugins)
+		{
+			ReflectUtil.queueInjectorAnnotationCacheInvalidation(plugin.injector);
+		}
 	}
 
 	public void loadCorePlugins() throws IOException, PluginInstantiationException
@@ -310,18 +275,57 @@ public class PluginManager
 		ClassPath classPath = ClassPath.from(getClass().getClassLoader());
 
 		List<Class<?>> plugins = classPath.getTopLevelClassesRecursive(PLUGIN_PACKAGE).stream()
-			.map(ClassInfo::load)
-			.collect(Collectors.toList());
+				.map(ClassInfo::load)
+				.collect(Collectors.toList());
 
 		loadPlugins(plugins, (loaded, total) ->
-			SplashScreen.stage(.60, .70, null, "Loading Plugins", loaded, total, false));
+				SplashScreen.stage(.60, .70, null, "Loading Plugins", loaded, total, false));
+	}
+
+	public void loadSideLoadPlugins()
+	{
+		if (!developerMode)
+		{
+			return;
+		}
+
+		File[] files = SIDELOADED_PLUGINS.listFiles();
+		if (files == null)
+		{
+			return;
+		}
+
+		for (File f : files)
+		{
+			if (f.getName().endsWith(".jar"))
+			{
+				log.info("Side-loading plugin {}", f);
+
+				try
+				{
+					ClassLoader classLoader = new PluginClassLoader(f, getClass().getClassLoader());
+
+					List<Class<?>> plugins = ClassPath.from(classLoader)
+							.getAllClasses()
+							.stream()
+							.map(ClassInfo::load)
+							.collect(Collectors.toList());
+
+					loadPlugins(plugins, null);
+				}
+				catch (PluginInstantiationException | IOException ex)
+				{
+					log.error("error sideloading plugin", ex);
+				}
+			}
+		}
 	}
 
 	public List<Plugin> loadPlugins(List<Class<?>> plugins, BiConsumer<Integer, Integer> onPluginLoaded) throws PluginInstantiationException
 	{
 		MutableGraph<Class<? extends Plugin>> graph = GraphBuilder
-			.directed()
-			.build();
+				.directed()
+				.build();
 
 		for (Class<?> clazz : plugins)
 		{
@@ -357,7 +361,7 @@ public class PluginManager
 				log.debug("Disabling {} due to safe mode", clazz);
 				// also disable the plugin from autostarting later
 				configManager.unsetConfiguration(RuneLiteConfig.GROUP_NAME,
-					(Strings.isNullOrEmpty(pluginDescriptor.configName()) ? clazz.getSimpleName() : pluginDescriptor.configName()).toLowerCase());
+						(Strings.isNullOrEmpty(pluginDescriptor.configName()) ? clazz.getSimpleName() : pluginDescriptor.configName()).toLowerCase());
 				continue;
 			}
 
@@ -384,7 +388,6 @@ public class PluginManager
 		}
 
 		List<Class<? extends Plugin>> sortedPlugins = topologicalSort(graph);
-
 
 		int loaded = 0;
 		List<Plugin> newPlugins = new ArrayList<>();
@@ -630,12 +633,12 @@ public class PluginManager
 				final MethodType subscription = MethodType.methodType(method.getReturnType(), method.getParameterTypes());
 				final MethodHandle target = caller.findVirtual(clazz, method.getName(), subscription);
 				final CallSite site = LambdaMetafactory.metafactory(
-					caller,
-					"run",
-					MethodType.methodType(Runnable.class, clazz),
-					subscription,
-					target,
-					subscription);
+						caller,
+						"run",
+						MethodType.methodType(Runnable.class, clazz),
+						subscription,
+						target,
+						subscription);
 
 				final MethodHandle factory = site.getTarget();
 				runnable = (Runnable) factory.bindTo(plugin).invokeExact();
@@ -671,17 +674,20 @@ public class PluginManager
 	/**
 	 * Topologically sort a graph. Uses Kahn's algorithm.
 	 *
-	 * @param graph
-	 * @param <T>
-	 * @return
+	 * @param graph - A directed graph
+	 * @param <T>   - The type of the item contained in the nodes of the graph
+	 * @return - A topologically sorted list corresponding to graph.
+	 * <p>
+	 * Multiple invocations with the same arguments may return lists that are not equal.
 	 */
-	private <T> List<T> topologicalSort(Graph<T> graph)
+	@VisibleForTesting
+	static <T> List<T> topologicalSort(Graph<T> graph)
 	{
 		MutableGraph<T> graphCopy = Graphs.copyOf(graph);
 		List<T> l = new ArrayList<>();
 		Set<T> s = graphCopy.nodes().stream()
-			.filter(node -> graphCopy.inDegree(node) == 0)
-			.collect(Collectors.toSet());
+				.filter(node -> graphCopy.inDegree(node) == 0)
+				.collect(Collectors.toSet());
 		while (!s.isEmpty())
 		{
 			Iterator<T> it = s.iterator();
@@ -716,29 +722,29 @@ public class PluginManager
 		}
 
 		return plugins.stream()
-			.filter(p ->
-			{
-				if (p == plugin)
+				.filter(p ->
 				{
-					return false;
-				}
+					if (p == plugin)
+					{
+						return false;
+					}
 
-				PluginDescriptor desc = p.getClass().getAnnotation(PluginDescriptor.class);
-				if (conflicts.contains(desc.name()))
-				{
-					return true;
-				}
-
-				for (String conflict : desc.conflicts())
-				{
-					if (conflicts.contains(conflict))
+					PluginDescriptor desc = p.getClass().getAnnotation(PluginDescriptor.class);
+					if (conflicts.contains(desc.name()))
 					{
 						return true;
 					}
-				}
 
-				return false;
-			})
-			.collect(Collectors.toList());
+					for (String conflict : desc.conflicts())
+					{
+						if (conflicts.contains(conflict))
+						{
+							return true;
+						}
+					}
+
+					return false;
+				})
+				.collect(Collectors.toList());
 	}
 }

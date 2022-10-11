@@ -25,14 +25,56 @@
 package net.runelite.client.ui;
 
 import com.google.common.base.Strings;
+import java.applet.Applet;
+import java.awt.Canvas;
+import java.awt.CardLayout;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Frame;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.LayoutManager;
+import java.awt.Rectangle;
+import java.awt.Toolkit;
+import java.awt.TrayIcon;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
+import java.time.Duration;
+import javax.annotation.Nullable;
+import com.google.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Provider;
+import javax.inject.Singleton;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JEditorPane;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import static javax.swing.JOptionPane.INFORMATION_MESSAGE;
+import javax.swing.JPanel;
+import javax.swing.JRootPane;
+import javax.swing.SwingUtilities;
+import javax.swing.event.HyperlinkEvent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.Client;
+import net.runelite.api.Constants;
+import net.runelite.api.GameState;
+import net.runelite.api.Player;
 import net.runelite.api.Point;
-import net.runelite.api.*;
 import net.runelite.api.events.GameStateChanged;
-import net.runelite.api.events.ResizeableChanged;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
+import net.runelite.client.RuneLiteProperties;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.config.ExpandResizeType;
@@ -49,24 +91,16 @@ import net.runelite.client.input.MouseAdapter;
 import net.runelite.client.input.MouseListener;
 import net.runelite.client.input.MouseManager;
 import net.runelite.client.ui.skin.SubstanceRuneLiteLookAndFeel;
-import net.runelite.client.util.*;
+import net.runelite.client.util.HotkeyListener;
+import net.runelite.client.util.ImageUtil;
+import net.runelite.client.util.LinkBrowser;
+import net.runelite.client.util.OSType;
+import net.runelite.client.util.OSXUtil;
+import net.runelite.client.util.SwingUtil;
+import net.runelite.client.util.WinUtil;
 import org.pushingpixels.substance.internal.SubstanceSynapse;
 import org.pushingpixels.substance.internal.utils.SubstanceCoreUtilities;
 import org.pushingpixels.substance.internal.utils.SubstanceTitlePaneUtilities;
-
-import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
-import javax.swing.*;
-import java.applet.Applet;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.BufferedImage;
-import java.time.Duration;
-
-import static javax.swing.JOptionPane.INFORMATION_MESSAGE;
 
 /**
  * Client UI.
@@ -75,9 +109,6 @@ import static javax.swing.JOptionPane.INFORMATION_MESSAGE;
 @Singleton
 public class ClientUI
 {
-	@Inject
-	private Client clients;
-
 	private static final String CONFIG_GROUP = "runelite";
 	private static final String CONFIG_CLIENT_BOUNDS = "clientBounds";
 	private static final String CONFIG_CLIENT_MAXIMIZED = "clientMaximized";
@@ -102,7 +133,7 @@ public class ClientUI
 	private boolean withTitleBar;
 	private BufferedImage sidebarOpenIcon;
 	private BufferedImage sidebarClosedIcon;
-	private static ContainableFrame frame;
+	private ContainableFrame frame;
 	private JPanel navContainer;
 	private PluginPanel pluginPanel;
 	private ClientPluginToolbar pluginToolbar;
@@ -116,17 +147,25 @@ public class ClientUI
 	private Dimension lastClientSize;
 	private Cursor defaultCursor;
 
+	@Inject(optional = true)
+	@Named("minMemoryLimit")
+	private int minMemoryLimit = 400;
+
+	@Inject(optional = true)
+	@Named("recommendedMemoryLimit")
+	private int recommendedMemoryLimit = 512;
+
 	@Inject
 	private ClientUI(
-		RuneLiteConfig config,
-		KeyManager keyManager,
-		MouseManager mouseManager,
-		@Nullable Applet client,
-		ConfigManager configManager,
-		Provider<ClientThread> clientThreadProvider,
-		EventBus eventBus,
-		@Named("safeMode") boolean safeMode,
-		@Named("runelite.title") String title
+			RuneLiteConfig config,
+			KeyManager keyManager,
+			MouseManager mouseManager,
+			@Nullable Applet client,
+			ConfigManager configManager,
+			Provider<ClientThread> clientThreadProvider,
+			EventBus eventBus,
+			@Named("safeMode") boolean safeMode,
+			@Named("runelite.title") String title
 	)
 	{
 		this.config = config;
@@ -144,8 +183,8 @@ public class ClientUI
 	public void onConfigChanged(ConfigChanged event)
 	{
 		if (!event.getGroup().equals(CONFIG_GROUP) ||
-			event.getKey().equals(CONFIG_CLIENT_MAXIMIZED) ||
-			event.getKey().equals(CONFIG_CLIENT_BOUNDS))
+				event.getKey().equals(CONFIG_CLIENT_MAXIMIZED) ||
+				event.getKey().equals(CONFIG_CLIENT_BOUNDS))
 		{
 			return;
 		}
@@ -323,10 +362,10 @@ public class ClientUI
 						try
 						{
 							result = JOptionPane.showConfirmDialog(
-								frame,
-								"Are you sure you want to exit?", "Exit",
-								JOptionPane.OK_CANCEL_OPTION,
-								JOptionPane.QUESTION_MESSAGE);
+									frame,
+									"Are you sure you want to exit?", "Exit",
+									JOptionPane.OK_CANCEL_OPTION,
+									JOptionPane.QUESTION_MESSAGE);
 						}
 						catch (Exception e)
 						{
@@ -461,7 +500,7 @@ public class ClientUI
 			}
 
 			// Update config
-			updateFrameConfig(true);
+			updateFrameConfig(false);
 
 			// Create hide sidebar button
 
@@ -469,17 +508,17 @@ public class ClientUI
 			sidebarClosedIcon = ImageUtil.flipImage(sidebarOpenIcon, true, false);
 
 			sidebarNavigationButton = NavigationButton
-				.builder()
-				.priority(100)
-				.icon(sidebarOpenIcon)
-				.tooltip("Open SideBar")
-				.onClick(this::toggleSidebar)
-				.build();
+					.builder()
+					.priority(100)
+					.icon(sidebarOpenIcon)
+					.tooltip("Open SideBar")
+					.onClick(this::toggleSidebar)
+					.build();
 
 			sidebarNavigationJButton = SwingUtil.createSwingButton(
-				sidebarNavigationButton,
-				0,
-				null);
+					sidebarNavigationButton,
+					0,
+					null);
 
 			titleToolbar.addComponent(sidebarNavigationButton, sidebarNavigationJButton);
 
@@ -511,7 +550,7 @@ public class ClientUI
 				try
 				{
 					Rectangle clientBounds = configManager.getConfiguration(
-						CONFIG_GROUP, CONFIG_CLIENT_BOUNDS, Rectangle.class);
+							CONFIG_GROUP, CONFIG_CLIENT_BOUNDS, Rectangle.class);
 					if (clientBounds != null)
 					{
 						frame.setBounds(clientBounds);
@@ -525,13 +564,17 @@ public class ClientUI
 
 							// When Windows screen scaling is on, the position/bounds will be wrong when they are set.
 							// The bounds saved in shutdown are the full, non-scaled co-ordinates.
+							// On MacOS the scaling is already applied and the position/bounds are correct on at least
+							// - 2015 x64 MBP JDK11 Mohave
+							// - 2020 m1 MBP JDK17 Big Sur
+							// Adjusting the scaling further results in the client position being incorrect
 							if (scale != 1 && OSType.getOSType() != OSType.MacOS)
 							{
 								clientBounds.setRect(
-									clientBounds.getX() / scale,
-									clientBounds.getY() / scale,
-									clientBounds.getWidth() / scale,
-									clientBounds.getHeight() / scale);
+										clientBounds.getX() / scale,
+										clientBounds.getY() / scale,
+										clientBounds.getWidth() / scale,
+										clientBounds.getHeight() / scale);
 
 								frame.setMinimumSize(clientBounds.getSize());
 								frame.setBounds(clientBounds);
@@ -565,6 +608,8 @@ public class ClientUI
 
 			// Show frame
 			frame.setVisible(true);
+			// On macos setResizable needs to be called after setVisible
+			frame.setResizable(!config.lockWindowSize());
 			frame.toFront();
 			requestFocus();
 			log.info("Showing frame {}", frame);
@@ -575,9 +620,33 @@ public class ClientUI
 		if (client != null && !(client instanceof Client))
 		{
 			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(frame,
-				"RuneLite has not yet been updated to work with the latest\n"
-					+ "game update, it will work with reduced functionality until then.",
-				"RuneLite is outdated", INFORMATION_MESSAGE));
+					"RuneLite has not yet been updated to work with the latest\n"
+							+ "game update, it will work with reduced functionality until then.",
+					"RuneLite is outdated", INFORMATION_MESSAGE));
+		}
+
+		final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024L / 1024L);
+		if (maxMemory < minMemoryLimit)
+		{
+			SwingUtilities.invokeLater(() ->
+			{
+				JEditorPane ep = new JEditorPane("text/html",
+						"Your Java memory limit is " + maxMemory + "mb, which is lower than the recommended " + minMemoryLimit + "mb.<br>" +
+								"This can cause instability, and it is recommended you remove or increase this limit.<br>" +
+								"Join <a href=\"" + RuneLiteProperties.getDiscordInvite() + "\">Discord</a> for assistance."
+				);
+				ep.addHyperlinkListener(e ->
+				{
+					if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED))
+					{
+						LinkBrowser.browse(e.getURL().toString());
+					}
+				});
+				ep.setEditable(false);
+				ep.setOpaque(false);
+				JOptionPane.showMessageDialog(frame,
+						ep, "Max memory limit low", JOptionPane.WARNING_MESSAGE);
+			});
 		}
 	}
 
@@ -804,7 +873,7 @@ public class ClientUI
 	{
 		if (client instanceof Client)
 		{
-			final Component canvas = ((Client) client).getCanvas();
+			final Canvas canvas = ((Client) client).getCanvas();
 			if (canvas != null)
 			{
 				final java.awt.Point point = SwingUtilities.convertPoint(canvas, 0, 0, frame);
@@ -832,15 +901,15 @@ public class ClientUI
 		// Offset sidebar button if resizable mode logout is visible
 		final Widget logoutButton = client.getWidget(WidgetInfo.RESIZABLE_VIEWPORT_BOTTOM_LINE_LOGOUT_BUTTON);
 		final int y = logoutButton != null && !logoutButton.isHidden() && logoutButton.getParent() != null
-			? logoutButton.getHeight() + logoutButton.getRelativeY()
-			: 5;
+				? logoutButton.getHeight() + logoutButton.getRelativeY()
+				: 5;
 
 		final BufferedImage image = sidebarOpen ? sidebarClosedIcon : sidebarOpenIcon;
 
 		final Rectangle sidebarButtonRange = new Rectangle(x - 15, 0, image.getWidth() + 25, client.getRealDimensions().height);
 		final Point mousePosition = new Point(
-			client.getMouseCanvasPosition().getX() + client.getViewportXOffset(),
-			client.getMouseCanvasPosition().getY() + client.getViewportYOffset());
+				client.getMouseCanvasPosition().getX() + client.getViewportXOffset(),
+				client.getMouseCanvasPosition().getY() + client.getViewportYOffset());
 
 		if (sidebarButtonRange.contains(mousePosition.getX(), mousePosition.getY()))
 		{
@@ -1004,7 +1073,7 @@ public class ClientUI
 	{
 		if (client instanceof Client)
 		{
-			final Component c = ((Client) client).getCanvas();
+			final Canvas c = ((Client) client).getCanvas();
 			if (c != null)
 			{
 				c.requestFocusInWindow();
@@ -1025,8 +1094,8 @@ public class ClientUI
 
 		// Update window opacity if the frame is undecorated, translucency capable and not fullscreen
 		if (frame.isUndecorated() &&
-			frame.getGraphicsConfiguration().isTranslucencyCapable() &&
-			frame.getGraphicsConfiguration().getDevice().getFullScreenWindow() == null)
+				frame.getGraphicsConfiguration().isTranslucencyCapable() &&
+				frame.getGraphicsConfiguration().getDevice().getFullScreenWindow() == null)
 		{
 			frame.setOpacity(((float) config.windowOpacity()) / 100.0f);
 		}
@@ -1119,15 +1188,6 @@ public class ClientUI
 
 			configManager.unsetConfiguration(CONFIG_GROUP, CONFIG_CLIENT_MAXIMIZED);
 			configManager.setConfiguration(CONFIG_GROUP, CONFIG_CLIENT_BOUNDS, bounds);
-		}
-	}
-
-	@Subscribe
-	public void onResizeableChanged(ResizeableChanged event)
-	{
-		// Smoother way to handle refresh on GPU mode
-		if (clients.isGpu() && !event.isResized()) {
-			frame.setSize(clients.getRealDimensions());
 		}
 	}
 }

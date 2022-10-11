@@ -82,6 +82,7 @@ import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.ui.overlay.WidgetOverlay;
 import net.runelite.client.ui.overlay.tooltip.TooltipOverlay;
 import net.runelite.client.ui.overlay.worldmap.WorldMapOverlay;
+import net.runelite.client.util.ReflectUtil;
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -254,6 +255,11 @@ public class RuneLite
 				RuneLiteProperties.getVersion(), RuneLiteProperties.getLauncherVersion() == null ? "unknown" : RuneLiteProperties.getLauncherVersion(),
 				args.length == 0 ? "none" : String.join(" ", args));
 
+			final RuntimeMXBean runtime = ManagementFactory.getRuntimeMXBean();
+			// This includes arguments from _JAVA_OPTIONS, which are parsed after command line flags and applied to
+			// the global VM args
+			log.info("Java VM arguments: {}", String.join(" ", runtime.getInputArguments()));
+
 			final long start = System.currentTimeMillis();
 
 			injector = Guice.createInjector(new RuneLiteModule(
@@ -268,8 +274,7 @@ public class RuneLite
 			injector.getInstance(RuneLite.class).start();
 
 			final long end = System.currentTimeMillis();
-			final RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
-			final long uptime = rb.getUptime();
+			final long uptime = runtime.getUptime();
 			log.info("Client initialization took {}ms. Uptime: {}ms", end - start, uptime);
 		}
 		catch (Exception e)
@@ -378,6 +383,10 @@ public class RuneLite
 		SplashScreen.stop();
 
 		clientUI.show();
+
+		ReflectUtil.queueInjectorAnnotationCacheInvalidation(injector);
+		ReflectUtil.invalidateAnnotationCaches();
+
 	}
 
 	private void setupSystemProps()

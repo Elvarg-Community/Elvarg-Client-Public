@@ -308,6 +308,16 @@ public final class Npc extends Mob implements RSNPC {
     }
 
     @Override
+    public int getPoseAnimationFrame() {
+        return 0;
+    }
+
+    @Override
+    public void setPoseAnimationFrame(int frame) {
+
+    }
+
+    @Override
     public int getModelHeight() {
         return modelBaseY;
     }
