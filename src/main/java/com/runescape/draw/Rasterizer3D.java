@@ -1,8 +1,6 @@
 package com.runescape.draw;
 
 import com.runescape.Client;
-import com.runescape.cache.FileArchive;
-import com.runescape.cache.graphics.IndexedImage;
 import com.runescape.cache.textures.TextureLoader;
 import com.runescape.cache.textures.TextureProvider;
 
@@ -16,7 +14,7 @@ public final class Rasterizer3D extends Rasterizer2D {
 
     public static void clear() {
         anIntArray1468 = null;
-        anIntArray1470 = null;
+        SINE = null;
         COSINE = null;
         scanOffsets = null;
         hslToRgb = null;
@@ -2198,7 +2196,7 @@ public final class Rasterizer3D extends Rasterizer2D {
     public static int originViewY;
     private static int[] anIntArray1468;
     public static final int[] anIntArray1469;
-    public static int anIntArray1470[];
+    public static int SINE[];
     public static int COSINE[];
     public static int scanOffsets[];
     public static int hslToRgb[] = new int[0x10000];
@@ -2206,7 +2204,7 @@ public final class Rasterizer3D extends Rasterizer2D {
     static {
         anIntArray1468 = new int[512];
         anIntArray1469 = new int[2048];
-        anIntArray1470 = new int[2048];
+        SINE = new int[2048];
         COSINE = new int[2048];
         for (int i = 1; i < 512; i++) {
             anIntArray1468[i] = 32768 / i;
@@ -2215,7 +2213,7 @@ public final class Rasterizer3D extends Rasterizer2D {
             anIntArray1469[j] = 0x10000 / j;
         }
         for (int k = 0; k < 2048; k++) {
-            anIntArray1470[k] = (int) (65536D * Math.sin((double) k * 0.0030679614999999999D));
+            SINE[k] = (int) (65536D * Math.sin((double) k * 0.0030679614999999999D));
             COSINE[k] = (int) (65536D * Math.cos((double) k * 0.0030679614999999999D));
         }
     }

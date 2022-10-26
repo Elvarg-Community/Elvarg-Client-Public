@@ -1,7 +1,6 @@
 package com.runescape.scene;
 
 import com.runescape.Client;
-import com.runescape.cache.ResourceProvider;
 import com.runescape.cache.def.FloorDefinition;
 import com.runescape.cache.def.ObjectDefinition;
 import com.runescape.draw.Rasterizer3D;
@@ -558,7 +557,7 @@ public final class MapRegion {
                     if (model != null) {
                         for (int j5 = 0; j5 <= j4; j5++) {
                             for (int k5 = 0; k5 <= l4; k5++) {
-                                int l5 = model.maxVertexDistanceXZPlane / 4;
+                                int l5 = model.diagonal2DAboveOrigin / 4;
                                 if (l5 > 30) {
                                     l5 = 30;
                                 }

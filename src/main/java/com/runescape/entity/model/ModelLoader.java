@@ -14,8 +14,8 @@ public class ModelLoader {
         Buffer var7 = new Buffer(var1);
         Buffer var8 = new Buffer(var1);
         var2.setOffset(var1.length - 26);
-        int var9 = var2.readUShort();
-        int var10 = var2.readUShort();
+        int var9 = var2.readUnsignedShort();
+        int var10 = var2.readUnsignedShort();
         int var11 = var2.readUnsignedByte();
         int var12 = var2.readUnsignedByte();
         int var13 = var2.readUnsignedByte();
@@ -24,12 +24,12 @@ public class ModelLoader {
         int var16 = var2.readUnsignedByte();
         int var17 = var2.readUnsignedByte();
         int var18 = var2.readUnsignedByte();
-        int var19 = var2.readUShort();
-        int var20 = var2.readUShort();
-        int var21 = var2.readUShort();
-        int var22 = var2.readUShort();
-        int var23 = var2.readUShort();
-        int var24 = var2.readUShort();
+        int var19 = var2.readUnsignedShort();
+        int var20 = var2.readUnsignedShort();
+        int var21 = var2.readUnsignedShort();
+        int var22 = var2.readUnsignedShort();
+        int var23 = var2.readUnsignedShort();
+        int var24 = var2.readUnsignedShort();
         int var25 = 0;
         int var26 = 0;
         int var27 = 0;
@@ -122,42 +122,42 @@ public class ModelLoader {
         var28 = var28 + var26 * 2 + var27 * 2;
 
 
-        def.numVertices = var9;
+        def.verticesCount = var9;
         def.trianglesCount = var10;
-        def.numberOfTexturesFaces = var11;
-        def.vertexX = new int[var9];
-        def.vertexY = new int[var9];
-        def.vertexZ = new int[var9];
-        def.facePointA = new int[var10];
-        def.facePointB = new int[var10];
-        def.facePointC = new int[var10];
+        def.texturesCount = var11;
+        def.verticesX = new int[var9];
+        def.verticesY = new int[var9];
+        def.verticesZ = new int[var9];
+        def.trianglesX = new int[var10];
+        def.trianglesY = new int[var10];
+        def.trianglesZ = new int[var10];
         if (var17 == 1)
         {
-            def.vertexVSkin = new int[var9];
+            def.vertexData = new int[var9];
         }
 
         if (var12 == 1)
         {
-            def.faceDrawType = new int[var10];
+            def.drawType = new int[var10];
         }
 
         if (var13 == 255)
         {
-            def.face_render_priorities = new byte[var10];
+            def.renderPriorities = new byte[var10];
         }
         else
         {
-            def.face_priority = (byte) var13;
+            def.facePriority = (byte) var13;
         }
 
         if (var14 == 1)
         {
-            def.face_alpha = new byte[var10];
+            def.triangleAlpha = new byte[var10];
         }
 
         if (var15 == 1)
         {
-            def.triangleTSkin = new int[var10];
+            def.triangleData = new int[var10];
         }
 
         if (var16 == 1)
@@ -176,12 +176,12 @@ public class ModelLoader {
             def.animayaScales = new int[var9][];
         }
 
-        def.triangleColours = new short[var10];
+        def.colors = new short[var10];
         if (var11 > 0)
         {
-            def.textures_face_a = new short[var11];
-            def.textures_face_b = new short[var11];
-            def.textures_face_c = new short[var11];
+            def.texturesX = new short[var11];
+            def.texturesY = new short[var11];
+            def.texturesZ = new short[var11];
         }
 
         var2.setOffset(var11);
@@ -219,15 +219,15 @@ public class ModelLoader {
                 var55 = var5.readSmart();
             }
 
-            def.vertexX[var51] = var48 + var53;
-            def.vertexY[var51] = var49 + var54;
-            def.vertexZ[var51] = var50 + var55;
-            var48 = def.vertexX[var51];
-            var49 = def.vertexY[var51];
-            var50 = def.vertexZ[var51];
+            def.verticesX[var51] = var48 + var53;
+            def.verticesY[var51] = var49 + var54;
+            def.verticesZ[var51] = var50 + var55;
+            var48 = def.verticesX[var51];
+            var49 = def.verticesY[var51];
+            var50 = def.verticesZ[var51];
             if (var17 == 1)
             {
-                def.vertexVSkin[var51] = var6.readUnsignedByte();
+                def.vertexData[var51] = var6.readUnsignedByte();
             }
         }
 
@@ -257,31 +257,30 @@ public class ModelLoader {
 
         for (var51 = 0; var51 < var10; ++var51)
         {
-            def.triangleColours[var51] = (short) var2.readUShort();
+            def.colors[var51] = (short) var2.readUnsignedShort();
             if (var12 == 1)
             {
-                def.faceDrawType[var51] = var3.readSignedByte();
+                def.drawType[var51] = var3.readSignedByte();
             }
 
             if (var13 == 255)
             {
-                def.face_render_priorities[var51] = var4.readSignedByte();
+                def.renderPriorities[var51] = var4.readSignedByte();
             }
 
             if (var14 == 1)
             {
-                def.face_alpha[var51] = var5.readSignedByte();
-
+                def.triangleAlpha[var51] = var5.readSignedByte();
             }
 
             if (var15 == 1)
             {
-                def.triangleTSkin[var51] = var6.readUnsignedByte();
+                def.triangleData[var51] = var6.readUnsignedByte();
             }
 
             if (var16 == 1)
             {
-                def.materials[var51] = (short) (var7.readUShort() - 1);
+                def.materials[var51] = (short) (var7.readUnsignedShort() - 1);
             }
 
             if (def.textures != null && def.materials[var51] != -1)
@@ -307,9 +306,9 @@ public class ModelLoader {
                 var52 = var2.readSmart() + var51;
                 var53 = var2.readSmart() + var52;
                 var54 = var53;
-                def.facePointA[var55] = var51;
-                def.facePointB[var55] = var52;
-                def.facePointC[var55] = var53;
+                def.trianglesX[var55] = var51;
+                def.trianglesY[var55] = var52;
+                def.trianglesZ[var55] = var53;
             }
 
             if (var56 == 2)
@@ -317,9 +316,9 @@ public class ModelLoader {
                 var52 = var53;
                 var53 = var2.readSmart() + var54;
                 var54 = var53;
-                def.facePointA[var55] = var51;
-                def.facePointB[var55] = var52;
-                def.facePointC[var55] = var53;
+                def.trianglesX[var55] = var51;
+                def.trianglesY[var55] = var52;
+                def.trianglesZ[var55] = var53;
             }
 
             if (var56 == 3)
@@ -327,9 +326,9 @@ public class ModelLoader {
                 var51 = var53;
                 var53 = var2.readSmart() + var54;
                 var54 = var53;
-                def.facePointA[var55] = var51;
-                def.facePointB[var55] = var52;
-                def.facePointC[var55] = var53;
+                def.trianglesX[var55] = var51;
+                def.trianglesY[var55] = var52;
+                def.trianglesZ[var55] = var53;
             }
 
             if (var56 == 4)
@@ -339,9 +338,9 @@ public class ModelLoader {
                 var52 = var57;
                 var53 = var2.readSmart() + var54;
                 var54 = var53;
-                def.facePointA[var55] = var51;
-                def.facePointB[var55] = var57;
-                def.facePointC[var55] = var53;
+                def.trianglesX[var55] = var51;
+                def.trianglesY[var55] = var57;
+                def.trianglesZ[var55] = var53;
             }
         }
 
@@ -357,9 +356,9 @@ public class ModelLoader {
             var56 = def.textureTypes[var55] & 255;
             if (var56 == 0)
             {
-                def.textures_face_a[var55] = (short) var2.readUShort();
-                def.textures_face_b[var55] = (short) var2.readUShort();
-                def.textures_face_c[var55] = (short) var2.readUShort();
+                def.texturesX[var55] = (short) var2.readUnsignedShort();
+                def.texturesY[var55] = (short) var2.readUnsignedShort();
+                def.texturesZ[var55] = (short) var2.readUnsignedShort();
             }
         }
 
@@ -367,12 +366,11 @@ public class ModelLoader {
         var55 = var2.readUnsignedByte();
         if (var55 != 0)
         {
-            var2.readUShort();
-            var2.readUShort();
-            var2.readUShort();
+            var2.readUnsignedShort();
+            var2.readUnsignedShort();
+            var2.readUnsignedShort();
             var2.readInt();
         }
-
 
     }
 
@@ -386,8 +384,8 @@ public class ModelLoader {
         Buffer var7 = new Buffer(var1);
         Buffer var8 = new Buffer(var1);
         var4.setOffset(var1.length - 23);
-        int var9 = var4.readUShort();
-        int var10 = var4.readUShort();
+        int var9 = var4.readUnsignedShort();
+        int var10 = var4.readUnsignedShort();
         int var11 = var4.readUnsignedByte();
         int var12 = var4.readUnsignedByte();
         int var13 = var4.readUnsignedByte();
@@ -395,11 +393,11 @@ public class ModelLoader {
         int var15 = var4.readUnsignedByte();
         int var16 = var4.readUnsignedByte();
         int var17 = var4.readUnsignedByte();
-        int var18 = var4.readUShort();
-        int var19 = var4.readUShort();
-        int var20 = var4.readUShort();
-        int var21 = var4.readUShort();
-        int var22 = var4.readUShort();
+        int var18 = var4.readUnsignedShort();
+        int var19 = var4.readUnsignedShort();
+        int var20 = var4.readUnsignedShort();
+        int var21 = var4.readUnsignedShort();
+        int var22 = var4.readUnsignedShort();
         byte var23 = 0;
         int var24 = var23 + var9;
         int var25 = var24;
@@ -441,52 +439,52 @@ public class ModelLoader {
         int var35 = var24;
         var24 += var19;
         int var10000 = var24 + var20;
-        def.numVertices = var9;
+        def.verticesCount = var9;
         def.trianglesCount = var10;
-        def.numberOfTexturesFaces = var11;
-        def.vertexX = new int[var9];
-        def.vertexY = new int[var9];
-        def.vertexZ = new int[var9];
-        def.facePointA = new int[var10];
-        def.facePointB = new int[var10];
-        def.facePointC = new int[var10];
+        def.texturesCount = var11;
+        def.verticesX = new int[var9];
+        def.verticesY = new int[var9];
+        def.verticesZ = new int[var9];
+        def.trianglesX = new int[var10];
+        def.trianglesY = new int[var10];
+        def.trianglesZ = new int[var10];
         if (var11 > 0)
         {
             def.textureTypes = new byte[var11];
-            def.textures_face_a = new short[var11];
-            def.textures_face_b = new short[var11];
-            def.textures_face_c = new short[var11];
+            def.texturesX = new short[var11];
+            def.texturesY = new short[var11];
+            def.texturesZ = new short[var11];
         }
 
         if (var16 == 1)
         {
-            def.vertexVSkin = new int[var9];
+            def.vertexData = new int[var9];
         }
 
         if (var12 == 1)
         {
-            def.faceDrawType = new int[var10];
+            def.drawType = new int[var10];
             def.textures = new byte[var10];
             def.materials = new short[var10];
         }
 
         if (var13 == 255)
         {
-            def.face_render_priorities = new byte[var10];
+            def.renderPriorities = new byte[var10];
         }
         else
         {
-            def.face_priority = (byte) var13;
+            def.facePriority = (byte) var13;
         }
 
         if (var14 == 1)
         {
-            def.face_alpha = new byte[var10];
+            def.triangleAlpha = new byte[var10];
         }
 
         if (var15 == 1)
         {
-            def.triangleTSkin = new int[var10];
+            def.triangleData = new int[var10];
         }
 
         if (var17 == 1)
@@ -495,7 +493,7 @@ public class ModelLoader {
             def.animayaScales = new int[var9][];
         }
 
-        def.triangleColours = new short[var10];
+        def.colors = new short[var10];
         var4.setOffset(var23);
         var5.setOffset(var34);
         var6.setOffset(var35);
@@ -531,15 +529,15 @@ public class ModelLoader {
                 var44 = var7.readSmart();
             }
 
-            def.vertexX[var40] = var37 + var42;
-            def.vertexY[var40] = var38 + var43;
-            def.vertexZ[var40] = var39 + var44;
-            var37 = def.vertexX[var40];
-            var38 = def.vertexY[var40];
-            var39 = def.vertexZ[var40];
+            def.verticesX[var40] = var37 + var42;
+            def.verticesY[var40] = var38 + var43;
+            def.verticesZ[var40] = var39 + var44;
+            var37 = def.verticesX[var40];
+            var38 = def.verticesY[var40];
+            var39 = def.verticesZ[var40];
             if (var16 == 1)
             {
-                def.vertexVSkin[var40] = var8.readUnsignedByte();
+                def.vertexData[var40] = var8.readUnsignedByte();
             }
         }
 
@@ -567,25 +565,25 @@ public class ModelLoader {
 
         for (var40 = 0; var40 < var10; ++var40)
         {
-            def.triangleColours[var40] = (short) var4.readUShort();
+            def.colors[var40] = (short) var4.readUnsignedShort();
             if (var12 == 1)
             {
                 var41 = var5.readUnsignedByte();
                 if ((var41 & 1) == 1)
                 {
-                    def.faceDrawType[var40] = 1;
+                    def.drawType[var40] = 1;
                     var2 = true;
                 }
                 else
                 {
-                    def.faceDrawType[var40] = 0;
+                    def.drawType[var40] = 0;
                 }
 
                 if ((var41 & 2) == 2)
                 {
                     def.textures[var40] = (byte) (var41 >> 2);
-                    def.materials[var40] = def.triangleColours[var40];
-                    def.triangleColours[var40] = 127;
+                    def.materials[var40] = def.colors[var40];
+                    def.colors[var40] = 127;
                     if (def.materials[var40] != -1)
                     {
                         var3 = true;
@@ -600,17 +598,17 @@ public class ModelLoader {
 
             if (var13 == 255)
             {
-                def.face_render_priorities[var40] = var6.readSignedByte();
+                def.renderPriorities[var40] = var6.readSignedByte();
             }
 
             if (var14 == 1)
             {
-                def.face_alpha[var40] = var7.readSignedByte();
+                def.triangleAlpha[var40] = var7.readSignedByte();
             }
 
             if (var15 == 1)
             {
-                def.triangleTSkin[var40] = var8.readUnsignedByte();
+                def.triangleData[var40] = var8.readUnsignedByte();
             }
         }
 
@@ -632,9 +630,9 @@ public class ModelLoader {
                 var41 = var4.readSmart() + var40;
                 var42 = var4.readSmart() + var41;
                 var43 = var42;
-                def.facePointA[var44] = var40;
-                def.facePointB[var44] = var41;
-                def.facePointC[var44] = var42;
+                def.trianglesX[var44] = var40;
+                def.trianglesY[var44] = var41;
+                def.trianglesZ[var44] = var42;
             }
 
             if (var45 == 2)
@@ -642,9 +640,9 @@ public class ModelLoader {
                 var41 = var42;
                 var42 = var4.readSmart() + var43;
                 var43 = var42;
-                def.facePointA[var44] = var40;
-                def.facePointB[var44] = var41;
-                def.facePointC[var44] = var42;
+                def.trianglesX[var44] = var40;
+                def.trianglesY[var44] = var41;
+                def.trianglesZ[var44] = var42;
             }
 
             if (var45 == 3)
@@ -652,9 +650,9 @@ public class ModelLoader {
                 var40 = var42;
                 var42 = var4.readSmart() + var43;
                 var43 = var42;
-                def.facePointA[var44] = var40;
-                def.facePointB[var44] = var41;
-                def.facePointC[var44] = var42;
+                def.trianglesX[var44] = var40;
+                def.trianglesY[var44] = var41;
+                def.trianglesZ[var44] = var42;
             }
 
             if (var45 == 4)
@@ -664,9 +662,9 @@ public class ModelLoader {
                 var41 = var46;
                 var42 = var4.readSmart() + var43;
                 var43 = var42;
-                def.facePointA[var44] = var40;
-                def.facePointB[var44] = var46;
-                def.facePointC[var44] = var42;
+                def.trianglesX[var44] = var40;
+                def.trianglesY[var44] = var46;
+                def.trianglesZ[var44] = var42;
             }
         }
 
@@ -675,9 +673,9 @@ public class ModelLoader {
         for (var44 = 0; var44 < var11; ++var44)
         {
             def.textureTypes[var44] = 0;
-            def.textures_face_a[var44] = (short) var4.readUShort();
-            def.textures_face_b[var44] = (short) var4.readUShort();
-            def.textures_face_c[var44] = (short) var4.readUShort();
+            def.texturesX[var44] = (short) var4.readUnsignedShort();
+            def.texturesY[var44] = (short) var4.readUnsignedShort();
+            def.texturesZ[var44] = (short) var4.readUnsignedShort();
         }
 
         if (def.textures != null)
@@ -686,11 +684,10 @@ public class ModelLoader {
 
             for (var45 = 0; var45 < var10; ++var45)
             {
-
                 var46 = def.textures[var45] & 255;
                 if (var46 != 255)
                 {
-                    if (def.facePointA[var45] == (def.textures_face_a[var46] & '\uffff') && def.facePointB[var45] == (def.textures_face_b[var46] & '\uffff') && def.facePointC[var45] == (def.textures_face_c[var46] & '\uffff'))
+                    if (def.trianglesX[var45] == (def.texturesX[var46] & '\uffff') && def.trianglesY[var45] == (def.texturesY[var46] & '\uffff') && def.trianglesZ[var45] == (def.texturesZ[var46] & '\uffff'))
                     {
                         def.textures[var45] = -1;
                     }
@@ -714,7 +711,7 @@ public class ModelLoader {
 
         if (!var2)
         {
-            def.faceDrawType = null;
+            def.drawType = null;
         }
 
     }
@@ -729,8 +726,8 @@ public class ModelLoader {
         Buffer var7 = new Buffer(var1);
         Buffer var8 = new Buffer(var1);
         var2.setOffset(var1.length - 23);
-        int var9 = var2.readUShort();
-        int var10 = var2.readUShort();
+        int var9 = var2.readUnsignedShort();
+        int var10 = var2.readUnsignedShort();
         int var11 = var2.readUnsignedByte();
         int var12 = var2.readUnsignedByte();
         int var13 = var2.readUnsignedByte();
@@ -738,11 +735,11 @@ public class ModelLoader {
         int var15 = var2.readUnsignedByte();
         int var16 = var2.readUnsignedByte();
         int var17 = var2.readUnsignedByte();
-        int var18 = var2.readUShort();
-        int var19 = var2.readUShort();
-        int var20 = var2.readUShort();
-        int var21 = var2.readUShort();
-        int var22 = var2.readUShort();
+        int var18 = var2.readUnsignedShort();
+        int var19 = var2.readUnsignedShort();
+        int var20 = var2.readUnsignedShort();
+        int var21 = var2.readUnsignedShort();
+        int var22 = var2.readUnsignedShort();
         int var23 = 0;
         int var24 = 0;
         int var25 = 0;
@@ -835,42 +832,42 @@ public class ModelLoader {
         var26 += var24;
         int var45 = var26;
         var26 = var26 + var24 * 2 + var25 * 2;
-        def.numVertices = var9;
+        def.verticesCount = var9;
         def.trianglesCount = var10;
-        def.numberOfTexturesFaces = var11;
-        def.vertexX = new int[var9];
-        def.vertexY = new int[var9];
-        def.vertexZ = new int[var9];
-        def.facePointA = new int[var10];
-        def.facePointB = new int[var10];
-        def.facePointC = new int[var10];
+        def.texturesCount = var11;
+        def.verticesX = new int[var9];
+        def.verticesY = new int[var9];
+        def.verticesZ = new int[var9];
+        def.trianglesX = new int[var10];
+        def.trianglesY = new int[var10];
+        def.trianglesZ = new int[var10];
         if (var17 == 1)
         {
-            def.vertexVSkin = new int[var9];
+            def.vertexData = new int[var9];
         }
 
         if (var12 == 1)
         {
-            def.faceDrawType = new int[var10];
+            def.drawType = new int[var10];
         }
 
         if (var13 == 255)
         {
-            def.face_render_priorities = new byte[var10];
+            def.renderPriorities = new byte[var10];
         }
         else
         {
-            def.face_priority = (byte) var13;
+            def.facePriority = (byte) var13;
         }
 
         if (var14 == 1)
         {
-            def.face_alpha = new byte[var10];
+            def.triangleAlpha = new byte[var10];
         }
 
         if (var15 == 1)
         {
-            def.triangleTSkin = new int[var10];
+            def.triangleData = new int[var10];
         }
 
         if (var16 == 1)
@@ -883,12 +880,12 @@ public class ModelLoader {
             def.textures = new byte[var10];
         }
 
-        def.triangleColours = new short[var10];
+        def.colors = new short[var10];
         if (var11 > 0)
         {
-            def.textures_face_a = new short[var11];
-            def.textures_face_b = new short[var11];
-            def.textures_face_c = new short[var11];
+            def.texturesX = new short[var11];
+            def.texturesY = new short[var11];
+            def.texturesZ = new short[var11];
         }
 
         var2.setOffset(var11);
@@ -926,15 +923,15 @@ public class ModelLoader {
                 var53 = var5.readSmart();
             }
 
-            def.vertexX[var49] = var46 + var51;
-            def.vertexY[var49] = var47 + var52;
-            def.vertexZ[var49] = var48 + var53;
-            var46 = def.vertexX[var49];
-            var47 = def.vertexY[var49];
-            var48 = def.vertexZ[var49];
+            def.verticesX[var49] = var46 + var51;
+            def.verticesY[var49] = var47 + var52;
+            def.verticesZ[var49] = var48 + var53;
+            var46 = def.verticesX[var49];
+            var47 = def.verticesY[var49];
+            var48 = def.verticesZ[var49];
             if (var17 == 1)
             {
-                def.vertexVSkin[var49] = var6.readUnsignedByte();
+                def.vertexData[var49] = var6.readUnsignedByte();
             }
         }
 
@@ -948,31 +945,30 @@ public class ModelLoader {
 
         for (var49 = 0; var49 < var10; ++var49)
         {
-            def.triangleColours[var49] = (short) var2.readUShort();
+            def.colors[var49] = (short) var2.readUnsignedShort();
             if (var12 == 1)
             {
-                def.faceDrawType[var49] = var3.readSignedByte();
+                def.drawType[var49] = var3.readSignedByte();
             }
 
             if (var13 == 255)
             {
-                def.face_render_priorities[var49] = var4.readSignedByte();
+                def.renderPriorities[var49] = var4.readSignedByte();
             }
 
             if (var14 == 1)
             {
-                def.face_alpha[var49] = var5.readSignedByte();
-
+                def.triangleAlpha[var49] = var5.readSignedByte();
             }
 
             if (var15 == 1)
             {
-                def.triangleTSkin[var49] = var6.readUnsignedByte();
+                def.triangleData[var49] = var6.readUnsignedByte();
             }
 
             if (var16 == 1)
             {
-                def.materials[var49] = (short) (var7.readUShort() - 1);
+                def.materials[var49] = (short) (var7.readUnsignedShort() - 1);
             }
 
             if (def.textures != null && def.materials[var49] != -1)
@@ -998,9 +994,9 @@ public class ModelLoader {
                 var50 = var2.readSmart() + var49;
                 var51 = var2.readSmart() + var50;
                 var52 = var51;
-                def.facePointA[var53] = var49;
-                def.facePointB[var53] = var50;
-                def.facePointC[var53] = var51;
+                def.trianglesX[var53] = var49;
+                def.trianglesY[var53] = var50;
+                def.trianglesZ[var53] = var51;
             }
 
             if (var54 == 2)
@@ -1008,9 +1004,9 @@ public class ModelLoader {
                 var50 = var51;
                 var51 = var2.readSmart() + var52;
                 var52 = var51;
-                def.facePointA[var53] = var49;
-                def.facePointB[var53] = var50;
-                def.facePointC[var53] = var51;
+                def.trianglesX[var53] = var49;
+                def.trianglesY[var53] = var50;
+                def.trianglesZ[var53] = var51;
             }
 
             if (var54 == 3)
@@ -1018,9 +1014,9 @@ public class ModelLoader {
                 var49 = var51;
                 var51 = var2.readSmart() + var52;
                 var52 = var51;
-                def.facePointA[var53] = var49;
-                def.facePointB[var53] = var50;
-                def.facePointC[var53] = var51;
+                def.trianglesX[var53] = var49;
+                def.trianglesY[var53] = var50;
+                def.trianglesZ[var53] = var51;
             }
 
             if (var54 == 4)
@@ -1030,9 +1026,9 @@ public class ModelLoader {
                 var50 = var55;
                 var51 = var2.readSmart() + var52;
                 var52 = var51;
-                def.facePointA[var53] = var49;
-                def.facePointB[var53] = var55;
-                def.facePointC[var53] = var51;
+                def.trianglesX[var53] = var49;
+                def.trianglesY[var53] = var55;
+                def.trianglesZ[var53] = var51;
             }
         }
 
@@ -1048,9 +1044,9 @@ public class ModelLoader {
             var54 = def.textureTypes[var53] & 255;
             if (var54 == 0)
             {
-                def.textures_face_a[var53] = (short) var2.readUShort();
-                def.textures_face_b[var53] = (short) var2.readUShort();
-                def.textures_face_c[var53] = (short) var2.readUShort();
+                def.texturesX[var53] = (short) var2.readUnsignedShort();
+                def.texturesY[var53] = (short) var2.readUnsignedShort();
+                def.texturesZ[var53] = (short) var2.readUnsignedShort();
             }
         }
 
@@ -1058,9 +1054,9 @@ public class ModelLoader {
         var53 = var2.readUnsignedByte();
         if (var53 != 0)
         {
-            var2.readUShort();
-            var2.readUShort();
-            var2.readUShort();
+            var2.readUnsignedShort();
+            var2.readUnsignedShort();
+            var2.readUnsignedShort();
             var2.readInt();
         }
 
@@ -1076,18 +1072,18 @@ public class ModelLoader {
         Buffer var7 = new Buffer(var1);
         Buffer var8 = new Buffer(var1);
         var4.setOffset(var1.length - 18);
-        int var9 = var4.readUShort();
-        int var10 = var4.readUShort();
+        int var9 = var4.readUnsignedShort();
+        int var10 = var4.readUnsignedShort();
         int var11 = var4.readUnsignedByte();
         int var12 = var4.readUnsignedByte();
         int var13 = var4.readUnsignedByte();
         int var14 = var4.readUnsignedByte();
         int var15 = var4.readUnsignedByte();
         int var16 = var4.readUnsignedByte();
-        int var17 = var4.readUShort();
-        int var18 = var4.readUShort();
-        int var19 = var4.readUShort();
-        int var20 = var4.readUShort();
+        int var17 = var4.readUnsignedShort();
+        int var18 = var4.readUnsignedShort();
+        int var19 = var4.readUnsignedShort();
+        int var20 = var4.readUnsignedShort();
         byte var21 = 0;
         int var22 = var21 + var9;
         int var23 = var22;
@@ -1133,55 +1129,55 @@ public class ModelLoader {
         int var33 = var22;
         var22 += var18;
         int var10000 = var22 + var19;
-        def.numVertices = var9;
+        def.verticesCount = var9;
         def.trianglesCount = var10;
-        def.numberOfTexturesFaces = var11;
-        def.vertexX = new int[var9];
-        def.vertexY = new int[var9];
-        def.vertexZ = new int[var9];
-        def.facePointA = new int[var10];
-        def.facePointB = new int[var10];
-        def.facePointC = new int[var10];
+        def.texturesCount = var11;
+        def.verticesX = new int[var9];
+        def.verticesY = new int[var9];
+        def.verticesZ = new int[var9];
+        def.trianglesX = new int[var10];
+        def.trianglesY = new int[var10];
+        def.trianglesZ = new int[var10];
         if (var11 > 0)
         {
             def.textureTypes = new byte[var11];
-            def.textures_face_a = new short[var11];
-            def.textures_face_b = new short[var11];
-            def.textures_face_c = new short[var11];
+            def.texturesX = new short[var11];
+            def.texturesY = new short[var11];
+            def.texturesZ = new short[var11];
         }
 
         if (var16 == 1)
         {
-            def.vertexVSkin = new int[var9];
+            def.vertexData = new int[var9];
         }
 
         if (var12 == 1)
         {
-            def.faceDrawType = new int[var10];
+            def.drawType = new int[var10];
             def.textures = new byte[var10];
             def.materials = new short[var10];
         }
 
         if (var13 == 255)
         {
-            def.face_render_priorities = new byte[var10];
+            def.renderPriorities = new byte[var10];
         }
         else
         {
-            def.face_priority = (byte) var13;
+            def.facePriority = (byte) var13;
         }
 
         if (var14 == 1)
         {
-            def.face_alpha = new byte[var10];
+            def.triangleAlpha = new byte[var10];
         }
 
         if (var15 == 1)
         {
-            def.triangleTSkin = new int[var10];
+            def.triangleData = new int[var10];
         }
 
-        def.triangleColours = new short[var10];
+        def.colors = new short[var10];
         var4.setOffset(var21);
         var5.setOffset(var32);
         var6.setOffset(var33);
@@ -1217,15 +1213,15 @@ public class ModelLoader {
                 var42 = var7.readSmart();
             }
 
-            def.vertexX[var38] = var35 + var40;
-            def.vertexY[var38] = var36 + var41;
-            def.vertexZ[var38] = var37 + var42;
-            var35 = def.vertexX[var38];
-            var36 = def.vertexY[var38];
-            var37 = def.vertexZ[var38];
+            def.verticesX[var38] = var35 + var40;
+            def.verticesY[var38] = var36 + var41;
+            def.verticesZ[var38] = var37 + var42;
+            var35 = def.verticesX[var38];
+            var36 = def.verticesY[var38];
+            var37 = def.verticesZ[var38];
             if (var16 == 1)
             {
-                def.vertexVSkin[var38] = var8.readUnsignedByte();
+                def.vertexData[var38] = var8.readUnsignedByte();
             }
         }
 
@@ -1237,25 +1233,25 @@ public class ModelLoader {
 
         for (var38 = 0; var38 < var10; ++var38)
         {
-            def.triangleColours[var38] = (short) var4.readUShort();
+            def.colors[var38] = (short) var4.readUnsignedShort();
             if (var12 == 1)
             {
                 var39 = var5.readUnsignedByte();
                 if ((var39 & 1) == 1)
                 {
-                    def.faceDrawType[var38] = 1;
+                    def.drawType[var38] = 1;
                     var2 = true;
                 }
                 else
                 {
-                    def.faceDrawType[var38] = 0;
+                    def.drawType[var38] = 0;
                 }
 
                 if ((var39 & 2) == 2)
                 {
                     def.textures[var38] = (byte) (var39 >> 2);
-                    def.materials[var38] = def.triangleColours[var38];
-                    def.triangleColours[var38] = 127;
+                    def.materials[var38] = def.colors[var38];
+                    def.colors[var38] = 127;
                     if (def.materials[var38] != -1)
                     {
                         var3 = true;
@@ -1270,18 +1266,17 @@ public class ModelLoader {
 
             if (var13 == 255)
             {
-                def.face_render_priorities[var38] = var6.readSignedByte();
+                def.renderPriorities[var38] = var6.readSignedByte();
             }
 
             if (var14 == 1)
             {
-                def.face_alpha[var38] = var7.readSignedByte();
-
+                def.triangleAlpha[var38] = var7.readSignedByte();
             }
 
             if (var15 == 1)
             {
-                def.triangleTSkin[var38] = var8.readUnsignedByte();
+                def.triangleData[var38] = var8.readUnsignedByte();
             }
         }
 
@@ -1303,9 +1298,9 @@ public class ModelLoader {
                 var39 = var4.readSmart() + var38;
                 var40 = var4.readSmart() + var39;
                 var41 = var40;
-                def.facePointA[var42] = var38;
-                def.facePointB[var42] = var39;
-                def.facePointC[var42] = var40;
+                def.trianglesX[var42] = var38;
+                def.trianglesY[var42] = var39;
+                def.trianglesZ[var42] = var40;
             }
 
             if (var43 == 2)
@@ -1313,9 +1308,9 @@ public class ModelLoader {
                 var39 = var40;
                 var40 = var4.readSmart() + var41;
                 var41 = var40;
-                def.facePointA[var42] = var38;
-                def.facePointB[var42] = var39;
-                def.facePointC[var42] = var40;
+                def.trianglesX[var42] = var38;
+                def.trianglesY[var42] = var39;
+                def.trianglesZ[var42] = var40;
             }
 
             if (var43 == 3)
@@ -1323,9 +1318,9 @@ public class ModelLoader {
                 var38 = var40;
                 var40 = var4.readSmart() + var41;
                 var41 = var40;
-                def.facePointA[var42] = var38;
-                def.facePointB[var42] = var39;
-                def.facePointC[var42] = var40;
+                def.trianglesX[var42] = var38;
+                def.trianglesY[var42] = var39;
+                def.trianglesZ[var42] = var40;
             }
 
             if (var43 == 4)
@@ -1335,9 +1330,9 @@ public class ModelLoader {
                 var39 = var44;
                 var40 = var4.readSmart() + var41;
                 var41 = var40;
-                def.facePointA[var42] = var38;
-                def.facePointB[var42] = var44;
-                def.facePointC[var42] = var40;
+                def.trianglesX[var42] = var38;
+                def.trianglesY[var42] = var44;
+                def.trianglesZ[var42] = var40;
             }
         }
 
@@ -1346,9 +1341,9 @@ public class ModelLoader {
         for (var42 = 0; var42 < var11; ++var42)
         {
             def.textureTypes[var42] = 0;
-            def.textures_face_a[var42] = (short) var4.readUShort();
-            def.textures_face_b[var42] = (short) var4.readUShort();
-            def.textures_face_c[var42] = (short) var4.readUShort();
+            def.texturesX[var42] = (short) var4.readUnsignedShort();
+            def.texturesY[var42] = (short) var4.readUnsignedShort();
+            def.texturesZ[var42] = (short) var4.readUnsignedShort();
         }
 
         if (def.textures != null)
@@ -1360,7 +1355,7 @@ public class ModelLoader {
                 var44 = def.textures[var43] & 255;
                 if (var44 != 255)
                 {
-                    if (def.facePointA[var43] == (def.textures_face_a[var44] & '\uffff') && def.facePointB[var43] == (def.textures_face_b[var44] & '\uffff') && def.facePointC[var43] == (def.textures_face_c[var44] & '\uffff'))
+                    if (def.trianglesX[var43] == (def.texturesX[var44] & '\uffff') && def.trianglesY[var43] == (def.texturesY[var44] & '\uffff') && def.trianglesZ[var43] == (def.texturesZ[var44] & '\uffff'))
                     {
                         def.textures[var43] = -1;
                     }
@@ -1384,11 +1379,8 @@ public class ModelLoader {
 
         if (!var2)
         {
-            def.faceDrawType = null;
+            def.drawType = null;
         }
 
     }
-
-
-
 }

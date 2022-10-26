@@ -310,7 +310,7 @@ public final class NpcDefinition implements RSNPCComposition {
 		if (models.length == 1)
 			model = models[0];
 		else
-			model = new Model(models.length, models,true);
+			model = new Model(models.length, models);
 		if (recolorToFind != null) {
 			for (int index = 0; index < recolorToFind.length; index++)
 				model.recolor(recolorToFind[index], recolorToReplace[index]);
@@ -360,30 +360,30 @@ public final class NpcDefinition implements RSNPCComposition {
 			if (models.length == 1)
 				model = models[0];
 			else
-				model = new Model(models.length, models,true);
+				model = new Model(models.length, models);
 			if (recolorToFind != null) {
 				for (int k1 = 0; k1 < recolorToFind.length; k1++)
 					model.recolor(recolorToFind[k1], recolorToReplace[k1]);
 
 			}
-			model.skin();
+			model.generateBones();
 			model.scale(132, 132, 132);
 			model.light(84 + ambient, 1000 + contrast, -90, -580, -90, true);
 			modelCache.put(model, interfaceType);
 		}
-		Model empty = Model.EMPTY_MODEL;
-		empty.replace(model, Frame.noAnimationInProgress(frame) & Frame.noAnimationInProgress(j));
+		Model empty = Model.emptyModel;
+		empty.replaceModel(model, Frame.noAnimationInProgress(frame) & Frame.noAnimationInProgress(j));
 		if (frame != -1 && j != -1)
 			empty.mix(ai, j, frame);
 		else if (frame != -1)
 			empty.applyTransform(frame);
 		if (widthScale != 128 || heightScale != 128)
 			empty.scale(widthScale, widthScale, heightScale);
-		empty.calc_diagonals();
+		empty.calculateDiagonals();
 		empty.faceGroups = null;
 		empty.vertexGroups = null;
 		if (size == 1)
-			empty.fits_on_single_square = true;
+			empty.singleTile = true;
 		return empty;
 	}
 
@@ -411,18 +411,18 @@ public final class NpcDefinition implements RSNPCComposition {
 			if (models.length == 1)
 				model = models[0];
 			else
-				model = new Model(models.length, models,true);
+				model = new Model(models.length, models);
 			if (recolorToFind != null) {
 				for (int index = 0; index < recolorToFind.length; index++)
 					model.recolor(recolorToFind[index], recolorToReplace[index]);
 
 			}
-			model.skin();
+			model.generateBones();
 			model.light(64 + ambient, 850 + contrast, -30, -50, -30, true);
 			modelCache.put(model, interfaceType);
 		}
-		Model model_1 = Model.EMPTY_MODEL;
-		model_1.replace(model,
+		Model model_1 = Model.emptyModel;
+		model_1.replaceModel(model,
 				Frame.noAnimationInProgress(secondaryFrame) & Frame.noAnimationInProgress(primaryFrame));
 		if (secondaryFrame != -1 && primaryFrame != -1)
 			model_1.mix(interleaveOrder, primaryFrame, secondaryFrame);
@@ -430,11 +430,11 @@ public final class NpcDefinition implements RSNPCComposition {
 			model_1.applyTransform(secondaryFrame);
 		if (widthScale != 128 || heightScale != 128)
 			model_1.scale(widthScale, widthScale, heightScale);
-		model_1.calc_diagonals();
+		model_1.calculateDiagonals();
 		model_1.faceGroups = null;
 		model_1.vertexGroups = null;
 		if (size == 1)
-			model_1.fits_on_single_square = true;
+			model_1.singleTile = true;
 		return model_1;
 	}
 

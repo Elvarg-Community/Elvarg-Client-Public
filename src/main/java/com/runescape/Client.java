@@ -906,7 +906,7 @@ public class Client extends GameEngine implements RSClient {
             for (int i8 = 0; i8 < 9; i8++) {
                 int k8 = 128 + i8 * 32 + 15;
                 int l8 = 600 + k8 * 3;
-                int i9 = Rasterizer3D.anIntArray1470[k8];
+                int i9 = Rasterizer3D.SINE[k8];
                 ai[i8] = l8 * i9 >> 16;
             }
             SceneGraph.buildVisibilityMap(500, 800, instance.getViewportWidth(), instance.getViewportHeight(), ai);
@@ -2298,7 +2298,7 @@ public class Client extends GameEngine implements RSClient {
             for (int i1 = 0; i1 < j; i1++) {
                 int l1 = resourceProvider.getModelIndex(i1);
                 if ((l1 & 0x79) == 0)
-                    Model.method461(i1);
+                    Model.resetModel(i1);
             }
 
         }
@@ -6907,8 +6907,8 @@ public class Client extends GameEngine implements RSClient {
         }
 
         long previous = -1L;
-        for (int k = 0; k < Model.obj_loaded; k++) {
-            long current = Model.obj_key[k];
+        for (int k = 0; k < Model.objectsHovering; k++) {
+            long current = Model.hoveringObjects[k];
             int x = ObjectKeyUtil.getObjectX(current);
             int y = ObjectKeyUtil.getObjectY(current);
             int opcode = ObjectKeyUtil.getObjectOpcode(current);
@@ -7991,7 +7991,7 @@ public class Client extends GameEngine implements RSClient {
                                 IdentityKit.kits[k2].bodyModel();
                 }
 
-                Model model = new Model(i2, aclass30_sub2_sub4_sub6s,true);
+                Model model = new Model(i2, aclass30_sub2_sub4_sub6s);
                 for (int l2 = 0; l2 < 5; l2++)
                     if (characterDesignColours[l2] != 0) {
                         model.recolor(PLAYER_BODY_RECOLOURS[l2][0],
@@ -8001,7 +8001,7 @@ public class Client extends GameEngine implements RSClient {
                                     anIntArray1204[characterDesignColours[l2]]);
                     }
 
-                model.skin();
+                model.generateBones();
                 model.applyTransform(Animation.animations[localPlayer.idleAnimation].primaryFrames[0]);
                 model.light(64, 850, -30, -50, -30, true);
                 widget.defaultMediaType = 5;
@@ -8027,7 +8027,7 @@ public class Client extends GameEngine implements RSClient {
                                     anIntArray1204[characterDesignColours[l2]]);
                     }
                 int staticFrame = localPlayer.idleAnimation;
-                characterDisplay.skin();
+                characterDisplay.generateBones();
                 characterDisplay.applyTransform(Animation.animations[staticFrame].primaryFrames[0]);
                 // characterDisplay.light(64, 850, -30, -50, -30, true);
                 rsInterface.defaultMediaType = 5;
@@ -9863,7 +9863,7 @@ public class Client extends GameEngine implements RSClient {
                 i -= 73;
                 j -= 75;
                 int k = cameraHorizontal + minimapRotation & 0x7ff;
-                int i1 = Rasterizer3D.anIntArray1470[k];
+                int i1 = Rasterizer3D.SINE[k];
                 int j1 = Rasterizer3D.COSINE[k];
                 i1 = i1 * (minimapZoom + 256) >> 8;
                 j1 = j1 * (minimapZoom + 256) >> 8;
@@ -10792,7 +10792,7 @@ public class Client extends GameEngine implements RSClient {
                     int centreY = Rasterizer3D.originViewY;
                     Rasterizer3D.originViewX = _x + childInterface.width / 2;
                     Rasterizer3D.originViewY = currentY + childInterface.height / 2;
-                    int sine = Rasterizer3D.anIntArray1470[childInterface.modelRotation1] * childInterface.modelZoom >> 16;
+                    int sine = Rasterizer3D.SINE[childInterface.modelRotation1] * childInterface.modelZoom >> 16;
                     int cosine = Rasterizer3D.COSINE[childInterface.modelRotation1] * childInterface.modelZoom >> 16;
                     boolean selected = interfaceIsSelected(childInterface);
                     int emoteAnimation;
@@ -10813,7 +10813,7 @@ public class Client extends GameEngine implements RSClient {
 
                     if (model != null) {
                         Rasterizer3D.world = false;
-                        model.render_2D(childInterface.modelRotation2, 0, childInterface.modelRotation1, 0, sine, cosine);
+                        model.renderModel(childInterface.modelRotation2, 0, childInterface.modelRotation1, 0, sine, cosine);
                         Rasterizer3D.world = true;
                     }
                     Rasterizer3D.originViewX = centreX;
@@ -15130,10 +15130,10 @@ public class Client extends GameEngine implements RSClient {
                         yCameraCurve = 383;
                 }
             }
-        Model.obj_exists = true;
-        Model.obj_loaded = 0;
-        Model.anInt1685 = MouseHandler.mouseX - (!isResized() ? 4 : 0);
-        Model.anInt1686 = MouseHandler.mouseY - (!isResized() ? 4 : 0);
+        Model.objectExist = true;
+        Model.objectsHovering = 0;
+        Model.cursorX = MouseHandler.mouseX - (!isResized() ? 4 : 0);
+        Model.cursorY = MouseHandler.mouseY - (!isResized() ? 4 : 0);
 
         Rasterizer2D.clear();
         if (Rasterizer3D.fieldOfView != cameraZoom) {
@@ -15553,7 +15553,7 @@ public class Client extends GameEngine implements RSClient {
                 if (resource == null)
                     return;
                 if (resource.dataType == 0) {
-                    Model.method460(resource.buffer, resource.ID);
+                    Model.loadModel(resource.buffer, resource.ID);
                     if (backDialogueId != -1)
                         updateChatbox = true;
                 }

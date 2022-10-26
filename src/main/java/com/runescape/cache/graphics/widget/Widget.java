@@ -4359,11 +4359,11 @@ public class Widget {
 			model = getModel(defaultMediaType, defaultMedia);
 		if (model == null)
 			return null;
-		if (k == -1 && j == -1 && model.triangleColours == null)
+		if (k == -1 && j == -1 && model.colors == null)
 			return model;
 		Model model_1 = new Model(true, Frame.noAnimationInProgress(k) & Frame.noAnimationInProgress(j), false, model);
 		if (k != -1 || j != -1)
-			model_1.skin();
+			model_1.generateBones();
 		if (k != -1)
 			model_1.applyTransform(k);
 		if (j != -1)

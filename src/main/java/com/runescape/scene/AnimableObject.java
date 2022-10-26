@@ -37,7 +37,7 @@ public final class AnimableObject extends Renderable {
         Model model_1 = new Model(true, Frame.noAnimationInProgress(j), false, model);
         if (!aBoolean1567) {
 
-            model_1.skin();
+            model_1.generateBones();
             model_1.applyTransform(j);
             model_1.faceGroups = null;
             model_1.vertexGroups = null;

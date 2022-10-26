@@ -68,7 +68,7 @@ public final class Player extends Mob implements RSPlayer {
         }
 
         super.height = animatedModel.modelBaseY;
-        animatedModel.fits_on_single_square = true;
+        animatedModel.singleTile = true;
 
         if (aBoolean1699) {
             return animatedModel;
@@ -90,8 +90,8 @@ public final class Player extends Mob implements RSPlayer {
             if (spotAnimationModel != null) {
 
                 Model model_3 = new Model(true, Frame.noAnimationInProgress(super.currentAnimation), false, spotAnimationModel);
-                model_3.translate(0, -super.graphicHeight, 0);
-                model_3.skin();
+                model_3.scaleT(0, -super.graphicHeight, 0);
+                model_3.generateBones();
                 /*model_3.applyAnimationFrame(spotAnim.animationSequence.primaryFrames[super.currentAnimation], nextFrame,
                         cycle1, cycle2);*/
                 model_3.applyTransform(spotAnim.animationSequence.primaryFrames[super.currentAnimation]);
@@ -110,7 +110,7 @@ public final class Player extends Mob implements RSPlayer {
                 playerModel = null;
             if (Client.tick >= objectModelStart && Client.tick < objectModelStop) {
                 Model model_1 = playerModel;
-                model_1.translate(objectXPos - super.x, objectCenterHeight - anInt1709, objectYPos - super.y);
+                model_1.scaleT(objectXPos - super.x, objectCenterHeight - anInt1709, objectYPos - super.y);
                 if (super.nextStepOrientation == 512) {
                     model_1.rotate90Degrees();
                     model_1.rotate90Degrees();
@@ -132,10 +132,10 @@ public final class Player extends Mob implements RSPlayer {
                     model_1.rotate90Degrees();
                     model_1.rotate90Degrees();
                 }
-                model_1.translate(super.x - objectXPos, anInt1709 - objectCenterHeight, super.y - objectYPos);
+                model_1.scaleT(super.x - objectXPos, anInt1709 - objectCenterHeight, super.y - objectYPos);
             }
         }
-        animatedModel.fits_on_single_square = true;
+        animatedModel.singleTile = true;
         return animatedModel;
     }
 
@@ -334,7 +334,7 @@ public final class Player extends Mob implements RSPlayer {
                         aclass30_sub2_sub4_sub6s[j2++] = model_4;
                 }
             }
-            model_1 = new Model(j2, aclass30_sub2_sub4_sub6s,true);
+            model_1 = new Model(j2, aclass30_sub2_sub4_sub6s);
             for (int j3 = 0; j3 < 5; j3++)
                 if (appearanceColors[j3] != 0) {
                     model_1.recolor(Client.PLAYER_BODY_RECOLOURS[j3][0],
@@ -343,7 +343,7 @@ public final class Player extends Mob implements RSPlayer {
                         model_1.recolor(Client.anIntArray1204[0], Client.anIntArray1204[appearanceColors[j3]]);
                 }
 
-            model_1.skin();
+            model_1.generateBones();
             model_1.light(64, 850, -30, -50, -30, true);
             models.put(model_1, l);
             cachedModel = l;
@@ -353,15 +353,15 @@ public final class Player extends Mob implements RSPlayer {
             return model_1;
         }
 
-        Model emptyModel = Model.EMPTY_MODEL;
+        Model emptyModel = Model.emptyModel;
 
-        emptyModel.replace(model_1, Frame.noAnimationInProgress(currentFrame) & Frame.noAnimationInProgress(i1));
+        emptyModel.replaceModel(model_1, Frame.noAnimationInProgress(currentFrame) & Frame.noAnimationInProgress(i1));
         if (currentFrame != -1 && i1 != -1) {
             emptyModel.mix(Animation.animations[super.emoteAnimation].interleaveOrder, i1, currentFrame);
         } else if (currentFrame != -1) {
             emptyModel.applyTransform(currentFrame);
         }
-        emptyModel.calc_diagonals();
+        emptyModel.calculateDiagonals();
         emptyModel.faceGroups = null;
         emptyModel.vertexGroups = null;
         return emptyModel;
@@ -420,7 +420,7 @@ public final class Player extends Mob implements RSPlayer {
             }
         }
 
-        Model headModel = new Model(headModelsOffset, headModels,true);
+        Model headModel = new Model(headModelsOffset, headModels);
 
         for (int index = 0; index < 5; index++) {
             if (appearanceColors[index] != 0) {

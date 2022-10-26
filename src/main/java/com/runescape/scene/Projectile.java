@@ -67,7 +67,7 @@ public final class Projectile extends Renderable implements RSProjectile {
         }
         Model projectileModel = new Model(true, Frame.noAnimationInProgress(frameNumber), false, modelGfx);
         if(frameNumber != -1) {
-            projectileModel.skin();
+            projectileModel.generateBones();
             projectileModel.applyTransform(frameNumber);
             projectileModel.faceGroups = null;
             projectileModel.vertexGroups = null;
@@ -75,7 +75,7 @@ public final class Projectile extends Renderable implements RSProjectile {
         if(projectileGFX.resizeXY != 128 || projectileGFX.resizeZ != 128) {
             projectileModel.scale(projectileGFX.resizeXY, projectileGFX.resizeXY, projectileGFX.resizeZ);
         }
-        projectileModel.leanOverX(tiltAngle);
+        projectileModel.rotateX(tiltAngle);
         projectileModel.light(64 + projectileGFX.modelBrightness, 850 + projectileGFX.modelShadow, -30, -50, -30, true);
         return projectileModel;
     }

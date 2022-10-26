@@ -280,19 +280,19 @@ public final class ObjectDefinition implements ObjectComposition {
         if (model == null)
             return null;
         if (contouredGround || mergeNormals)
-            model = new Model(contouredGround, mergeNormals, model,type);
+            model = new Model(contouredGround, mergeNormals, model);
         if (contouredGround) {
             int y = (aY + bY + cY + dY) / 4;
-            for (int vertex = 0; vertex < model.numVertices; vertex++) {
-                int x = model.vertexX[vertex];
-                int z = model.vertexZ[vertex];
+            for (int vertex = 0; vertex < model.verticesCount; vertex++) {
+                int x = model.verticesX[vertex];
+                int z = model.verticesZ[vertex];
                 int l2 = aY + ((bY - aY) * (x + 64)) / 128;
                 int i3 = dY + ((cY - dY) * (x + 64)) / 128;
                 int j3 = l2 + ((i3 - l2) * (z + 64)) / 128;
-                model.vertexY[vertex] += j3 - y;
+                model.verticesY[vertex] += j3 - y;
             }
 
-            model.calc_diagonals();
+            model.normalise();
         }
         return model;
     }
@@ -348,7 +348,7 @@ public final class ObjectDefinition implements ObjectComposition {
                     if (model == null)
                         return null;
                     if (flag1)
-                        model.invert();
+                        model.mirror();
                     baseModels.put(model, l2);
                 }
                 if (k1 > 1)
@@ -356,7 +356,7 @@ public final class ObjectDefinition implements ObjectComposition {
             }
 
             if (k1 > 1)
-                model = new Model(k1, aModelArray741s,true);
+                model = new Model(k1, aModelArray741s);
         } else {
             int i1 = -1;
             for (int j1 = 0; j1 < objectTypes.length; j1++) {
@@ -386,7 +386,7 @@ public final class ObjectDefinition implements ObjectComposition {
                 if (model == null)
                     return null;
                 if (flag3)
-                    model.invert();
+                    model.mirror();
                 baseModels.put(model, j2);
             }
         }
@@ -398,7 +398,7 @@ public final class ObjectDefinition implements ObjectComposition {
                 Frame.noAnimationInProgress(k), l == 0 && k == -1 && !flag
                 && !flag2, textureFind == null, model);
         if (k != -1) {
-            model_3.skin();
+            model_3.generateBones();
             model_3.applyTransform(k);
             model_3.faceGroups = null;
             model_3.vertexGroups = null;
@@ -421,7 +421,7 @@ public final class ObjectDefinition implements ObjectComposition {
         if (flag)
             model_3.scale(scaleX, scaleZ, scaleY);
         if (flag2)
-            model_3.translate(translateX, translateY, translateZ);
+            model_3.scaleT(translateX, translateY, translateZ);
         model_3.light(85 + ambient, 768 + contrast, -50, -10, -50, !mergeNormals);
         if (supportItems == 1)
             model_3.itemDropHeight = model_3.modelBaseY;

@@ -14,7 +14,6 @@ import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.NpcChanged;
 import net.runelite.api.events.NpcDespawned;
 import net.runelite.rs.api.*;
-import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -71,8 +70,8 @@ public final class Npc extends Mob implements RSNPC {
                 int frame = spotAnim.animationSequence.primaryFrames[super.currentAnimation];
                 Model model = new Model(true, Frame.noAnimationInProgress(frame),
                         false, graphicModel);
-                model.translate(0, -super.graphicHeight, 0);
-                model.skin();
+                model.scaleT(0, -super.graphicHeight, 0);
+                model.generateBones();
                 model.applyTransform(frame);
                 model.faceGroups = null;
                 model.vertexGroups = null;
@@ -86,7 +85,7 @@ public final class Npc extends Mob implements RSNPC {
             }
         }
         if (desc.size == 1)
-            animatedModel.fits_on_single_square = true;
+            animatedModel.singleTile = true;
         return animatedModel;
     }
 

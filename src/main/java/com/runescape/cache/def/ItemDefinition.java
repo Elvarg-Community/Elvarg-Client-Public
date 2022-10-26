@@ -252,10 +252,10 @@ public final class ItemDefinition implements RSItemComposition {
             k3 = (int) ((double) k3 * 1.5D);
         if (outlineColor > 0)
             k3 = (int) ((double) k3 * 1.04D);
-        int l3 = Rasterizer3D.anIntArray1470[itemDef.xan2d] * k3 >> 16;
+        int l3 = Rasterizer3D.SINE[itemDef.xan2d] * k3 >> 16;
         int i4 = Rasterizer3D.COSINE[itemDef.xan2d] * k3 >> 16;
         Rasterizer3D.renderOnGpu = true;
-        model.render_2D(itemDef.yan2d, itemDef.zan2d, itemDef.xan2d, itemDef.xOffset2d,
+        model.renderModel(itemDef.yan2d, itemDef.zan2d, itemDef.xan2d, itemDef.xOffset2d,
                 l3 + model.modelBaseY / 2 + itemDef.yOffset2d, i4 + itemDef.yOffset2d);
         Rasterizer3D.renderOnGpu = false;
 
@@ -327,11 +327,11 @@ public final class ItemDefinition implements RSItemComposition {
         Rasterizer2D.initDrawingArea(90, 90, sprite.myPixels);
         Rasterizer2D.drawItemBox(0, 0, 90, 90, 0);
         Rasterizer3D.useViewport();
-        int l3 = Rasterizer3D.anIntArray1470[itemDef.xan2d] * zoom >> 15;
+        int l3 = Rasterizer3D.SINE[itemDef.xan2d] * zoom >> 15;
         int i4 = Rasterizer3D.COSINE[itemDef.xan2d] * zoom >> 15;
         Rasterizer3D.renderOnGpu = true;
 
-        model.render_2D(itemDef.yan2d, itemDef.zan2d, itemDef.xan2d, itemDef.xOffset2d,
+        model.renderModel(itemDef.yan2d, itemDef.zan2d, itemDef.xan2d, itemDef.xOffset2d,
                 l3 + model.modelBaseY / 2 + itemDef.yOffset2d, i4 + itemDef.yOffset2d);
         sprite.outline(1);
         Rasterizer3D.renderOnGpu = false;
@@ -388,7 +388,7 @@ public final class ItemDefinition implements RSItemComposition {
         if (dialogueHatModel != -1) {
             Model hatModel_ = Model.getModel(dialogueHatModel);
             Model models[] = {dialogueModel_, hatModel_};
-            dialogueModel_ = new Model(2, models,true);
+            dialogueModel_ = new Model(2, models);
         }
         if (colorReplace != null) {
             for (int i1 = 0; i1 < colorReplace.length; i1++)
@@ -438,16 +438,16 @@ public final class ItemDefinition implements RSItemComposition {
                 Model secondaryModel_ = Model.getModel(secondaryModel);
                 Model emblemModel = Model.getModel(emblem);
                 Model models[] = {primaryModel_, secondaryModel_, emblemModel};
-                primaryModel_ = new Model(3, models,true);
+                primaryModel_ = new Model(3, models);
             } else {
                 Model model_2 = Model.getModel(secondaryModel);
                 Model models[] = {primaryModel_, model_2};
-                primaryModel_ = new Model(2, models,true);
+                primaryModel_ = new Model(2, models);
             }
         if (gender == 0 && maleOffset != 0)
-            primaryModel_.translate(0, maleOffset, 0);
+            primaryModel_.scaleT(0, maleOffset, 0);
         if (gender == 1 && femaleOffset != 0)
-            primaryModel_.translate(0, femaleOffset, 0);
+            primaryModel_.scaleT(0, femaleOffset, 0);
 
         if (colorReplace != null) {
             for (int i1 = 0; i1 < colorReplace.length; i1++)
@@ -639,7 +639,7 @@ public final class ItemDefinition implements RSItemComposition {
         int lightInt = 64 + ambient;
         int lightMag = 768 + contrast;
         model.light(lightInt, lightMag, -50, -10, -50, true);
-        model.fits_on_single_square = true;
+        model.singleTile = true;
         models.put(model, id);
         return model;
     }

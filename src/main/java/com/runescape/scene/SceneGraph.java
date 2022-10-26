@@ -547,10 +547,10 @@ public final class SceneGraph implements RSScene {
                                 method307(zLoc, 1, 1, xLoc, yLoc, (Model) wallObject.renderable2);
                                 mergeNormals((Model) wallObject.renderable1, (Model) wallObject.renderable2, 0, 0,
                                         0, false);
-                                ((Model) wallObject.renderable2).flat_lighting(intensity, someLightQualityVariable,
+                                ((Model) wallObject.renderable2).setLighting(intensity, someLightQualityVariable,
                                         lightX, lightY, lightZ);
                             }
-                            ((Model) wallObject.renderable1).flat_lighting(intensity, someLightQualityVariable,
+                            ((Model) wallObject.renderable1).setLighting(intensity, someLightQualityVariable,
                                     lightX, lightY, lightZ);
                         }
                         for (int k2 = 0; k2 < tile.gameObjectIndex; k2++) {
@@ -560,7 +560,7 @@ public final class SceneGraph implements RSScene {
                                 method307(zLoc, (interactableObject.xLocHigh - interactableObject.xLocLow) + 1,
                                         (interactableObject.yLocLow - interactableObject.yLocHigh) + 1, xLoc, yLoc,
                                         (Model) interactableObject.renderable);
-                                ((Model) interactableObject.renderable).flat_lighting(intensity,
+                                ((Model) interactableObject.renderable).setLighting(intensity,
                                         someLightQualityVariable, lightX, lightY, lightZ);
                             }
                         }
@@ -568,7 +568,7 @@ public final class SceneGraph implements RSScene {
                         GroundDecoration groundDecoration = tile.groundDecoration;
                         if (groundDecoration != null && groundDecoration.renderable.normals != null) {
                             method306GroundDecorationOnly(xLoc, zLoc, (Model) groundDecoration.renderable, yLoc);
-                            ((Model) groundDecoration.renderable).flat_lighting(intensity, someLightQualityVariable, lightX, lightY, lightZ);
+                            ((Model) groundDecoration.renderable).setLighting(intensity, someLightQualityVariable, lightX, lightY, lightZ);
                         }
 
                     }
@@ -637,47 +637,41 @@ public final class SceneGraph implements RSScene {
 
     }
 
-
-    private void mergeNormals(Model first, Model second, int dx, int dy, int dz, boolean flag) {
-        anInt488++;
+    private void mergeNormals(final Model model, final Model secondModel, final int posX, final int posY, final int posZ, final boolean flag) {
+        this.anInt488++;
         int count = 0;
-        int[] secondX = second.vertexX;
-        int secondVertices = second.numVertices;
-        for (int vA = 0; vA < first.numVertices; vA++) {
+        final int[] vertices = secondModel.verticesX;
+        final int vertexCount = secondModel.verticesCount;
 
-            if (first == null || first.gouraud_vertex[vA] == null) {
-                return;
-            }
-            VertexNormal parentNormalA = first.normals[vA];
-            VertexNormal normalA = first.gouraud_vertex[vA];
-
-            if (normalA.magnitude != 0) {
-                int y = first.vertexY[vA] - dy;
-                if (y <= second.max_y) {
-
-                    int x = first.vertexX[vA] - dx;
-                    if (x >= second.min_x && x <= second.max_x) {
-
-                        int z = first.vertexZ[vA] - dz;
-                        if (z >= second.min_z && z <= second.max_z) {
-                            for (int vB = 0; vB < secondVertices; vB++) {
-                                VertexNormal parentNormalB = second.normals[vB];
-                                VertexNormal normalB = second.gouraud_vertex[vB];
-
-                                if (x == secondX[vB] && z == second.vertexZ[vB] && y == second.vertexY[vB] && normalB.magnitude != 0) {
-                                    parentNormalA.x += normalB.x;
-                                    parentNormalA.y += normalB.y;
-                                    parentNormalA.z += normalB.z;
-                                    parentNormalA.magnitude += normalB.magnitude;
-                                    parentNormalB.x += normalA.x;
-                                    parentNormalB.y += normalA.y;
-                                    parentNormalB.z += normalA.z;
-                                    parentNormalB.magnitude += normalA.magnitude;
+        for (int vertex = 0; vertex < model.verticesCount; vertex++) {
+            final VertexNormal vertexNormal = model.normals[vertex];
+            final VertexNormal offsetVertexNormal = model.vertexNormalsOffsets[vertex];
+            if (offsetVertexNormal.magnitude != 0) {
+                final int y = model.verticesY[vertex] - posY;
+                if (y <= secondModel.maxY) {
+                    final int x = model.verticesX[vertex] - posX;
+                    if (x >= secondModel.minX && x <= secondModel.maxX) {
+                        final int z = model.verticesZ[vertex] - posZ;
+                        if (z >= secondModel.minZ && z <= secondModel.maxZ) {
+                            for (int v = 0; v < vertexCount; v++) {
+                                final VertexNormal vertexNormal2 = secondModel.normals[v];
+                                final VertexNormal offsetVertexNormal2 = secondModel.vertexNormalsOffsets[v];
+                                if (x == vertices[v] && z == secondModel.verticesZ[v] && y == secondModel.verticesY[v]
+                                        && offsetVertexNormal2.magnitude != 0) {
+                                    vertexNormal.x += offsetVertexNormal2.x;
+                                    vertexNormal.y += offsetVertexNormal2.y;
+                                    vertexNormal.z += offsetVertexNormal2.z;
+                                    vertexNormal.magnitude += offsetVertexNormal2.magnitude;
+                                    vertexNormal2.x += offsetVertexNormal.x;
+                                    vertexNormal2.y += offsetVertexNormal.y;
+                                    vertexNormal2.z += offsetVertexNormal.z;
+                                    vertexNormal2.magnitude += offsetVertexNormal.magnitude;
                                     count++;
-                                    anIntArray486[vA] = anInt488;
-                                    anIntArray487[vB] = anInt488;
+                                    this.anIntArray486[vertex] = this.anInt488;
+                                    this.anIntArray487[v] = this.anInt488;
                                 }
                             }
+
                         }
                     }
                 }
@@ -688,19 +682,22 @@ public final class SceneGraph implements RSScene {
             return;
         }
 
-        for (int k1 = 0; k1 < first.trianglesCount; k1++) {
-            if (anIntArray486[first.facePointA[k1]] == anInt488 && anIntArray486[first.facePointB[k1]] == anInt488
-                    && anIntArray486[first.facePointC[k1]] == anInt488) {
-                first.faceDrawType[k1] = -1;
+        for (int triangle = 0; triangle < model.trianglesCount; triangle++) {
+            if (this.anIntArray486[model.trianglesX[triangle]] == this.anInt488
+                    && this.anIntArray486[model.trianglesY[triangle]] == this.anInt488
+                    && this.anIntArray486[model.trianglesZ[triangle]] == this.anInt488) {
+                model.drawType[triangle] = -1;
             }
         }
 
-        for (int l1 = 0; l1 < second.trianglesCount; l1++) {
-            if (anIntArray487[second.facePointA[l1]] == anInt488 && anIntArray487[second.facePointB[l1]] == anInt488
-                    && anIntArray487[second.facePointC[l1]] == anInt488) {
-                second.faceDrawType[l1] = -1;
+        for (int triangle = 0; triangle < secondModel.trianglesCount; triangle++) {
+            if (this.anIntArray487[secondModel.trianglesX[triangle]] == this.anInt488
+                    && this.anIntArray487[secondModel.trianglesY[triangle]] == this.anInt488
+                    && this.anIntArray487[secondModel.trianglesZ[triangle]] == this.anInt488) {
+                secondModel.drawType[triangle] = -1;
             }
         }
+
     }
 
     public void drawTileMinimap(int[] pixels, int pixelOffset, int z, int x, int y)
