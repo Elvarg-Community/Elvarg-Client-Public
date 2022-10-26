@@ -26,6 +26,7 @@ package net.runelite.client.plugins.minimap;
 
 import com.google.inject.Provides;
 import java.awt.Color;
+import java.awt.event.MouseWheelEvent;
 import java.util.Arrays;
 import javax.inject.Inject;
 import net.runelite.api.Client;
@@ -39,6 +40,8 @@ import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
+import net.runelite.client.input.MouseManager;
+import net.runelite.client.input.MouseWheelListener;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 
@@ -47,7 +50,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 	description = "Customize the color of minimap dots, hide the minimap, and zoom",
 	tags = {"items", "npcs", "players", "zoom"}
 )
-public class MinimapPlugin extends Plugin
+public class MinimapPlugin extends Plugin implements MouseWheelListener
 {
 	private static final int DOT_ITEM = 0;
 	private static final int DOT_NPC = 1;
@@ -59,6 +62,9 @@ public class MinimapPlugin extends Plugin
 
 	@Inject
 	private Client client;
+
+	@Inject
+	private MouseManager mouseManager;
 
 	@Inject
 	private MinimapConfig config;
@@ -74,6 +80,7 @@ public class MinimapPlugin extends Plugin
 	@Override
 	protected void startUp()
 	{
+		mouseManager.registerMouseWheelListener(this);
 		updateMinimapWidgetVisibility(config.hideMinimap());
 		storeOriginalDots();
 		replaceMapDots();
@@ -94,6 +101,7 @@ public class MinimapPlugin extends Plugin
 		client.setMinimapZoom(false);
 		client.setHdMinimapEnabled(false);
 		client.setGameState(1);
+		mouseManager.unregisterMouseWheelListener(this);
 	}
 
 	@Subscribe
@@ -215,4 +223,50 @@ public class MinimapPlugin extends Plugin
 
 		System.arraycopy(originalDotSprites, 0, mapDots, 0, mapDots.length);
 	}
+
+	@Override
+	public MouseWheelEvent mouseWheelMoved(MouseWheelEvent event) {
+
+
+		if (client.getGameState() == GameState.LOGGED_IN) {
+
+			int mouseX = client.getMouseCanvasPosition().getX();
+			int mouseY = client.getMouseCanvasPosition().getY();
+
+			if (inMap(mouseX,mouseY,client.isResized(), (int) client.getStretchedDimensions().getWidth()) && client.isMinimapZoom()) {
+				int zoom = (int) client.getMinimapZoom();
+				zoom += event.getWheelRotation() * 35;
+				client.setMinimapZoom(zoom);
+
+				if(zoom > 210) {
+					client.setMinimapZoom(210);
+				}
+				if(zoom < -70) {
+					client.setMinimapZoom(-70);
+				}
+
+			}
+
+		}
+
+		return event;
+	}
+
+	public Boolean inMap(int mouseX, int mouseY, boolean resized, int width)  {
+		int i = mouseX - 25 - 547;
+		int j = mouseY - 5 - 3;
+		if (resized) {
+			i = mouseX - (width - 182 + 24);
+			j = mouseY - 8;
+		}
+		return inCircle(0, 0, i, j, 76);
+	}
+
+	public boolean inCircle(int circleX, int circleY, int clickX, int clickY, int radius) {
+		return Math.pow((circleX + radius - clickX), 2)
+				+ Math.pow((circleY + radius - clickY), 2) < Math
+				.pow(radius, 2);
+	}
+
+
 }

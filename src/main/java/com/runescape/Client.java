@@ -19194,24 +19194,26 @@ public class Client extends GameEngine implements RSClient {
         return 0;
     }
 
+    boolean minimapZoomActive = false;
+
     @Override
     public void setMinimapZoom(boolean minimapZoom) {
-
+        minimapZoomActive = minimapZoom;
     }
 
     @Override
     public double getMinimapZoom() {
-        return 0;
+        return minimapZoom;
     }
 
     @Override
     public boolean isMinimapZoom() {
-        return false;
+        return minimapZoomActive;
     }
 
     @Override
     public void setMinimapZoom(double zoom) {
-
+        minimapZoom = (int) zoom;
     }
 
 }
