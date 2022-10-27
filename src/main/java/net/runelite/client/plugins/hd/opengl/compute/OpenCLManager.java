@@ -47,10 +47,12 @@ import org.jocl.cl_kernel;
 import org.jocl.cl_mem;
 import org.jocl.cl_platform_id;
 import org.jocl.cl_program;
+import org.lwjgl.BufferUtils;
 import net.runelite.client.plugins.hd.HdPlugin;
 import net.runelite.client.plugins.hd.opengl.shader.Template;
 import net.runelite.client.plugins.hd.utils.buffer.GLBuffer;
 
+@SuppressWarnings("deprecation")
 @Singleton
 @Slf4j
 public class OpenCLManager
@@ -186,7 +188,7 @@ public class OpenCLManager
 		long[] size = new long[1];
 		clGetProgramBuildInfo(program, device, param, 0, null, size);
 
-		ByteBuffer buffer = ByteBuffer.allocateDirect((int) size[0]);
+		ByteBuffer buffer = BufferUtils.createByteBuffer((int) size[0]);
 		clGetProgramBuildInfo(program, device, param, buffer.limit(), Pointer.toBuffer(buffer), null);
 
 		switch (param)
@@ -230,7 +232,7 @@ public class OpenCLManager
 			logPlatformInfo(platform, CL_PLATFORM_NAME);
 			logPlatformInfo(platform, CL_PLATFORM_VENDOR);
 			String[] extensions = logPlatformInfo(platform, CL_PLATFORM_EXTENSIONS).split(" ");
-			if (Arrays.stream(extensions).anyMatch(s -> s.equals(GL_SHARING_PLATFORM_EXT)))
+			if (Arrays.asList(extensions).contains(GL_SHARING_PLATFORM_EXT))
 			{
 				this.platform = platform;
 			}
@@ -474,7 +476,7 @@ public class OpenCLManager
 			clSetKernelArg(kernelSmall, 11, Sizeof.cl_mem, uniformBuffer.ptr());
 
 			clEnqueueNDRangeKernel(commandQueue, kernelSmall, 1, null,
-				new long[]{smallModels * (SMALL_SIZE / smallFaceCount)}, new long[]{SMALL_SIZE / smallFaceCount}, 1, new cl_event[]{acquireGLBuffers}, computeEvents[numComputeEvents++]);
+				new long[]{(long) smallModels * (SMALL_SIZE / smallFaceCount)}, new long[]{SMALL_SIZE / smallFaceCount}, 1, new cl_event[]{acquireGLBuffers}, computeEvents[numComputeEvents++]);
 		}
 
 		if (largeModels > 0)

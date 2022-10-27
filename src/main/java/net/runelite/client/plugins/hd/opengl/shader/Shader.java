@@ -26,12 +26,25 @@
 package net.runelite.client.plugins.hd.opengl.shader;
 
 import com.google.common.annotations.VisibleForTesting;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.lwjgl.opengl.GL43C;
+import lombok.extern.slf4j.Slf4j;
+import org.lwjgl.BufferUtils;
+import net.runelite.client.plugins.hd.utils.Env;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import static org.lwjgl.opengl.GL43C.*;
+import static net.runelite.client.plugins.hd.utils.ResourcePath.path;
+
+@Slf4j
 public class Shader
 {
 	@VisibleForTesting
@@ -54,9 +67,11 @@ public class Shader
 		return this;
 	}
 
+	Pattern NVIDIA_ERROR_REGEX = Pattern.compile("^(\\d+)\\((\\d+)\\) : (.*)");
+
 	public int compile(Template template) throws ShaderException
 	{
-		int program = GL43C.glCreateProgram();
+		int program = glCreateProgram();
 		int[] shaders = new int[units.size()];
 		int i = 0;
 		boolean ok = false;
@@ -65,48 +80,118 @@ public class Shader
 			while (i < shaders.length)
 			{
 				Unit unit = units.get(i);
-				int shader = GL43C.glCreateShader(unit.type);
+				int shader = glCreateShader(unit.type);
 				if (shader == 0)
 				{
 					throw new ShaderException("Unable to create shader of type " + unit.type);
 				}
 
 				String source = template.load(unit.filename);
-				GL43C.glShaderSource(shader, source);
-				GL43C.glCompileShader(shader);
+				glShaderSource(shader, source);
+				glCompileShader(shader);
 
-				if (GL43C.glGetShaderi(shader, GL43C.GL_COMPILE_STATUS) != GL43C.GL_TRUE)
+				if (glGetShaderi(shader, GL_COMPILE_STATUS) != GL_TRUE)
 				{
-					String err = GL43C.glGetShaderInfoLog(shader);
-					GL43C.glDeleteShader(shader);
+					String err = glGetShaderInfoLog(shader);
+					glDeleteShader(shader);
+
+					if (template.includeType == Template.IncludeType.GLSL) {
+						Matcher m = NVIDIA_ERROR_REGEX.matcher(err);
+						if (m.find()) {
+							try {
+								int index = Integer.parseInt(m.group(1));
+								int lineNumber = Integer.parseInt(m.group(2));
+								String error = m.group(3);
+								String include = template.includeList.get(index);
+								err = String.format(
+									"Compile error in '%s' on line %d when compiling shader '%s':\n\n%s\n",
+									include, lineNumber, unit.filename, error);
+							} catch (Exception ex) {
+								log.error("Error while parsing shader compilation error:", ex);
+							}
+						}
+						else
+						{
+							// Unknown error format, so include a mapping from source file index to filename
+							StringBuilder sb = new StringBuilder();
+							sb
+								.append("Compile error while compiling shader '")
+								.append(unit.filename)
+								.append("':\n\n")
+								.append(err)
+								.append("\nIncluded sources: [\n");
+							for (int j = 0; j < template.includeList.size(); j++) {
+								String s = String.valueOf(j);
+								sb
+									.append("  ")
+									.append(String.join("", Collections.nCopies( // Left pad
+										1 + (int) Math.log10(template.includeList.size()) - s.length(), " ")))
+									.append(s)
+									.append(": ")
+									.append(template.includeList.get(j))
+									.append("\n");
+							}
+							sb.append("]\n");
+							err = sb.toString();
+						}
+					}
+
 					throw new ShaderException(err);
 				}
-				GL43C.glAttachShader(program, shader);
+
+				glAttachShader(program, shader);
 				shaders[i++] = shader;
 			}
 
-			GL43C.glLinkProgram(program);
+			glLinkProgram(program);
 
-			if (GL43C.glGetProgrami(program, GL43C.GL_LINK_STATUS) == GL43C.GL_FALSE)
+			if (glGetProgrami(program, GL_LINK_STATUS) == GL_FALSE)
 			{
-				String err = GL43C.glGetProgramInfoLog(program);
+				String err = glGetProgramInfoLog(program);
 				throw new ShaderException(err);
 			}
 
 			ok = true;
+
+			if (Env.has("RLHD_DUMP_SHADERS"))
+			{
+				int[] numFormats = { 0 };
+				glGetIntegerv(GL_NUM_PROGRAM_BINARY_FORMATS, numFormats);
+				if (numFormats[0] < 1) {
+					log.error("OpenGL driver does not support any binary formats");
+				} else {
+					int[] size = { 0 };
+					glGetProgramiv(program, GL_PROGRAM_BINARY_LENGTH, size);
+
+					int[] format = { 0 };
+					ByteBuffer binary = BufferUtils.createByteBuffer(size[0]);
+					glGetProgramBinary(program, size, format, binary);
+
+					try {
+						String shaderName = units.stream()
+							.map(Unit::getFilename)
+							.collect(Collectors.joining(" + ")) + ".bin";
+						path("shader-dumps", shaderName)
+							.mkdirs()
+							.writeByteBuffer(binary);
+					} catch (IOException ex) {
+						throw new RuntimeException(ex);
+					}
+				}
+			}
 		}
 		finally
 		{
 			while (i > 0)
 			{
 				int shader = shaders[--i];
-				GL43C.glDetachShader(program, shader);
-				GL43C.glDeleteShader(shader);
+				glDetachShader(program, shader);
+				glDeleteShader(shader);
 			}
 
 			if (!ok)
 			{
-				GL43C.glDeleteProgram(program);
+				glDeleteProgram(program);
 			}
 		}
 

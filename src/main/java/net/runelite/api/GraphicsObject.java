@@ -66,7 +66,7 @@ public interface GraphicsObject extends Renderable
 	 *
 	 * @return the height
 	 */
-	int getHeight();
+	int getZ();
 
 	/**
 	 * Checks if this spotanim is done animating

@@ -31,7 +31,8 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
-import net.runelite.api.Constants;
+
+import static net.runelite.api.Constants.*;
 import static net.runelite.api.Constants.CHUNK_SIZE;
 import net.runelite.api.GameState;
 import net.runelite.api.coords.LocalPoint;
@@ -41,7 +42,7 @@ import net.runelite.client.plugins.hd.HdPluginConfig;
 import net.runelite.client.plugins.hd.data.environments.Environment;
 import net.runelite.client.plugins.hd.utils.HDUtils;
 import net.runelite.client.plugins.hd.config.DefaultSkyColor;
-import net.runelite.client.plugins.hd.utils.Rect;
+import net.runelite.client.plugins.hd.utils.AABB;
 
 @Singleton
 @Slf4j
@@ -166,7 +167,9 @@ public class EnvironmentManager
 				{
 					if (environment == Environment.PLAYER_OWNED_HOUSE || environment == Environment.PLAYER_OWNED_HOUSE_SNOWY) {
 						hdPlugin.setInHouse(true);
-						hdPlugin.setNextSceneReload(System.currentTimeMillis() + 2500);
+
+						// POH takes 1 game tick to enter, then 2 game ticks to load per floor
+						hdPlugin.reloadSceneIn(7);
 					} else {
 						hdPlugin.setInHouse(false);
 					}
@@ -410,37 +413,35 @@ public class EnvironmentManager
 
 		sceneEnvironments = new ArrayList<>();
 
-		int sceneMinX = client.getBaseX();
-		int sceneMinY = client.getBaseY();
+		int baseX = client.getBaseX();
+		int baseY = client.getBaseY();
 		if (client.isInInstancedRegion())
 		{
 			LocalPoint localPoint = client.getLocalPlayer() != null ? client.getLocalPlayer().getLocalLocation() : new LocalPoint(0, 0);
 			WorldPoint worldPoint = WorldPoint.fromLocalInstance(client, localPoint);
-			sceneMinX = worldPoint.getX() - localPoint.getSceneX();
-			sceneMinY = worldPoint.getY() - localPoint.getSceneY();
+			baseX = worldPoint.getX() - localPoint.getSceneX();
+			baseY = worldPoint.getY() - localPoint.getSceneY();
 		}
-		int sceneMaxX = sceneMinX + Constants.SCENE_SIZE - 2;
-		int sceneMaxY = sceneMinY + Constants.SCENE_SIZE - 2;
+		AABB sceneAABB = new AABB(baseX, baseY, baseX + SCENE_SIZE - 2, baseY + SCENE_SIZE - 2);
 
-		log.debug("adding environments for scene {},{} - {},{}..", sceneMinX, sceneMinY, sceneMaxX, sceneMaxY);
+		log.debug("Adding environments for scene {}", sceneAABB);
 
 		for (Environment environment: Environment.values())
 		{
-			for (Rect rect : environment.getArea().getRects())
+			for (AABB aabb : environment.getArea().getAabbs())
 			{
-				if (rect.getMinX() > sceneMaxX || sceneMinX > rect.getMaxX() || rect.getMinY() > sceneMaxY || sceneMinY > rect.getMaxY())
+				if (sceneAABB.intersects(aabb))
 				{
-					continue;
+					log.debug("Added environment {} to sceneArea list", environment.name());
+					sceneEnvironments.add(environment);
+					break;
 				}
-				log.debug("added environment {} to sceneArea list", environment.name());
-				sceneEnvironments.add(environment);
-				break;
 			}
 		}
 
 		for (Environment environment : sceneEnvironments)
 		{
-			log.debug("sceneArea: " + environment.name());
+			log.debug("SceneArea: " + environment.name());
 		}
 
 		if (currentEnvironment != null)

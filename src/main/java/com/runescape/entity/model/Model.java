@@ -2330,6 +2330,11 @@ public class Model extends Renderable implements RSModel {
     }
 
     @Override
+    public int getDiameter() {
+        return diagonal3D;
+    }
+
+    @Override
     public short[] getFaceTextures() {
         return materials;
     }

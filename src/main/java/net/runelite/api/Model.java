@@ -69,6 +69,8 @@ public interface Model extends Renderable
 
 	int[] getFaceColors3();
 
+	int getDiameter();
+
 	byte[] getFaceTransparencies();
 
 	int getSceneId();

@@ -26,5 +26,7 @@ package net.runelite.client.plugins.hd.data.materials;
 
 public enum UvType
 {
-	GEOMETRY, GROUND_PLANE
+	VANILLA,
+	GEOMETRY,
+	GROUND_PLANE
 }

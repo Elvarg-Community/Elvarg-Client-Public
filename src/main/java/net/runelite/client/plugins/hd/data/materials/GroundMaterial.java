@@ -31,7 +31,7 @@ import lombok.Getter;
 public enum GroundMaterial
 {
 	NONE(Material.NONE),
-
+	TRANSPARENT(Material.TRANSPARENT),
 	GRASS_1(Material.GRASS_1, Material.GRASS_2, Material.GRASS_3),
 	OVERWORLD_GRASS_1(Material.GRASS_1, Material.GRASS_2, Material.GRASS_3),
 	GRASS_SCROLLING(Material.GRASS_SCROLLING),
@@ -49,6 +49,7 @@ public enum GroundMaterial
 	CARPET(Material.CARPET),
 	BRICK(Material.BRICK),
 	BRICK_BROWN(Material.BRICK_BROWN),
+	GRUNGE(Material.GRUNGE_2),
 
 	TILES_2x2_1(Material.TILES_1_2x2),
 	TILES_2x2_2(Material.TILES_2_2x2),
@@ -70,25 +71,15 @@ public enum GroundMaterial
 	UNDERWATER_GENERIC(Material.DIRT_1, Material.DIRT_2),
 
 	WOOD_PLANKS_1(Material.WOOD_PLANKS_1),
+	CLEAN_WOOD_FLOOR(Material.CLEAN_WOOD_FLOOR),
 
 	HD_LAVA(Material.HD_LAVA_1, Material.HD_LAVA_2, Material.HD_LAVA_1, Material.HD_LAVA_1, Material.HD_LAVA_2, Material.HD_MAGMA_1, Material.HD_MAGMA_2),
 
 	STONE_PATTERN(Material.STONE_PATTERN),
 	CONCRETE(Material.CONCRETE),
 	SAND_BRICK(Material.SAND_BRICK),
-	TILE_DARK(Material.TILE_DARK),
-
-	// water/fluid variants
-	WATER(Material.WATER),
-	WATER_FLAT(Material.WATER_FLAT),
-	SWAMP_WATER(Material.SWAMP_WATER),
-	SWAMP_WATER_FLAT(Material.SWAMP_WATER_FLAT),
-	POISON_WASTE(Material.POISON_WASTE),
-	POISON_WASTE_FLAT(Material.POISON_WASTE_FLAT),
-	BLOOD(Material.BLOOD),
-	BLOOD_FLAT(Material.BLOOD_FLAT),
-	ICE(Material.ICE),
-	ICE_FLAT(Material.ICE_FLAT),
+	CLEAN_TILE(Material.CLEAN_TILE),
+	WORN_TILES(Material.WORN_TILES),
 	;
 
 	private final Material[] materials;

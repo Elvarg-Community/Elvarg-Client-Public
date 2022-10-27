@@ -28,7 +28,7 @@ public interface RSGraphicsObject extends GraphicsObject, RSRenderable
 
 	@Import("height")
 	@Override
-	int getHeight();
+	int getZ();
 
 	@Import("isFinished")
 	@Override

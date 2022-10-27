@@ -1180,7 +1180,7 @@ public class ModelOutlineRenderer
 			Model model = graphicsObject.getModel();
 			if (model != null)
 			{
-				drawModelOutline(model, lp.getX(), lp.getY(), graphicsObject.getHeight(),
+				drawModelOutline(model, lp.getX(), lp.getY(), graphicsObject.getZ(),
 						0, outlineWidth, color, feather);
 			}
 		}

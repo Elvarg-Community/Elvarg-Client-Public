@@ -23,12 +23,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define CAUSTICS_MAP_ID 240
-
 float sampleCausticsChannel(const vec2 flow1, const vec2 flow2) {
     return min(
-        texture(texturesHD, vec3(flow1, CAUSTICS_MAP_ID)).r,
-        texture(texturesHD, vec3(flow2, CAUSTICS_MAP_ID)).r
+        texture(textureArray, vec3(flow1, MAT_CAUSTICS_MAP.colorMap)).r,
+        texture(textureArray, vec3(flow2, MAT_CAUSTICS_MAP.colorMap)).r
     );
 }
 

@@ -26,7 +26,8 @@ package net.runelite.client.plugins.hd.data.environments;
 
 import java.awt.Color;
 import lombok.Getter;
-import net.runelite.client.plugins.hd.utils.HDUtils;
+
+import static net.runelite.client.plugins.hd.utils.HDUtils.*;
 
 @Getter
 public enum Environment
@@ -245,6 +246,22 @@ public enum Environment
 		.setDirectionalStrength(5.0f)
 		.setDirectionalColor("#DFC0C0")
 	),
+	TOA_LOOT_ROOM(Area.TOA_LOOT_ROOM, new Properties()
+		.setFogColor("#050505")
+		.setFogDepth(20)
+		.setAmbientStrength(1.2f)
+		.setAmbientColor("#ffffff")
+		.setDirectionalStrength(.5f)
+		.setDirectionalColor("#ffffff")
+	),
+	TOMBS_OF_AMASCUT(Area.TOMBS_OF_AMASCUT, new Properties()
+		.setFogColor("#050505")
+		.setFogDepth(20)
+		.setAmbientStrength(1)
+		.setAmbientColor("#ffffff")
+		.setDirectionalStrength(.75f)
+		.setDirectionalColor("#ffffff")
+	),
 	BARROWS_CRYPTS(Area.BARROWS_CRYPTS, new Properties()
 		.setFogColor(0, 0, 0)
 		.setFogDepth(20)
@@ -313,6 +330,17 @@ public enum Environment
 		.setLightDirection(260f, 10f)
 	),
 	DRAYNOR(Area.DRAYNOR, new Properties()),
+
+	ASGARNIA_ICE_DUNGEON(Area.ASGARNIA_ICE_DUNGEON_SNOWY, new Properties()
+		.setFogColor("#B8C5DB")
+		.setFogDepth(40)
+		.setAmbientColor("#AAAFB6")
+		.setAmbientStrength(.75f)
+		.setDirectionalColor("#FFFFFF")
+		.setDirectionalStrength(.75f)
+		.setLightDirection(260f, 10f)
+		.setWaterColor(102, 234, 255)
+	),
 
 	MISTHALIN_MYSTERY_MANOR(Area.MISTHALIN_MYSTERY_MANOR, new Properties()
 		.setFogColor(15, 14, 13)
@@ -465,11 +493,12 @@ public enum Environment
 	GOD_WARS_DUNGEON(Area.GOD_WARS_DUNGEON, new Properties()
 		.setFogColor(14, 59, 89)
 		.setFogDepth(30)
-		.setAmbientColor("#68ACFF")
-		.setAmbientStrength(0.5f)
+		.setAmbientColor(181,215,255)
+		.setAmbientStrength(1.0f)
 		.setDirectionalColor(146, 209, 250)
 		.setDirectionalStrength(1.8f)
 		.setLightDirection(260f, 10f)
+		.setWaterColor(56, 188, 255)
 	),
 
 	TAR_SWAMP(Area.TAR_SWAMP, new Properties()
@@ -623,6 +652,7 @@ public enum Environment
 		.setAmbientStrength(1.0f)
 		.setDirectionalColor(125, 141, 179)
 		.setDirectionalStrength(4.0f)
+		.setWaterColor(185, 214, 255)
 	),
 
 	// Zanaris
@@ -661,6 +691,7 @@ public enum Environment
 		.setAmbientStrength(0.8f)
 		.setDirectionalColor("#FF8700")
 		.setDirectionalStrength(4.0f)
+		.setWaterColor(102, 234, 255)
 	),
 	DS2_SHIPS(Area.DS2_SHIPS, new Properties()
 		.setFogColor("#FFD3C7")
@@ -669,6 +700,7 @@ public enum Environment
 		.setAmbientStrength(0.8f)
 		.setDirectionalColor("#FF8700")
 		.setDirectionalStrength(4.0f)
+		.setWaterColor(102, 234, 255)
 	),
 
 	// The Gauntlet
@@ -684,9 +716,9 @@ public enum Environment
 	THE_GAUNTLET_CORRUPTED(Area.THE_GAUNTLET_CORRUPTED, new Properties()
 		.setFogColor("#090606")
 		.setFogDepth(20)
-		.setAmbientColor("#95B6F7")
+		.setAmbientColor("#BB9EAE")
 		.setAmbientStrength(1.5f)
-		.setDirectionalColor("#FF7878")
+		.setDirectionalColor("#C58C9E")
 		.setDirectionalStrength(3.0f)
 		.setLightDirection(260f, 10f)
 	),
@@ -914,6 +946,10 @@ public enum Environment
 			.setAmbientStrength(1.75f)
 			.setDirectionalStrength(1.0f)
 	),
+	ANCIENT_CAVERN_UPPER(Area.ANCIENT_CAVERN_UPPER, new Properties()
+			.setWaterColor(79, 178, 255)
+	),
+
 
 
 
@@ -1198,14 +1234,5 @@ public enum Environment
 			properties.directionalStrength : properties.underwaterCausticsStrength;
 		this.waterColor = properties.waterColor;
 		this.customWaterColor = properties.customWaterColor;
-	}
-
-	public static float[] rgb(int r, int g, int b)
-	{
-		return new float[]{
-			HDUtils.gammaToLinear(r / 255f),
-			HDUtils.gammaToLinear(g / 255f),
-			HDUtils.gammaToLinear(b / 255f)
-		};
 	}
 }

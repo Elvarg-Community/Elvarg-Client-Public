@@ -41,7 +41,11 @@ class TextureManager
 
 	int initTextureArray(TextureProvider textureProvider)
 	{
-		
+		if (!allTexturesLoaded(textureProvider))
+		{
+			return -1;
+		}
+
 		Texture[] textures = textureProvider.getTextures();
 
 		int textureArrayId = GL43C.glGenTextures();

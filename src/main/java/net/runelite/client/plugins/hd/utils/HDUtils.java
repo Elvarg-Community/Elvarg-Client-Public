@@ -24,8 +24,6 @@
  */
 package net.runelite.client.plugins.hd.utils;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.sqrt;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,15 +33,15 @@ public class HDUtils
 {
 
 	// directional vectors approximately opposite of the directional light used by the client
-	private static final float[] inverseLightDirectionZ0 = new float[]{
+	private static final float[] lightDirTile = new float[]{
 		0.70710678f, 0.70710678f, 0f
 	};
-	private static final float[] inverseLightDirectionZ1 = new float[]{
+	public static final float[] lightDirModel = new float[]{
 		0.57735026f, 0.57735026f, 0.57735026f
 	};
 
 	// The epsilon for floating point values used by jogl
-	private static final float EPSILON = 1.1920929E-7f;
+	public static final float EPSILON = 1.1920929E-7f;
 
 	public static float[] vectorAdd(float[] vec1, float[] vec2)
 	{
@@ -132,14 +130,20 @@ public class HDUtils
 		return out;
 	}
 
+	public static int clamp(int value, int min, int max) {
+		return Math.min(max, Math.max(min, value));
+	}
+
+	public static float clamp(float value, float min, float max) {
+		return Math.min(max, Math.max(min, value));
+	}
+
 	public static int vertexHash(int[] vPos)
 	{
 		// simple custom hashing function for vertex position data
 		StringBuilder s = new StringBuilder();
-		for (int i = 0; i < vPos.length; i++)
-		{
-			s.append(vPos[i]).append(",");
-		}
+		for (int part : vPos)
+			s.append(part).append(",");
 		return s.toString().hashCode();
 	}
 
@@ -245,37 +249,66 @@ public class HDUtils
 		return p;
 	}
 
-	public static float linearToGamma(float c)
+	// Conversion functions to and from sRGB and linear color space.
+	// The implementation is based on the sRGB EOTF given in the Khronos Data Format Specification.
+	// Source: https://web.archive.org/web/20220808015852/https://registry.khronos.org/DataFormat/specs/1.3/dataformat.1.3.pdf
+	// Page number 130 (146 in the PDF)
+	public static float linearToSrgb(float c)
 	{
-		float gamma = 2.2f;
-		return (float)Math.pow(c, 1.0f / gamma);
+		return c <= 0.0031308 ?
+			c * 12.92f :
+			(float) (1.055 * Math.pow(c, 1 / 2.4) - 0.055);
 	}
 
-	public static float gammaToLinear(float c)
+	public static float srgbToLinear(float c)
 	{
-		float gamma = 2.2f;
-		return (float)Math.pow(c, gamma);
+		return c <= 0.04045f ?
+			c / 12.92f :
+			(float) Math.pow((c + 0.055) / 1.055, 2.4);
 	}
 
-	public static float dotNormal3Lights(float[] normals)
+	public static float[] linearToSrgb(float[] c)
 	{
-		return dotNormal3Lights(normals, true);
+		float[] result = new float[c.length];
+		for (int i = 0; i < c.length; i++) {
+			result[i] = linearToSrgb(c[i]);
+		}
+		return result;
 	}
 
-	public static float dotNormal3Lights(float[] normals, final boolean includeZ)
+	public static float[] srgbToLinear(float[] c)
 	{
-		final float lengthSq = normals[0] * normals[0] + normals[1] * normals[1] + normals[2] * normals[2];
-		if (abs(lengthSq) < EPSILON)
-		{
-			return 0f;
+		float[] result = new float[c.length];
+		for (int i = 0; i < c.length; i++) {
+			result[i] = srgbToLinear(c[i]);
 		}
-		else if (includeZ)
-		{
-			return (normals[0] * inverseLightDirectionZ1[0] + normals[1] * inverseLightDirectionZ1[1] + normals[2] * inverseLightDirectionZ1[2]) / (float) sqrt(lengthSq);
-		}
-		else
-		{
-			return (normals[0] * inverseLightDirectionZ0[0] + normals[1] * inverseLightDirectionZ0[1]) / (float) sqrt(lengthSq);
-		}
+		return result;
 	}
+
+	public static float dotLightDirectionModel(float x, float y, float z)
+	{
+		// Model normal vectors need to be normalized
+		float length = x * x + y * y + z * z;
+		if (length < EPSILON)
+			return 0;
+		return (x * lightDirModel[0] + y * lightDirModel[1] + z * lightDirModel[2]) / (float) Math.sqrt(length);
+	}
+
+	public static float dotLightDirectionTile(float x, float y, float z)
+	{
+		// Tile normal vectors need to be normalized
+		float length = x * x + y * y + z * z;
+		if (length < EPSILON)
+			return 0;
+		return (x * lightDirTile[0] + y * lightDirTile[1]) / (float) Math.sqrt(length);
+	}
+
+    public static float[] rgb(int r, int g, int b)
+    {
+        return new float[]{
+            srgbToLinear(r / 255f),
+            srgbToLinear(g / 255f),
+            srgbToLinear(b / 255f)
+        };
+    }
 }

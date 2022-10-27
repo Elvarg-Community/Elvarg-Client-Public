@@ -26,8 +26,10 @@ package net.runelite.client.plugins.gpu;
 
 import com.google.common.primitives.Ints;
 import com.google.inject.Provides;
-
-import java.awt.*;
+import java.awt.Canvas;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
@@ -75,6 +77,7 @@ import org.lwjgl.opengl.GL43C;
 import org.lwjgl.opengl.GLCapabilities;
 import org.lwjgl.opengl.GLUtil;
 import org.lwjgl.system.Callback;
+import org.lwjgl.system.Configuration;
 
 @PluginDescriptor(
 	name = "GPU",
@@ -87,7 +90,7 @@ import org.lwjgl.system.Callback;
 public class GpuPlugin extends Plugin implements DrawCallbacks
 {
 	// This is the maximum number of triangles the compute shaders support
-	static final int MAX_TRIANGLE = 4096;
+	static final int MAX_TRIANGLE = 6144;
 	static final int SMALL_TRIANGLE_COUNT = 512;
 	private static final int FLAG_SCENE_BUFFER = Integer.MIN_VALUE;
 	private static final int DEFAULT_DISTANCE = 25;
@@ -146,7 +149,7 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 		.add(GL43C.GL_COMPUTE_SHADER, "comp.glsl");
 
 	static final Shader SMALL_COMPUTE_PROGRAM = new Shader()
-		.add(GL43C.GL_COMPUTE_SHADER, "comp_small.glsl");
+		.add(GL43C.GL_COMPUTE_SHADER, "comp.glsl");
 
 	static final Shader UNORDERED_COMPUTE_PROGRAM = new Shader()
 		.add(GL43C.GL_COMPUTE_SHADER, "comp_unordered.glsl");
@@ -235,11 +238,6 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 	private int viewportOffsetX;
 	private int viewportOffsetY;
 
-	// fields for non-compute draw
-	private boolean drawingModel;
-	private int modelX, modelY, modelZ;
-	private int modelOrientation;
-
 	// Uniforms
 	private int uniColorBlindMode;
 	private int uniUiColorBlindMode;
@@ -275,7 +273,6 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 				fboSceneHandle = rboSceneHandle = -1; // AA FBO
 				targetBufferOffset = 0;
 				unorderedModels = smallModels = largeModels = 0;
-				drawingModel = false;
 
 				AWTContext.loadNatives();
 
@@ -300,6 +297,10 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 					? (OSType.getOSType() == OSType.MacOS ? ComputeMode.OPENCL : ComputeMode.OPENGL)
 					: ComputeMode.NONE;
 
+				// lwjgl defaults to lwjgl- + user.name, but this breaks if the username would cause an invalid path
+				// to be created, and also breaks if both 32 and 64 bit lwjgl versions try to run at once.
+				Configuration.SHARED_LIBRARY_EXTRACT_DIRECTORY.set("lwjgl-rl-" + System.getProperty("os.arch", "unknown"));
+
 				GL.createCapabilities();
 
 				log.info("Using device: {}", GL43C.glGetString(GL43C.GL_RENDERER));
@@ -316,6 +317,11 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 				{
 					log.info("disabling compute shaders because OpenGL 4.3 is not available");
 					computeMode = ComputeMode.NONE;
+				}
+
+				if (computeMode == ComputeMode.NONE)
+				{
+					sceneUploader.initSortingBuffers();
 				}
 
 				lwjglInitted = true;
@@ -417,6 +423,8 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 			client.setDrawCallbacks(null);
 			client.setUnlockedFps(false);
 
+			sceneUploader.releaseSortingBuffers();
+
 			if (lwjglInitted)
 			{
 				openCLManager.cleanup();
@@ -517,7 +525,7 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 		checkGLErrors();
 	}
 
-	private void initProgram() throws ShaderException
+	private Template createTemplate(int threadCount, int facesPerThread)
 	{
 		String versionHeader = OSType.getOSType() == OSType.Linux ? LINUX_VERSION_HEADER : WINDOWS_VERSION_HEADER;
 		Template template = new Template();
@@ -527,17 +535,27 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 			{
 				return versionHeader;
 			}
+			if ("thread_config".equals(key))
+			{
+				return "#define THREAD_COUNT " + threadCount + "\n" +
+					"#define FACES_PER_THREAD " + facesPerThread + "\n";
+			}
 			return null;
 		});
 		template.addInclude(GpuPlugin.class);
+		return template;
+	}
 
+	private void initProgram() throws ShaderException
+	{
+		Template template = createTemplate(-1, -1);
 		glProgram = PROGRAM.compile(template);
 		glUiProgram = UI_PROGRAM.compile(template);
 
 		if (computeMode == ComputeMode.OPENGL)
 		{
-			glComputeProgram = COMPUTE_PROGRAM.compile(template);
-			glSmallComputeProgram = SMALL_COMPUTE_PROGRAM.compile(template);
+			glComputeProgram = COMPUTE_PROGRAM.compile(createTemplate(1024, 6));
+			glSmallComputeProgram = SMALL_COMPUTE_PROGRAM.compile(createTemplate(512, 1));
 			glUnorderedComputeProgram = UNORDERED_COMPUTE_PROGRAM.compile(template);
 		}
 		else if (computeMode == ComputeMode.OPENCL)
@@ -808,11 +826,6 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 	@Override
 	public void postDrawScene()
 	{
-		postDraw();
-	}
-
-	private void postDraw()
-	{
 		if (computeMode == ComputeMode.NONE)
 		{
 			// Upload buffers
@@ -1004,20 +1017,8 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 		}
 	}
 
-	@Override
-	public void draw(int overlayColor)
-	{
-		drawFrame(overlayColor);
-	}
-
 	private void prepareInterfaceTexture(int canvasWidth, int canvasHeight)
 	{
-
-		final boolean fixed = client.isResized();
-		if (!fixed) {
-			canvasWidth = client.getRealDimensions().width;
-			canvasHeight = client.getRealDimensions().height;
-		}
 		if (canvasWidth != lastCanvasWidth || canvasHeight != lastCanvasHeight)
 		{
 			lastCanvasWidth = canvasWidth;
@@ -1048,7 +1049,8 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 		GL43C.glBindTexture(GL43C.GL_TEXTURE_2D, 0);
 	}
 
-	private void drawFrame(int overlayColor)
+	@Override
+	public void draw(int overlayColor)
 	{
 		final int canvasHeight = client.getCanvasHeight();
 		final int canvasWidth = client.getCanvasWidth();
@@ -1109,10 +1111,10 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 		GL43C.glClear(GL43C.GL_COLOR_BUFFER_BIT);
 
 		// Draw 3d scene
-		final TextureProvider textureProvider = client.getTextureProvider();
 		final GameState gameState = client.getGameState();
-		if (textureProvider != null && gameState.getState() >= GameState.LOADING.getState())
+		if (gameState.getState() >= GameState.LOADING.getState())
 		{
+			final TextureProvider textureProvider = client.getTextureProvider();
 			if (textureArrayId == -1)
 			{
 				// lazy init textures as they may not be loaded at plugin start.
@@ -1519,19 +1521,12 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 				model.calculateExtreme(orientation);
 				client.checkClickbox(model, orientation, pitchSin, pitchCos, yawSin, yawCos, x, y, z, hash);
 
-				modelX = x + client.getCameraX2();
-				modelY = y + client.getCameraY2();
-				modelZ = z + client.getCameraZ2();
-				modelOrientation = orientation;
-				int triangleCount = model.getFaceCount();
-				vertexBuffer.ensureCapacity(12 * triangleCount);
-				uvBuffer.ensureCapacity(12 * triangleCount);
-
-				drawingModel = true;
-
-				renderable.draw(orientation, pitchSin, pitchCos, yawSin, yawCos, x, y, z, hash);
-
-				drawingModel = false;
+				targetBufferOffset += sceneUploader.pushSortedModel(
+					model, orientation,
+					pitchSin, pitchCos,
+					yawSin, yawCos,
+					x, y, z,
+					vertexBuffer, uvBuffer);
 			}
 		}
 		// Model may be in the scene buffer
@@ -1612,13 +1607,7 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 	@Override
 	public boolean drawFace(Model model, int face)
 	{
-		if (!drawingModel)
-		{
-			return false;
-		}
-
-		targetBufferOffset += sceneUploader.pushFace(model, face, true, vertexBuffer, uvBuffer, modelX, modelY, modelZ, modelOrientation);
-		return true;
+		return false;
 	}
 
 	/**

@@ -29,7 +29,7 @@ import org.jocl.cl_mem;
 
 public class GLBuffer
 {
-	public int glBufferId = -1;
+	public int glBufferId = 0;
 	public int size = -1;
 	public cl_mem cl_mem;
 
