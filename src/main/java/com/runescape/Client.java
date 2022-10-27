@@ -4233,7 +4233,7 @@ public class Client extends GameEngine implements RSClient {
     }
 
     protected void startUp() {
-        setGameState(GameState.LOADING);
+        setGameState(GameState.STARTING);
 
         drawLoadingText(20, "Starting up");
         if (SignLink.cache_dat != null) {
@@ -11602,9 +11602,10 @@ public class Client extends GameEngine implements RSClient {
         }
         callbacks.frame();
         updateCamera();
-
+        
         if (gameState == GameState.STARTING.getState()) {
             this.drawInitial(loadingPercent, loadingText, redraw);
+            rasterProvider.drawFull(0, 0);
         } else if (gameState == GameState.LOGIN_SCREEN.getState()) {
             drawLoginScreen();
         } else if (gameState == GameState.CONNECTION_LOST.getState()) {
@@ -11615,7 +11616,9 @@ public class Client extends GameEngine implements RSClient {
             drawGameScreen();
         }
 
-        rasterProvider.drawFull(0, 0);
+        if (gameState > 0) {
+            rasterProvider.drawFull(0, 0);
+        }
         anInt1213 = 0;
     }
 
