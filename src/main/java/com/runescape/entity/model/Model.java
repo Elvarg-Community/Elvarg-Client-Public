@@ -1511,8 +1511,8 @@ public class Model extends Renderable implements RSModel {
         int sceneY = offsetY * pitchSine + sceneX * pitchCos >> 16;
         int dimensionSinY = diagonal2DAboveOrigin * pitchCos >> 16;
         int pos = sceneY + dimensionSinY;
-        final boolean gpu = Client.processGpuPlugin() && Rasterizer3D.world;
-        if (pos <= 50 || (sceneY >= 3500 && !gpu)) {
+        final boolean gpu = Client.instance.isGpu();
+        if (pos <= 50 || (sceneY >= 3500 && !Client.instance.isGpu())) {
             return;
         }
         int xRotation = offsetZ * yawSin + offsetX * yawCos >> 16;

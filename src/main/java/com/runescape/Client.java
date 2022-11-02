@@ -901,7 +901,7 @@ public class Client extends GameEngine implements RSClient {
 
         Rasterizer3D.fieldOfView = instance.getViewportWidth() * instance.getViewportHeight() / 85504 << 1;
 
-        if(!Client.processGpuPlugin()) {
+        if(!Client.instance.isGpu()) {
             int ai[] = new int[9];
             for (int i8 = 0; i8 < 9; i8++) {
                 int k8 = 128 + i8 * 32 + 15;
@@ -17934,11 +17934,7 @@ public class Client extends GameEngine implements RSClient {
     public void setGpu(boolean gpu) {
         this.gpu = gpu;
     }
-
-    public static boolean processGpuPlugin() {
-        return loggedIn && instance.loadingStage == 2 && instance.getDrawCallbacks() != null;
-    }
-
+    
     @Override
     public int get3dZoom() {
         return cameraZoom;

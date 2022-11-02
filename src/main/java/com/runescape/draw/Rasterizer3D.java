@@ -159,7 +159,7 @@ public final class Rasterizer3D extends Rasterizer2D {
 
 
     public static void drawShadedTriangle(int y1, int y2, int y3, int x1, int x2, int x3, int hsl1, int hsl2, int hsl3) {
-        if (Client.processGpuPlugin() && !renderOnGpu) {
+        if (Client.instance.isGpu() && !renderOnGpu) {
             return;
         }
 
@@ -774,7 +774,7 @@ public final class Rasterizer3D extends Rasterizer2D {
     }
 
     public static void drawFlatTriangle(int y_a, int y_b, int y_c, int x_a, int x_b, int x_c, int k1) {
-        if (Client.processGpuPlugin() && !renderOnGpu) {
+        if (Client.instance.isGpu() && !renderOnGpu) {
             return;
         }
 
@@ -1128,7 +1128,7 @@ public final class Rasterizer3D extends Rasterizer2D {
     }
 
     public static void drawTexturedTriangle(int var0, int var1, int var2, int var3, int var4, int var5, int var6, int var7, int var8, int var9, int var10, int var11, int var12, int var13, int var14, int var15, int var16, int var17, int textureID) {
-        if (Client.processGpuPlugin() && !renderOnGpu) {
+        if (Client.instance.isGpu() && !renderOnGpu) {
             return;
         }
         int[] texturePixels = textureLoader.getTexturePixels(textureID);

@@ -1043,8 +1043,7 @@ public final class SceneGraph implements RSScene {
         int i1 = j * camLeftRightX - k * camLeftRightY >> 16;
         int j1 = i * camUpDownY + i1 * camUpDownX >> 16;
         int k1 = i * camUpDownX - i1 * camUpDownY >> 16;
-        final boolean gpu = Client.processGpuPlugin() && Rasterizer3D.world;
-        if (j1 < 50 || (j1 >= 3500 && !gpu)) {
+        if (j1 < 50 || j1 >= 3500) {
             return false;
         }
 
