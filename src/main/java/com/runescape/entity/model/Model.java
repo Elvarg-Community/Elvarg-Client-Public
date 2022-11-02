@@ -1301,10 +1301,6 @@ public class Model extends Renderable implements RSModel {
             this.calculateDiagonalsAndBounds(22);
         }
 
-        if (textures == null) {
-            vertexNormals();
-        }
-
         if (faceTextureUVCoordinates == null)
         {
             computeTextureUvCoordinates();
@@ -2504,6 +2500,9 @@ public class Model extends Renderable implements RSModel {
 
     @Override
     public float[] getFaceTextureUVCoordinates() {
+        if (faceTextureUVCoordinates == null) {
+            computeTextureUvCoordinates();
+        }
         return faceTextureUVCoordinates;
     }
 
