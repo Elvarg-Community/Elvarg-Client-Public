@@ -15183,11 +15183,6 @@ public class Client extends GameEngine implements RSClient {
         drawMinimap();
         drawTabArea();
 
-
-        if (Client.processGpuPlugin()) {
-            drawCallbacks.draw(0);
-        }
-
         xCameraPos = l;
         zCameraPos = i1;
         yCameraPos = j1;
