@@ -451,18 +451,18 @@ public final class Sprite extends Rasterizer2D implements RSSpritePixels {
         for (int i2 = -k; i2 < 0; i2++) {
             for (int j2 = l1; j2 < 0; j2++) {
                 int val = ai[i1++];
-                drawAlpha(ai1, i++, val, val, 255);
+                drawAlpha(ai1, i++, val, 255);
                 val = ai[i1++];
-                drawAlpha(ai1, i++, val, val, 255);
+                drawAlpha(ai1, i++, val, 255);
                 val = ai[i1++];
-                drawAlpha(ai1, i++, val, val, 255);
+                drawAlpha(ai1, i++, val, 255);
                 val = ai[i1++];
-                drawAlpha(ai1, i++, val, val, 255);
+                drawAlpha(ai1, i++, val, 255);
             }
 
             for (int k2 = j; k2 < 0; k2++) {
                 int val = ai[i1++];
-                drawAlpha(ai1, i++, val, val, 255);
+                drawAlpha(ai1, i++, val, 255);
             }
 
             i += k1;
@@ -760,7 +760,7 @@ public final class Sprite extends Rasterizer2D implements RSSpritePixels {
                 k = ai1[i++];
                 if (k != 0) {
                     int i3 = ai[l1];
-                    drawAlpha(ai, l1++, ((k & 0xff00ff) * k1 + (i3 & 0xff00ff) * j2 & 0xff00ff00) + ((k & 0xff00) * k1 + (i3 & 0xff00) * j2 & 0xff0000) >> 8, k, k1);
+                    drawAlpha(ai, l1++, ((k & 0xff00ff) * k1 + (i3 & 0xff00ff) * j2 & 0xff00ff00) + ((k & 0xff00) * k1 + (i3 & 0xff00) * j2 & 0xff0000) >> 8, k1);
                 } else {
                     l1++;
                 }

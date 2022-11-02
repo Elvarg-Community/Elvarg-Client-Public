@@ -13,101 +13,16 @@ import java.util.Hashtable;
 
 public class Rasterizer2D extends Cacheable implements RSRasterizer2D {
 
-    public static void drawAlpha(int[] pixels, int index, int color, int alpha) {
-        if (!Client.processGpuPlugin()) {
-            try {
-                pixels[index] = color;
-            }catch (Exception e) {}
-            return;
-        }
-        if (alpha <= 0) {
-            return;
-        }
-        int prevColor = pixels[index];
-
-        if ((prevColor & 0xFF000000) == 0 || alpha == 255) {
-            // No transparency, so we can cheat to save CPU resources
-            pixels[index] = (color & 0xFFFFFF) | (alpha << 24);
-            return;
-        }
-
-        if ((prevColor & 0xFF000000) == 0xFF000000) {
-            // When the background is opaque, the result will also be opaque,
-            // so we can simply use the value calculated by Jagex.
-            pixels[index] = color | 0xFF000000;
-            return;
-        }
-
-        int prevAlpha = (prevColor >>> 24) * (255 - alpha) >>> 8;
-        int finalAlpha = alpha + prevAlpha;
-
-        // Scale alphas so (relativeAlpha >>> 8) is approximately equal to (alpha /
-        // finalAlpha).
-        // Avoiding extra divisions increase performance by quite a bit.
-        // And with divisions we get a problems if dividing a number where
-        // the last bit is 1 (as it will become negative).
-        int relativeAlpha1 = (alpha << 8) / finalAlpha;
-        int relativeAlpha2 = (prevAlpha << 8) / finalAlpha;
-
-        // Red and blue are calculated at the same time to save CPU cycles
-        int finalColor = (((color & 0xFF00FF) * relativeAlpha1 + (prevColor & 0xFF00FF) * relativeAlpha2 & 0xFF00FF00) | ((color & 0x00FF00) * relativeAlpha1 + (prevColor & 0x00FF00) * relativeAlpha2 & 0x00FF0000)) >>> 8;
-
-        pixels[index] = finalColor | (finalAlpha << 24);
-    }
-    public static void drawAlpha(int[] pixels, int index, int value, int color, int alpha) {
-        if (!Client.processGpuPlugin()) {
+    public static void drawAlpha(int[] pixels, int index, int value, int alpha) {
+        if (! Client.instance.isGpu() || pixels != Client.instance.getBufferProvider().getPixels())
+        {
             pixels[index] = value;
             return;
         }
 
-        if (alpha == 0) {
-            return;
-        }
-
-        int prevColor = pixels[index];
-
-        if ((prevColor & 0xFF000000) == 0 || alpha == 255) {
-            // No transparency, so we can cheat to save CPU resources
-            pixels[index] = (color & 0xFFFFFF) | (alpha << 24);
-            return;
-        }
-
-        if ((prevColor & 0xFF000000) == 0xFF000000) {
-            // When the background is opaque, the result will also be opaque,
-            // so we can simply use the value calculated by Jagex.
-            pixels[index] = value | 0xFF000000;
-            return;
-        }
-
-        int prevAlpha = (prevColor >>> 24) * (255 - alpha) >>> 8;
-        int finalAlpha = alpha + prevAlpha;
-
-        // Scale alphas so (relativeAlpha >>> 8) is approximately equal to (alpha /
-        // finalAlpha).
-        // Avoiding extra divisions increase performance by quite a bit.
-        // And with divisions we get a problems if dividing a number where
-        // the last bit is 1 (as it will become negative).
-        int relativeAlpha1 = (alpha << 8) / finalAlpha;
-        int relativeAlpha2 = (prevAlpha << 8) / finalAlpha;
-
-        // Red and blue are calculated at the same time to save CPU cycles
-        int finalColor = (((color & 0xFF00FF) * relativeAlpha1 + (prevColor & 0xFF00FF) * relativeAlpha2 & 0xFF00FF00) | ((color & 0x00FF00) * relativeAlpha1 + (prevColor & 0x00FF00) * relativeAlpha2 & 0x00FF0000)) >>> 8;
-
-        pixels[index] = finalColor | (finalAlpha << 24);
-    }
-
-    public static void drawAlpha(byte[] pixels, int index, byte color, int alpha) {
-        if (!Client.processGpuPlugin()) {
-            pixels[index] = color;
-            return;
-        }
-
-        if (alpha <= 0) {
-            return;
-        }
-
-        alpha += (pixels[index] >>> 24) * (255 - alpha) >>> 8;
-        pixels[index] = (byte) (color & 16777215 | alpha << 24);
+        // (int) x * 0x8081 >>> 23 is equivalent to (short) x / 255
+        int outAlpha = alpha + ((pixels[index] >>> 24) * (255 - alpha) * 0x8081 >>> 23);
+        pixels[index] = value & 0x00FFFFFF | outAlpha << 24;
     }
 
     /**
@@ -263,7 +178,7 @@ public class Rasterizer2D extends Cacheable implements RSRasterizer2D {
         for (int rowIndex = 0; rowIndex < height; rowIndex++) {
             for (int columnIndex = 0; columnIndex < width; columnIndex++)
                 //pixels[pixelIndex++] = rgbColour;
-                drawAlpha(pixels, pixelIndex++, rgbColour, rgbColour, 0);
+                drawAlpha(pixels, pixelIndex++, rgbColour, 0);
             pixelIndex += leftOver;
         }
     }
