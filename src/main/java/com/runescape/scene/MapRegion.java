@@ -588,7 +588,7 @@ public final class MapRegion {
             if (type <= 17 && type != 13 && z > 0) {
                 anIntArrayArrayArray135[z][x][y] |= 0x924;
             }
-            if (definition.occludes && class11 != null) {
+            if (definition.interactType && class11 != null) {
                 class11.method212(definition.blocksProjectile, definition.sizeX, definition.sizeY,
                         x, y, rotation);
             }
@@ -637,7 +637,7 @@ public final class MapRegion {
                     anIntArrayArrayArray135[z][x][y] |= 0x492;
                 }
             }
-            if (definition.occludes && class11 != null) {
+            if (definition.interactType && class11 != null) {
                 class11.method211(y, rotation, x, type, definition.blocksProjectile);
             }
             if (definition.decorDisplacement != 16) {
@@ -666,7 +666,7 @@ public final class MapRegion {
                     shading[z][x][y] = 50;
                 }
             }
-            if (definition.occludes && class11 != null) {
+            if (definition.interactType && class11 != null) {
                 class11.method211(y, rotation, x, type, definition.blocksProjectile);
             }
             return;
@@ -701,7 +701,7 @@ public final class MapRegion {
                     anIntArrayArrayArray135[z][x][y] |= 0x249;
                 }
             }
-            if (definition.occludes && class11 != null) {
+            if (definition.interactType && class11 != null) {
                 class11.method211(y, rotation, x, type, definition.blocksProjectile);
             }
             if (definition.decorDisplacement != 16) {
@@ -730,7 +730,7 @@ public final class MapRegion {
                     shading[z][x][y] = 50;
                 }
             }
-            if (definition.occludes && class11 != null) {
+            if (definition.interactType && class11 != null) {
                 class11.method211(y, rotation, x, type, definition.blocksProjectile);
             }
             return;
@@ -744,7 +744,7 @@ public final class MapRegion {
                         true);
             }
             scene.addTiledObject(key, config, mean, 1, ((Renderable) (obj6)), 1, z, 0, y, x);
-            if (definition.occludes && class11 != null) {
+            if (definition.interactType && class11 != null) {
                 class11.method212(definition.blocksProjectile, definition.sizeX, definition.sizeY,
                         x, y, rotation);
             }
@@ -1120,7 +1120,7 @@ public final class MapRegion {
                 obj = new SceneObject(j1, rotation, 22, i2, j2, l1, k2, definition.animation, true);
             }
             worldController.addGroundDecoration(k1, l2, regionY, ((Renderable) (obj)), byte1, key, regionX);
-            if (definition.occludes && definition.isInteractive) {
+            if (definition.interactType && definition.isInteractive) {
                 class11.block(regionX, regionY);
             }
             return;
@@ -1148,7 +1148,7 @@ public final class MapRegion {
                 }
                 worldController.addTiledObject(key, byte1, l2, i5, ((Renderable) (obj1)), k4, k1, j5, regionY, regionX);
             }
-            if (definition.occludes) {
+            if (definition.interactType) {
                 class11.method212(definition.blocksProjectile, definition.sizeX, definition.sizeY, regionX, regionY, rotation);
             }
             return;
@@ -1161,7 +1161,7 @@ public final class MapRegion {
                 obj2 = new SceneObject(j1, rotation, type, i2, j2, l1, k2, definition.animation, true);
             }
             worldController.addTiledObject(key, byte1, l2, 1, ((Renderable) (obj2)), 1, k1, 0, regionY, regionX);
-            if (definition.occludes) {
+            if (definition.interactType) {
                 class11.method212(definition.blocksProjectile, definition.sizeX, definition.sizeY, regionX, regionY, rotation);
             }
             return;
@@ -1175,7 +1175,7 @@ public final class MapRegion {
             }
             worldController.addWallObject(anIntArray152[rotation], ((Renderable) (obj3)), key, regionY, byte1, regionX, null,
                     l2, 0, k1);
-            if (definition.occludes) {
+            if (definition.interactType) {
                 class11.method211(regionY, rotation, regionX, type, definition.blocksProjectile);
             }
             return;
@@ -1189,7 +1189,7 @@ public final class MapRegion {
             }
             worldController.addWallObject(anIntArray140[rotation], ((Renderable) (obj4)), key, regionY, byte1, regionX, null,
                     l2, 0, k1);
-            if (definition.occludes) {
+            if (definition.interactType) {
                 class11.method211(regionY, rotation, regionX, type, definition.blocksProjectile);
             }
             return;
@@ -1207,7 +1207,7 @@ public final class MapRegion {
             }
             worldController.addWallObject(anIntArray152[rotation], ((Renderable) (obj11)), key, regionY, byte1, regionX,
                     ((Renderable) (obj12)), l2, anIntArray152[j3], k1);
-            if (definition.occludes) {
+            if (definition.interactType) {
                 class11.method211(regionY, rotation, regionX, type, definition.blocksProjectile);
             }
             return;
@@ -1221,7 +1221,7 @@ public final class MapRegion {
             }
             worldController.addWallObject(anIntArray140[rotation], ((Renderable) (obj5)), key, regionY, byte1, regionX, null,
                     l2, 0, k1);
-            if (definition.occludes) {
+            if (definition.interactType) {
                 class11.method211(regionY, rotation, regionX, type, definition.blocksProjectile);
             }
             return;
@@ -1234,7 +1234,7 @@ public final class MapRegion {
                 obj6 = new SceneObject(j1, rotation, type, i2, j2, l1, k2, definition.animation, true);
             }
             worldController.addTiledObject(key, byte1, l2, 1, ((Renderable) (obj6)), 1, k1, 0, regionY, regionX);
-            if (definition.occludes) {
+            if (definition.interactType) {
                 class11.method212(definition.blocksProjectile, definition.sizeX, definition.sizeY, regionX, regionY, rotation);
             }
             return;
