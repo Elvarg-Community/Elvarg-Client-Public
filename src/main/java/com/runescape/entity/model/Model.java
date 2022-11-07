@@ -969,7 +969,7 @@ public class Model extends Renderable implements RSModel {
                     int ai4[] = faceGroups[k3];
                     for (int l4 = 0; l4 < ai4.length; l4++) {
                         int var13 = ai4[l4]; // L: 441
-                        int var14 = this.triangleAlpha[var13] & 255; // L: 442
+                        int var14 = (this.triangleAlpha[var13] & 255) + x * 8; // L: 442
                         if (var14 < 0) {
                             var14 = 0;
                         } else if (var14 > 255) {
