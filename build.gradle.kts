@@ -61,6 +61,7 @@ dependencies {
     implementation(group = "org.madlonkay", name = "desktopsupport", version = "0.6.0")
     implementation(group = "org.apache.commons", name = "commons-text", version = "1.9")
     implementation(group = "org.apache.commons", name = "commons-csv", version = "1.9.0")
+    implementation("com.beust:klaxon:5.5")
     implementation(group = "commons-io", name = "commons-io", version = "2.8.0")
     implementation(group = "org.jetbrains", name = "annotations", version = "22.0.0")
     implementation(group = "com.github.zafarkhaja", name = "java-semver", version = "0.9.0")

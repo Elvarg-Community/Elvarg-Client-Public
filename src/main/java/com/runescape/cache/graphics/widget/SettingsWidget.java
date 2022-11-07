@@ -2,6 +2,7 @@ package com.runescape.cache.graphics.widget;
 
 import com.runescape.Client;
 import com.runescape.Configuration;
+import com.runescape.UserPreferences;
 import com.runescape.cache.graphics.Dropdown;
 import com.runescape.cache.graphics.Slider;
 import com.runescape.model.content.Keybinding;
@@ -237,7 +238,7 @@ public class SettingsWidget extends Widget {
                 Client.instance.frameMode(true);
                 break;
             case SHIFT_CLICK_DROP:
-                Configuration.enableShiftClickDrop = !Configuration.enableShiftClickDrop;
+                Client.preferences.setEnableShiftClickDrop(!Client.preferences.getEnableShiftClickDrop());
                 break;
             case 42521:
                 Client.cameraZoom = 600;
@@ -256,45 +257,42 @@ public class SettingsWidget extends Widget {
                 Client.transparentTabArea = !Client.transparentTabArea;
                 break;
             case TRANSPARENT_CHATBOX:
-                Client.changeChatArea = !Client.changeChatArea;
+                Client.preferences.setChangeChatArea(!Client.preferences.getChangeChatArea());
                 break;
             case SIDE_STONES_ARRANGEMENT:
             	if (!Client.instance.isResized()) {
             		return;
             	}
-            	Client.stackSideStones = !Client.stackSideStones;
+                Client.preferences.setStackSideStones(!Client.preferences.getStackSideStones());
                 break;
             case ROOF_REMOVAL:
-                Configuration.enableRoofs = !Configuration.enableRoofs;
+                Client.preferences.setEnableRoofs(!Client.preferences.getEnableRoofs());
                 break;
             case ORBS:
-                Configuration.enableOrbs = !Configuration.enableOrbs;
-                break;
-            case FOG:
-                Configuration.enableFog = !Configuration.enableFog;
+                Client.preferences.setEnableOrbs(!Client.preferences.getEnableOrbs());
                 break;
             case GROUND_ITEM_NAMES:
-                Configuration.enableGroundItemNames = !Configuration.enableGroundItemNames;
+                Client.preferences.setEnableGroundItemNames(!Client.preferences.getEnableGroundItemNames());
                 break;
             case SKILL_ORBS:
-                Configuration.enableSkillOrbs = !Configuration.enableSkillOrbs;
+                Client.preferences.setEnableOrbs(!Client.preferences.getEnableSkillOrbs());
                 break;
             case TOOLTIP_HOVERS:
-                Configuration.enableTooltipHovers = !Configuration.enableTooltipHovers;
+                Client.preferences.setEnableTooltipHovers(!Client.preferences.getEnableTooltipHovers());
                 break;
             case COMBAT_OVERLAY:
-                Configuration.combatOverlayBox = !Configuration.combatOverlayBox;
+                Client.preferences.setCombatOverlayBox(!Client.preferences.getCombatOverlayBox());
                 break;
             case BUFF_OVERLAY:
-                Configuration.enableBuffOverlay = !Configuration.enableBuffOverlay;
+                Client.preferences.setEnableBuffOverlay(!Client.preferences.getEnableBuffOverlay());
                 break;
             case TIMERS:
                 break;
             case SPEC_ORB:
-                Configuration.enableSpecOrb = !Configuration.enableSpecOrb;
+                Client.preferences.setEnableSpecOrb(!Client.preferences.getEnableSpecOrb());
                 break;
         }
-        Client.instance.savePlayerData();
+        UserPreferences.INSTANCE.save();
     }
 
     public static void switchSettings(int button) {
@@ -310,33 +308,31 @@ public class SettingsWidget extends Widget {
         Widget.interfaceCache[CHAT_EFFECTS].active = true;
         Widget.interfaceCache[SPLIT_PRIVATE_CHAT].active = false;
         Widget.interfaceCache[MOUSE_BUTTONS].active = true;
-        Widget.interfaceCache[SHIFT_CLICK_DROP].active = Configuration.enableShiftClickDrop;
+        Widget.interfaceCache[SHIFT_CLICK_DROP].active = Client.preferences.getEnableShiftClickDrop();
 
-        Widget.interfaceCache[PLAYER_ATTACK_DROPDOWN].dropdown.setSelected(Widget.interfaceCache[42554].dropdown.getOptions()[Configuration.playerAttackOptionPriority]);
-        Widget.interfaceCache[NPC_ATTACK_DROPDOWN].dropdown.setSelected(Widget.interfaceCache[42556].dropdown.getOptions()[Configuration.npcAttackOptionPriority]);
+        Widget.interfaceCache[PLAYER_ATTACK_DROPDOWN].dropdown.setSelected(Widget.interfaceCache[42554].dropdown.getOptions()[Client.preferences.getPlayerAttackOptionPriority()]);
+        Widget.interfaceCache[NPC_ATTACK_DROPDOWN].dropdown.setSelected(Widget.interfaceCache[42556].dropdown.getOptions()[Client.preferences.getNpcAttackOptionPriority()]);
 
         Widget.interfaceCache[ZOOM_SLIDER].slider.setValue(Client.cameraZoom);
-        Widget.interfaceCache[BRIGHTNESS_SLIDER].slider.setValue(Client.brightnessState);
-        //Widget.interfaceCache[MUSIC_SLIDER].slider.setValue(Client.cameraZoom); TODO
-        //Widget.interfaceCache[SOUND_SLIDER].slider.setValue(Client.cameraZoom);
+        Widget.interfaceCache[BRIGHTNESS_SLIDER].slider.setValue(Client.preferences.getBrightnessState());
 
 		/* Advanced settings*/
-        Widget.interfaceCache[TRANSPARENT_SIDE_PANEL].active = Client.transparentTabArea;
-        Widget.interfaceCache[TRANSPARENT_CHATBOX].active = Client.changeChatArea;
-        Widget.interfaceCache[SIDE_STONES_ARRANGEMENT].active = Client.stackSideStones;
-        Widget.interfaceCache[ROOF_REMOVAL].active = Configuration.enableRoofs;
-        Widget.interfaceCache[ORBS].active = Configuration.enableOrbs;
-        Widget.interfaceCache[SPEC_ORB].active = Configuration.enableSpecOrb;
+        Widget.interfaceCache[TRANSPARENT_SIDE_PANEL].active = Client.preferences.getTransparentTabArea();
+        Widget.interfaceCache[TRANSPARENT_CHATBOX].active = Client.preferences.getChangeChatArea();
+        Widget.interfaceCache[SIDE_STONES_ARRANGEMENT].active = Client.preferences.getStackSideStones();
+        Widget.interfaceCache[ROOF_REMOVAL].active = Client.preferences.getEnableRoofs();
+        Widget.interfaceCache[ORBS].active = Client.preferences.getEnableOrbs();
+        Widget.interfaceCache[SPEC_ORB].active = Client.preferences.getEnableSpecOrb();
 
 
-        Widget.interfaceCache[COMBAT_OVERLAY].active = Configuration.combatOverlayBox;
-        Widget.interfaceCache[BUFF_OVERLAY].active = Configuration.enableBuffOverlay;
-        Widget.interfaceCache[GROUND_ITEM_NAMES].active = Configuration.enableGroundItemNames;
-        Widget.interfaceCache[FOG].active = Configuration.enableFog;
+        Widget.interfaceCache[COMBAT_OVERLAY].active = Client.preferences.getCombatOverlayBox();
+        Widget.interfaceCache[BUFF_OVERLAY].active = Client.preferences.getEnableBuffOverlay();
+        Widget.interfaceCache[GROUND_ITEM_NAMES].active = Client.preferences.getEnableGroundItemNames();
+        Widget.interfaceCache[FOG].active = false;
 
         Widget.interfaceCache[TIMERS].active = false;
-        Widget.interfaceCache[SKILL_ORBS].active = Configuration.enableSkillOrbs;
-        Widget.interfaceCache[TOOLTIP_HOVERS].active = Configuration.enableTooltipHovers;
+        Widget.interfaceCache[SKILL_ORBS].active = Client.preferences.getEnableSkillOrbs();
+        Widget.interfaceCache[TOOLTIP_HOVERS].active = Client.preferences.getEnableTooltipHovers();
     }
 
 }

@@ -46,21 +46,6 @@ public final class Configuration {
     public static boolean clientData = false;
 
     /**
-     * Enables the use of music played through the client
-     */
-    public static boolean enableMusic = true;
-
-    /**
-     * Toggles the ability for a player to see roofs in-game
-     */
-    public static boolean enableRoofs = false;
-
-    /**
-     * Displays a hover menu tooltip over mouse
-     */
-    public static boolean enableTooltipHovers = false;
-
-    /**
      * Used to repack indexes Index 1 = Models Index 2 = Animations Index 3 =
      * Sounds/Music Index 4 = Maps
      */
@@ -76,17 +61,7 @@ public final class Configuration {
      * Enables exp counter
      */
     public static boolean expCounterOpen = true;
-    public static boolean mergeExpDrops = true;
 
-    /**
-     * Enables fog effects
-     */
-    public static boolean enableFog = true;
-
-    /**
-     * Does the escape key close current interface?
-     */
-    public static boolean escapeCloseInterface = false;
 
     /**
      * Enables/Disables Revision 554 hitmarks
@@ -96,22 +71,13 @@ public final class Configuration {
      * Enables the use of run energy
      */
     public static boolean runEnergy = false;
-    /**
-     * Displays health above entities heads
-     */
-    public static boolean hpAboveHeads = false;
+
     /**
      * Displays names above entities
      */
     public static boolean namesAboveHeads = false;
-    /**
-     * Displays orbs on HUD
-     */
-    public static boolean enableOrbs = true;
-    /**
-     * Displays spec orb on HUD
-     */
-    public static boolean enableSpecOrb = true;
+
+
     /**
      * Enables/Disables Revision 554 health bar
      */
@@ -120,41 +86,10 @@ public final class Configuration {
      * Enables the HUD to display 10 X the amount of hitpoints
      */
     public static boolean tenXHp = false;
-    /**
-     * Attack option priorities
-     * 0 -> Depends on combat level
-     * 1 -> Always right-click
-     * 2 -> Left-click where available
-     * 3 -> Hidden
-     */
-    public static int playerAttackOptionPriority = 0;
-    public static int npcAttackOptionPriority = 2;
-    /**
-     * Is the combat overlay box enabled?
-     */
-    public static boolean combatOverlayBox = true;
+
     /**
      * Enables bounty hunter interface
      */
     public static boolean bountyHunterInterface = true;
-    /**
-     * Enables names above ground items
-     */
-    public static boolean enableGroundItemNames = true;
-    /**
-     * Enables one-click dropping of items while holding shift
-     */
-    public static boolean enableShiftClickDrop = true;
-    /**
-     * Enables skill orbs
-     */
-    public static boolean enableSkillOrbs = false;
-    /**
-     * Enables buff overlay
-     */
-    public static boolean enableBuffOverlay = true;
 
-    private Configuration() {
-
-    }
 }

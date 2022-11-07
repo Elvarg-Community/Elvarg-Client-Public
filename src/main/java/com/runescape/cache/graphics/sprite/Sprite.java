@@ -11,7 +11,10 @@ import java.awt.image.ImageFilter;
 import java.awt.image.ImageProducer;
 import java.awt.image.PixelGrabber;
 import java.awt.image.RGBImageFilter;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 
+import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
 import com.runescape.Client;
@@ -47,6 +50,27 @@ public final class Sprite extends Rasterizer2D implements RSSpritePixels {
 
         Color color = Color.MAGENTA;
         setTransparency (color.getRed(), color.getGreen(), color.getBlue());
+    }
+
+    public Sprite(byte[] data, int file) {
+        try {
+
+            InputStream is = new ByteArrayInputStream(data);
+            BufferedImage image = ImageIO.read(is);
+
+            myWidth = image.getWidth();
+            myHeight = image.getHeight();
+            maxWidth = myWidth;
+            maxHeight = myHeight;
+            drawOffsetX = 0;
+            drawOffsetY = 0;
+            myPixels = new int[myWidth * myHeight];
+            PixelGrabber pixelgrabber = new PixelGrabber(image, 0, 0, myWidth, myHeight, myPixels, 0, myWidth);
+            pixelgrabber.grabPixels();
+        } catch(Exception _ex) {
+            System.out.println("Could not load Image: " + file);
+            _ex.printStackTrace();
+        }
     }
 
     public Sprite(int i, int j) {

@@ -63,7 +63,7 @@ public final class KeyHandler implements KeyListener, FocusListener, RSKeyHandle
             return;
         }
 
-        if (i == KeyEvent.VK_ESCAPE && Configuration.escapeCloseInterface) {
+        if (i == KeyEvent.VK_ESCAPE && Client.preferences.getEscapeCloseInterface()) {
             if (Client.loggedIn && Client.openInterfaceId != -1) {
                 Client.instance. packetSender.sendInterfaceClear();
                 return;

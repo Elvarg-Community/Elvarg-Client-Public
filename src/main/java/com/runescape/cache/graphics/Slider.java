@@ -1,6 +1,7 @@
 package com.runescape.cache.graphics;
 
 import com.runescape.Client;
+import com.runescape.UserPreferences;
 import com.runescape.cache.graphics.sprite.Sprite;
 import com.runescape.cache.graphics.widget.Widget;
 import com.runescape.draw.Rasterizer3D;
@@ -104,7 +105,7 @@ public class Slider {
                 Client.cameraZoom = (int) (minValue + maxValue - value);
                 break;
             case BRIGHTNESS:
-                Client.brightnessState = minValue + maxValue - value;
+                Client.preferences.setBrightnessState(minValue + maxValue - value);
                 Rasterizer3D.setBrightness(minValue + maxValue - value);
                 break;
             case MUSIC:
@@ -113,7 +114,7 @@ public class Slider {
             case SOUND:
                 break;
         }
-        Client.instance.savePlayerData();
+        UserPreferences.INSTANCE.save();
     }
 
     public double getPercentage() {

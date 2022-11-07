@@ -1,5 +1,6 @@
 package com.runescape.cache.graphics;
 
+import com.runescape.Client;
 import com.runescape.Configuration;
 import com.runescape.cache.graphics.widget.Widget;
 import com.runescape.model.content.Keybinding;
@@ -25,14 +26,14 @@ public enum Dropdown {
     PLAYER_ATTACK_OPTION_PRIORITY() {
         @Override
         public void selectOption(int selected, Widget r) {
-            Configuration.playerAttackOptionPriority = selected;
+            Client.preferences.setPlayerAttackOptionPriority(selected);
         }
     },
 
     NPC_ATTACK_OPTION_PRIORITY() {
         @Override
         public void selectOption(int selected, Widget r) {
-            Configuration.npcAttackOptionPriority = selected;
+            Client.preferences.setNpcAttackOptionPriority(selected);
         }
     };
 

@@ -40,6 +40,7 @@ import com.runescape.entity.model.Model;
 import com.runescape.io.Buffer;
 import com.runescape.io.PacketConstants;
 import com.runescape.io.PacketSender;
+import com.runescape.loginscreen.LoginScreen;
 import com.runescape.model.ChatCrown;
 import com.runescape.model.ChatMessage;
 import com.runescape.model.EffectTimer;
@@ -103,6 +104,13 @@ import static com.runescape.scene.SceneGraph.pitchRelaxEnabled;
 @Slf4j
 public class Client extends GameEngine implements RSClient {
 
+    /**
+     *  [preferences] Data for settings
+     */
+    public static PreferencesData preferences = new PreferencesData();
+
+    public static LoginScreen loginScreen;
+
     public final void init() {
         System.out.println("Init");
         nodeID = 10;
@@ -113,8 +121,10 @@ public class Client extends GameEngine implements RSClient {
         }
         frameMode(false);
         instance = this;
+        loginScreen = new LoginScreen(instance);
         startThread(765, 503, 206, 1);
         setMaxCanvasSize(765, 503);
+        UserPreferences.INSTANCE.load(this);
     }
 
     @Override
@@ -218,11 +228,9 @@ public class Client extends GameEngine implements RSClient {
     public static final SpriteCache spriteCache = new SpriteCache();
 
     public static int cameraZoom = 600;
-    public static double brightnessState = 0.8;
+
     public static boolean showChatComponents = true;
     public static boolean showTabComponents = true;
-    public static boolean changeChatArea = false;
-    public static boolean stackSideStones = false;
     public static boolean transparentTabArea = false;
     public static Client instance;
     public static int openInterfaceId;
@@ -804,7 +812,7 @@ public class Client extends GameEngine implements RSClient {
         lastKnownPlane = -1;
         hitMarks = new Sprite[20];
         characterDesignColours = new int[5];
-        indices = new FileStore[5];
+        indices = new FileStore[6];
         aBoolean994 = false;
         amountOrNameInput = "";
         projectiles = new Deque();
@@ -1204,131 +1212,6 @@ public class Client extends GameEngine implements RSClient {
         return crc == expectedCrc;
     }
 
-    public void savePlayerData() {
-        try {
-            File file = new File(SignLink.findcachedir() + "/settings.dat");
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-            DataOutputStream stream = new DataOutputStream(new FileOutputStream(file));
-            if (stream != null) {
-                stream.writeBoolean(rememberUsername);
-                stream.writeUTF(rememberUsername ? myUsername : "");
-
-                stream.writeBoolean(rememberPassword);
-                stream.writeUTF(rememberPassword ? myPassword : "");
-
-				/* Settings */
-                stream.writeBoolean(true); // Accept aid
-                stream.writeBoolean(settings[152] == 1); // Run
-                stream.writeBoolean(true); // Chat effects
-                stream.writeBoolean(true); // Split private chat
-                stream.writeBoolean(true); // Mouse buttons
-                stream.writeBoolean(Configuration.enableShiftClickDrop);
-                stream.writeByte(Configuration.playerAttackOptionPriority);
-                stream.writeByte(Configuration.npcAttackOptionPriority);
-
-				/* Advanced settings*/
-                stream.writeBoolean(transparentTabArea);
-                stream.writeBoolean(changeChatArea);
-                stream.writeBoolean(stackSideStones); // Side stones arrangement
-                stream.writeBoolean(Configuration.enableRoofs);
-                stream.writeBoolean(Configuration.enableOrbs);
-                stream.writeBoolean(Configuration.enableSpecOrb);
-
-                stream.writeBoolean(Configuration.combatOverlayBox);
-                stream.writeBoolean(Configuration.enableBuffOverlay);
-                stream.writeBoolean(Configuration.enableGroundItemNames);
-                stream.writeBoolean(Configuration.enableFog);
-
-                stream.writeBoolean(false); // Timers
-                stream.writeBoolean(Configuration.enableSkillOrbs);
-                stream.writeBoolean(Configuration.enableTooltipHovers);
-
-                stream.writeBoolean(Configuration.escapeCloseInterface);
-                stream.writeBoolean(Configuration.mergeExpDrops);
-                stream.writeBoolean(Configuration.hpAboveHeads);
-
-                stream.writeDouble(brightnessState);
-
-				/*for(int i = 0; i < 14; i++) {
-                    stream.writeByte(Keybinding.KEYBINDINGS[i]);
-				}*/
-
-                stream.writeBoolean(Configuration.enableMusic);
-                stream.close();
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void loadPlayerData() throws IOException {
-        File file = new File(SignLink.findcachedir() + "/settings.dat");
-        if (!file.exists()) {
-            return;
-        }
-
-        DataInputStream stream = new DataInputStream(new FileInputStream(file));
-
-        try {
-            rememberUsername = stream.readBoolean();
-            myUsername = stream.readUTF();
-            if (rememberUsername && myUsername.length() > 0) {
-                loginScreenCursorPos = 1;
-            }
-
-            rememberPassword = stream.readBoolean();
-            myPassword = stream.readUTF();
-
-			/* Settings */
-            stream.readBoolean(); // Accept aid
-            settings[152] = stream.readBoolean() ? 1 : 0;
-            stream.readBoolean(); // Chat effects
-            stream.readBoolean(); // Split private chat
-            stream.readBoolean(); // Mouse buttons
-            Configuration.enableShiftClickDrop = stream.readBoolean();
-            Configuration.playerAttackOptionPriority = stream.readByte();
-            Configuration.npcAttackOptionPriority = stream.readByte();
-
-			/* Advanced settings */
-            transparentTabArea = stream.readBoolean();
-            changeChatArea = stream.readBoolean();
-            stackSideStones = stream.readBoolean(); // Side stones arrangement
-            Configuration.enableRoofs = stream.readBoolean();
-            Configuration.enableOrbs = stream.readBoolean();
-            Configuration.enableSpecOrb = stream.readBoolean();
-
-            Configuration.combatOverlayBox = stream.readBoolean();
-            Configuration.enableBuffOverlay = stream.readBoolean();
-            Configuration.enableGroundItemNames = stream.readBoolean();
-            Configuration.enableFog = stream.readBoolean();
-
-            stream.readBoolean(); // Timers
-            Configuration.enableSkillOrbs = stream.readBoolean();
-            Configuration.enableTooltipHovers = stream.readBoolean();
-
-            Configuration.escapeCloseInterface = stream.readBoolean();
-            Configuration.mergeExpDrops = stream.readBoolean();
-            Configuration.hpAboveHeads = stream.readBoolean();
-
-            brightnessState = stream.readDouble();
-            Rasterizer3D.setBrightness(brightnessState);
-
-			/*for(int i = 0; i < Keybinding.KEYBINDINGS.length; i++) {
-                Keybinding.KEYBINDINGS[i] = stream.readByte();
-			}*/
-
-            Configuration.enableMusic = stream.readBoolean();
-        } catch (IOException e) {
-            System.out.println("Unable to load player data.");
-            file.delete();
-        } finally {
-            stream.close();
-        }
-    }
-
     public void addEffectTimer(EffectTimer et) {
 
         // Check if exists.. If so, update delay.
@@ -1376,7 +1259,7 @@ public class Client extends GameEngine implements RSClient {
     }
 
     public boolean shouldDrawCombatBox() {
-        if (!Configuration.combatOverlayBox) {
+        if (!preferences.getCombatOverlayBox()) {
             return false;
         }
         return currentInteract != null && !combatBoxTimer.finished();
@@ -1537,7 +1420,7 @@ public class Client extends GameEngine implements RSClient {
             if (xp_added[i][0] > -1)
                 lowest_y_off = Math.min(lowest_y_off, xp_added[i][2]);
 
-        if (Configuration.mergeExpDrops && lowest_y_off != Integer.MAX_VALUE && lowest_y_off <= 0) {
+        if (preferences.getMergeExpDrops() && lowest_y_off != Integer.MAX_VALUE && lowest_y_off <= 0) {
             for (int i = 0; i < xp_added.length; i++) {
                 if (xp_added[i][2] != lowest_y_off)
                     continue;
@@ -1588,7 +1471,7 @@ public class Client extends GameEngine implements RSClient {
             return false;
         }
         if (showChatComponents) {
-            if (changeChatArea && isResized()) {
+            if (preferences.getChangeChatArea() && isResized()) {
                 if (chatStateCheck() && MouseHandler.mouseX > 0 && MouseHandler.mouseX < 494
                         && MouseHandler.mouseY > canvasHeight - 175
                         && MouseHandler.mouseY < canvasHeight) {
@@ -1604,7 +1487,7 @@ public class Client extends GameEngine implements RSClient {
                         return false;
                     }
                 }
-            } else if (!changeChatArea) {
+            } else if (!preferences.getChangeChatArea()) {
                 if (MouseHandler.mouseX > 0 && MouseHandler.mouseX < 519
                         && MouseHandler.mouseY > canvasHeight - 175
                         && MouseHandler.mouseY < canvasHeight) {
@@ -1615,7 +1498,7 @@ public class Client extends GameEngine implements RSClient {
         if (mouseInRegion(canvasWidth - 216, canvasWidth, 0, 172)) {
             return false;
         }
-        if (!stackSideStones) {
+        if (!preferences.getStackSideStones()) {
             if (MouseHandler.mouseX > 0 && MouseHandler.mouseY > 0 && MouseHandler.mouseY < canvasWidth
                     && MouseHandler.mouseY < canvasHeight) {
                 if (MouseHandler.mouseX >= canvasWidth - 242 && MouseHandler.mouseY >= canvasHeight - 335) {
@@ -1804,7 +1687,7 @@ public class Client extends GameEngine implements RSClient {
             spriteCache.draw(20, 0, yOffset);
         }
         if (showChatComponents) {
-            if ((changeChatArea && isResized()) && !chatStateCheck()) {
+            if ((preferences.getChangeChatArea() && isResized()) && !chatStateCheck()) {
                 Rasterizer2D.drawHorizontalLine(7, 7 + yOffset, 506, 0x575757);
                 Rasterizer2D.drawTransparentGradientBox(7, 7 + yOffset, 510, 130, 0x00000000, 0x5A000000,20);
             } else {
@@ -1846,7 +1729,7 @@ public class Client extends GameEngine implements RSClient {
         } else if (showChatComponents) {
             int j77 = -3;
             int j = 0;
-            int shadow = (changeChatArea && isResized()) ? 0 : -1;
+            int shadow = (preferences.getChangeChatArea() && isResized()) ? 0 : -1;
             Rasterizer2D.setDrawingArea(122 + yOffset, 8, 497, 7 + yOffset);
             for (int k = 0; k < 500; k++) {
                 if (chatMessages[k] != null) {
@@ -1861,7 +1744,7 @@ public class Client extends GameEngine implements RSClient {
                     if (type == 0) {
                         if (chatTypeView == 5 || chatTypeView == 0) {
                             newRegularFont.drawBasicString(message, 11,
-                                    yPos + yOffset, (changeChatArea && isResized()) ? 0xFFFFFF : 0, shadow);
+                                    yPos + yOffset, (preferences.getChangeChatArea() && isResized()) ? 0xFFFFFF : 0, shadow);
                             j++;
                             j77++;
                         }
@@ -1881,11 +1764,11 @@ public class Client extends GameEngine implements RSClient {
 							}
 
                             newRegularFont.drawBasicString(name + ":", xPos,
-                                    yPos + yOffset, (changeChatArea && isResized()) ? 0xFFFFFF : 0, shadow);
+                                    yPos + yOffset, (preferences.getChangeChatArea() && isResized()) ? 0xFFFFFF : 0, shadow);
                             xPos += font.getTextWidth(name) + 8;
                             newRegularFont.drawBasicString(message, xPos,
                                     yPos + yOffset,
-                                    (changeChatArea && isResized()) ? 0x7FA9FF : 255, shadow);
+                                    (preferences.getChangeChatArea() && isResized()) ? 0x7FA9FF : 255, shadow);
                             j++;
                             j77++;
                         }
@@ -1898,7 +1781,7 @@ public class Client extends GameEngine implements RSClient {
                         if (chatTypeView == 2 || chatTypeView == 0) {
                             int k1 = 11;
                             newRegularFont.drawBasicString("From", k1, yPos + yOffset,
-                                    (changeChatArea && isResized()) ? 0xFFFFFF : 0, shadow);
+                                    (preferences.getChangeChatArea() && isResized()) ? 0xFFFFFF : 0, shadow);
                             k1 += font.getTextWidth("From ");
 
                             for (ChatCrown c : crowns) {
@@ -1910,7 +1793,7 @@ public class Client extends GameEngine implements RSClient {
 							}
 
                             newRegularFont.drawBasicString(name + ":", k1,
-                                    yPos + yOffset, (changeChatArea && isResized()) ? 0xFFFFFF : 0, shadow);
+                                    yPos + yOffset, (preferences.getChangeChatArea() && isResized()) ? 0xFFFFFF : 0, shadow);
                             k1 += font.getTextWidth(name) + 8;
                             newRegularFont.drawBasicString(message, k1,
                                     yPos + yOffset, 0x800000, shadow);
@@ -1939,7 +1822,7 @@ public class Client extends GameEngine implements RSClient {
                             && privateChatMode < 2) {
                         if (chatTypeView == 2 || chatTypeView == 0) {
                             newRegularFont.drawBasicString("To " + name + ":", 11,
-                                    yPos + yOffset, (changeChatArea && isResized()) ? 0xFFFFFF : 0,
+                                    yPos + yOffset, (preferences.getChangeChatArea() && isResized()) ? 0xFFFFFF : 0,
                                     shadow);
                             newRegularFont.drawBasicString(message,
                                     15 + font.getTextWidth("To :" + name),
@@ -1975,7 +1858,7 @@ public class Client extends GameEngine implements RSClient {
                         if (chatTypeView == 11 || chatTypeView == 0) {
 
 							newRegularFont.drawBasicString(message, 10, yPos + yOffset,
-									changeChatArea ? 0x7FA9FF : 255, shadow);
+									preferences.getChangeChatArea() ? 0x7FA9FF : 255, shadow);
 
                             j++;
                             j77++;
@@ -1996,7 +1879,7 @@ public class Client extends GameEngine implements RSClient {
             if (anInt1211 < 111) {
                 anInt1211 = 111;
             }
-            drawScrollbar(114, anInt1211 - anInt1089 - 113, 7 + yOffset, 496, anInt1211, (changeChatArea && isResized()));
+            drawScrollbar(114, anInt1211 - anInt1089 - 113, 7 + yOffset, 496, anInt1211, (preferences.getChangeChatArea() && isResized()));
             String s;
             if (localPlayer != null && localPlayer.name != null) {
                 s = localPlayer.name;
@@ -2015,11 +1898,11 @@ public class Client extends GameEngine implements RSClient {
 			}
 			
             newRegularFont.drawBasicString(s + ":", xOffset, 133 + yOffset,
-                    (changeChatArea && isResized()) ? 0xFFFFFF : 0, shadow);
+                    (preferences.getChangeChatArea() && isResized()) ? 0xFFFFFF : 0, shadow);
             newRegularFont.drawBasicString(inputString + "*",
                     xOffset + font.getTextWidth(s + ": "), 133 + yOffset,
-                    (changeChatArea && isResized()) ? 0x7FA9FF : 255, shadow);
-            Rasterizer2D.drawHorizontalLine(7, 121 + yOffset, 506, (changeChatArea && isResized()) ? 0x575757 : 0x807660);
+                    (preferences.getChangeChatArea() && isResized()) ? 0x7FA9FF : 255, shadow);
+            Rasterizer2D.drawHorizontalLine(7, 121 + yOffset, 506, (preferences.getChangeChatArea() && isResized()) ? 0x575757 : 0x807660);
             rasterProvider.setRaster();
         }
 
@@ -2820,7 +2703,7 @@ public class Client extends GameEngine implements RSClient {
                                             secondMenuAction[menuActionRow] = childInterface.id;
                                             menuActionRow++;
 
-                                            if (Configuration.enableShiftClickDrop && !hasDestroyOption && !menuOpen && shiftDown) {
+                                            if (preferences.getEnableShiftClickDrop() && !hasDestroyOption && !menuOpen && shiftDown) {
                                                 menuActionsRow("Drop @lre@" + itemDef.name, 1, 847, 2);
                                                 removeShiftDropOnMenuOpen = true;
                                             }
@@ -2841,7 +2724,7 @@ public class Client extends GameEngine implements RSClient {
                                                     menuActionRow++;
                                                 }
                                             }
-                                            if (Configuration.enableShiftClickDrop && !hasDestroyOption && !menuOpen && shiftDown) {
+                                            if (preferences.getEnableShiftClickDrop() && !hasDestroyOption && !menuOpen && shiftDown) {
                                                 menuActionsRow("Drop @lre@" + itemDef.name, 1, 847, 2);
                                                 removeShiftDropOnMenuOpen = true;
                                             }
@@ -3269,19 +3152,19 @@ public class Client extends GameEngine implements RSClient {
     }
 
     public void changeMusicVolume(int newVolume) {
-        boolean wasPlayingMusic = Configuration.enableMusic;
+        boolean wasPlayingMusic = preferences.getEnableMusic();
 
         if (newVolume <= 0) {
-            Configuration.enableMusic = false;
+            preferences.setEnableMusic(false);
         } else {
             // if (SignLink.music != null) {
             //     adjustVolume(wasPlayingMusic, (100 * newVolume));
             // }
-            Configuration.enableMusic = true;
+            preferences.setEnableMusic(true);
         }
 
-        if (Configuration.enableMusic != wasPlayingMusic && !lowMemory) {
-            if (Configuration.enableMusic) {
+        if (preferences.getEnableMusic() != wasPlayingMusic && !lowMemory) {
+            if (preferences.getEnableMusic()) {
                 nextSong = currentSong;
                 fadeMusic = true;
                 //resourceProvider.provide(2, nextSong);
@@ -3306,22 +3189,22 @@ public class Client extends GameEngine implements RSClient {
 
             if (state == 1) {
                 Rasterizer3D.setBrightness(0.9);
-                savePlayerData();
+                UserPreferences.INSTANCE.save();
             }
 
             if (state == 2) {
                 Rasterizer3D.setBrightness(0.8);
-                savePlayerData();
+                UserPreferences.INSTANCE.save();
             }
 
             if (state == 3) {
                 Rasterizer3D.setBrightness(0.7);
-                savePlayerData();
+                UserPreferences.INSTANCE.save();
             }
 
             if (state == 4) {
                 Rasterizer3D.setBrightness(0.6);
-                savePlayerData();
+                UserPreferences.INSTANCE.save();
             }
 
             ItemDefinition.sprites.clear();
@@ -3331,44 +3214,44 @@ public class Client extends GameEngine implements RSClient {
         if (parameter == 3) {
 
 
-            boolean previousPlayingMusic = Configuration.enableMusic;
+            boolean previousPlayingMusic = preferences.getEnableMusic();
 
             if (state == 0) {
 
                 //if (SignLink.music != null) {
-                //    adjustVolume(Configuration.enableMusic, 500);
+                //    adjustVolume(preferences.getEnableMusic(), 500);
                 // }
 
-                Configuration.enableMusic = true;
+                preferences.setEnableMusic(true);
             }
             if (state == 1) {
 
                 //if (SignLink.music != null) {
-                //    adjustVolume(Configuration.enableMusic, 300);
+                //    adjustVolume(preferences.getEnableMusic(), 300);
                 //}
 
-                Configuration.enableMusic = true;
+                preferences.setEnableMusic(true);
             }
             if (state == 2) {
 
                 //if (SignLink.music != null) {
-                //    adjustVolume(Configuration.enableMusic, 100);
+                //    adjustVolume(preferences.getEnableMusic(), 100);
                 //}
 
-                Configuration.enableMusic = true;
+                preferences.setEnableMusic(true);
             }
             if (state == 3) {
 
                 //if (SignLink.music != null) {
-                //    adjustVolume(Configuration.enableMusic, 0);
+                //    adjustVolume(preferences.getEnableMusic(), 0);
                 //}
 
-                Configuration.enableMusic = true;
+                preferences.setEnableMusic(true);
             }
             if (state == 4)
-                Configuration.enableMusic = false;
-            if (Configuration.enableMusic != previousPlayingMusic && !lowMemory) {
-                if (Configuration.enableMusic) {
+                preferences.setEnableMusic(false);
+            if (preferences.getEnableMusic() != previousPlayingMusic && !lowMemory) {
+                if (preferences.getEnableMusic()) {
                     nextSong = currentSong;
                     fadeMusic = true;
                     //resourceProvider.provide(2, nextSong);
@@ -3458,11 +3341,11 @@ public class Client extends GameEngine implements RSClient {
                             if (player.skullIcon < 2) {
                                 skullIcons[player.skullIcon].drawSprite(spriteDrawX - 12 + offset, spriteDrawY - l);
                                 l += 25;
-                                if (Configuration.hpAboveHeads && Configuration.namesAboveHeads) {
+                                if (preferences.getHpAboveHeads() && Configuration.namesAboveHeads) {
                                     text_over_head_offset -= 25;
                                 } else if (Configuration.namesAboveHeads) {
                                     text_over_head_offset -= 23;
-                                } else if (Configuration.hpAboveHeads) {
+                                } else if (preferences.getHpAboveHeads()) {
                                     text_over_head_offset -= 33;
                                 }
                             }
@@ -3470,11 +3353,11 @@ public class Client extends GameEngine implements RSClient {
                                 headIcons[player.headIcon].drawSprite(spriteDrawX - 12 + offset, spriteDrawY - l - 3);
                                 l += 21;
                                 text_over_head_offset -= 5;
-                                if (Configuration.hpAboveHeads && Configuration.namesAboveHeads) {
+                                if (preferences.getHpAboveHeads() && Configuration.namesAboveHeads) {
                                     text_over_head_offset -= 25;
                                 } else if (Configuration.namesAboveHeads) {
                                     text_over_head_offset -= 26;
-                                } else if (Configuration.hpAboveHeads) {
+                                } else if (preferences.getHpAboveHeads()) {
                                     text_over_head_offset -= 33;
                                 }
                             }
@@ -3488,13 +3371,13 @@ public class Client extends GameEngine implements RSClient {
                             headIconsHint[player.hintIcon].drawAdvancedSprite(spriteDrawX - 12 + offset, spriteDrawY - l, 200);
                         }
                     }
-                    if (Configuration.hpAboveHeads && Configuration.namesAboveHeads) {
+                    if (preferences.getHpAboveHeads() && Configuration.namesAboveHeads) {
                         newSmallFont.drawCenteredString(
                                 (new StringBuilder()).append(((Mob) (Mob) obj).currentHealth).append("/")
                                         .append(((Mob) (Mob) obj).maxHealth).toString(),
                                 spriteDrawX + offset, spriteDrawY - 29 + text_over_head_offset, 0xff0000, 0);
                     } // Draws HP above head
-                    else if (Configuration.hpAboveHeads && !Configuration.namesAboveHeads) {
+                    else if (preferences.getHpAboveHeads() && !Configuration.namesAboveHeads) {
                         newSmallFont.drawCenteredString(
                                 (new StringBuilder()).append(((Mob) (Mob) obj).currentHealth).append("/")
                                         .append(((Mob) (Mob) obj).maxHealth).toString(),
@@ -3772,7 +3655,7 @@ public class Client extends GameEngine implements RSClient {
     public void drawSideIcons() {
         final int xOffset = !isResized() ? 516 : canvasWidth - 247;
         final int yOffset = !isResized() ? 168 : canvasHeight - 336;
-        if (!isResized() || isResized() && !stackSideStones) {
+        if (!isResized() || isResized() && !preferences.getStackSideStones()) {
             for (int i = 0; i < sideIconsTab.length; i++) {
                 if (tabInterfaceIDs[sideIconsTab[i]] != -1) {
                     if (sideIconsId[i] != -1) {
@@ -3786,7 +3669,7 @@ public class Client extends GameEngine implements RSClient {
                     }
                 }
             }
-        } else if (stackSideStones && canvasWidth < 1000) {
+        } else if (preferences.getStackSideStones() && canvasWidth < 1000) {
             int[] iconId = {0, 1, 2, 3, 4, 5, 6, -1, 8, 9, 7, 11, 12, 13};
             int[] iconX = {219, 189, 156, 126, 94, 62, 30, 219, 189, 156, 124, 92, 59, 28};
             int[] iconY = {67, 69, 67, 69, 72, 72, 69, 32, 29, 29, 32, 30, 33, 31, 32};
@@ -3802,7 +3685,7 @@ public class Client extends GameEngine implements RSClient {
                     }
                 }
             }
-        } else if (stackSideStones && canvasWidth >= 1000) {
+        } else if (preferences.getStackSideStones() && canvasWidth >= 1000) {
             int[] iconId = {0, 1, 2, 3, 4, 5, 6, -1, 8, 9, 7, 11, 12, 13};
             int[] iconX =
                     {50, 80, 114, 143, 176, 208, 240, 242, 273, 306, 338, 370, 404, 433};
@@ -3832,12 +3715,12 @@ public class Client extends GameEngine implements RSClient {
         final int xOffset = !isResized() ? 516 : canvasWidth - 247;
         final int yOffset = !isResized() ? 168 : canvasHeight - 336;
 
-        if (!isResized() || isResized() && !stackSideStones) {
+        if (!isResized() || isResized() && !preferences.getStackSideStones()) {
             if (tabInterfaceIDs[tabId] != -1 && tabId != 15) {
                 spriteCache.draw(redStonesId[tabId], redStonesX[tabId] + xOffset,
                         redStonesY[tabId] + yOffset);
             }
-        } else if (stackSideStones && canvasWidth < 1000) {
+        } else if (preferences.getStackSideStones() && canvasWidth < 1000) {
             int[] stoneX = {226, 194, 162, 130, 99, 65, 34, 219, 195, 161, 130, 98, 65, 33};
             int[] stoneY = {73, 73, 73, 73, 73, 73, 73, -1, 37, 37, 37, 37, 37, 37, 37};
             if (tabInterfaceIDs[tabId] != -1 && tabId != 10 && showTabComponents) {
@@ -3847,7 +3730,7 @@ public class Client extends GameEngine implements RSClient {
                 spriteCache.draw(39, canvasWidth - stoneX[tabId],
                         canvasHeight - stoneY[tabId]);
             }
-        } else if (stackSideStones && canvasWidth >= 1000) {
+        } else if (preferences.getStackSideStones() && canvasWidth >= 1000) {
             int[] stoneX =
                     {417, 385, 353, 321, 289, 256, 224, 129, 193, 161, 130, 98, 65, 33};
             if (tabInterfaceIDs[tabId] != -1 && tabId != 10 && showTabComponents) {
@@ -3897,7 +3780,7 @@ public class Client extends GameEngine implements RSClient {
 		Rasterizer3D.scanOffsets = anIntArray1181;
 		if (!isResized()) {
 		    spriteCache.draw(21, xOffset, yOffset);
-		} else if (isResized() && !stackSideStones) {
+		} else if (isResized() && !preferences.getStackSideStones()) {
             Rasterizer2D.drawTransparentBox(canvasWidth - 217, canvasHeight - 304, 195, 270, 0x3E3529, transparentTabArea ? 80 : 256);
             spriteCache.draw(47, xOffset, yOffset);
 		} else {
@@ -3929,7 +3812,7 @@ public class Client extends GameEngine implements RSClient {
         if (showTabComponents) {
             int x = !isResized() ? xOffset + 31 : canvasWidth - 215;
             int y = !isResized() ? yOffset + 37 : canvasHeight - 299;
-            if (stackSideStones && isResized()) {
+            if (preferences.getStackSideStones() && isResized()) {
                 x = canvasWidth - 197;
                 y = canvasWidth >= 1000 ? canvasHeight - 303 : canvasHeight - 340;
             }
@@ -4167,7 +4050,7 @@ public class Client extends GameEngine implements RSClient {
         nextSong = -1;
         prevSong = 0;
         frameMode(false);
-        savePlayerData();
+        UserPreferences.INSTANCE.save();
     }
 
     private void changeCharacterGender() {
@@ -4237,9 +4120,10 @@ public class Client extends GameEngine implements RSClient {
 
         drawLoadingText(20, "Starting up");
         if (SignLink.cache_dat != null) {
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 6; i++)
                 indices[i] = new FileStore(SignLink.cache_dat, SignLink.indices[i], i + 1);
         }
+        ImagePacker.INSTANCE.init();
         try {
          //   requestCRCs();
           /*  if (Configuration.JAGCACHED_ENABLED) {
@@ -4428,8 +4312,6 @@ public class Client extends GameEngine implements RSClient {
             SceneObject.clientInstance = this;
             ObjectDefinition.clientInstance = this;
             NpcDefinition.clientInstance = this;
-
-            loadPlayerData();
 
             setGameState(GameState.LOGIN_SCREEN);
             
@@ -5499,7 +5381,7 @@ public class Client extends GameEngine implements RSClient {
     }
 
     public void playSong(int id) {
-        if (id != currentSong && Configuration.enableMusic && !lowMemory && prevSong == 0) {
+        if (id != currentSong && preferences.getEnableMusic() && !lowMemory && prevSong == 0) {
             nextSong = id;
             fadeMusic = true;
             //resourceProvider.provide(2, nextSong);
@@ -5568,7 +5450,7 @@ public class Client extends GameEngine implements RSClient {
             prevSong -= 20;
             if (prevSong < 0)
                 prevSong = 0;
-            if (prevSong == 0 && Configuration.enableMusic && !lowMemory) {
+            if (prevSong == 0 && preferences.getEnableMusic() && !lowMemory) {
                 nextSong = currentSong;
                 fadeMusic = true;
                 //resourceProvider.provide(2, nextSong);
@@ -5718,7 +5600,7 @@ public class Client extends GameEngine implements RSClient {
         }
 
         // custom
-        if (action == 1506 && Configuration.enableOrbs) { // Select quick
+        if (action == 1506 && preferences.getEnableOrbs()) { // Select quick
             // prayers
 			/*  outgoing.writeOpcode(185);
                   outgoing.writeShort(5001);*/
@@ -5727,7 +5609,7 @@ public class Client extends GameEngine implements RSClient {
         }
 
         // custom
-        if (action == 1500 && Configuration.enableOrbs) { // Toggle quick
+        if (action == 1500 && preferences.getEnableOrbs()) { // Toggle quick
             // prayers
             packetSender.sendButtonClick(1500);
             return;
@@ -5754,9 +5636,8 @@ public class Client extends GameEngine implements RSClient {
         }
 
         // custom
-        if (action == 1508 && Configuration.enableOrbs) { // Toggle HP above
-            // heads
-            Configuration.hpAboveHeads = !Configuration.hpAboveHeads;
+        if (action == 1508 && preferences.getEnableOrbs()) { // Toggle HP above
+            preferences.setHpAboveHeads(preferences.getHpAboveHeads());
             return;
         }
 
@@ -5764,7 +5645,7 @@ public class Client extends GameEngine implements RSClient {
             Configuration.expCounterOpen = !Configuration.expCounterOpen;
             return;
         } else if (action == 257) {
-            Configuration.mergeExpDrops = !Configuration.mergeExpDrops;
+            preferences.setMergeExpDrops(preferences.getMergeExpDrops());
             return;
         }
 
@@ -5889,13 +5770,13 @@ public class Client extends GameEngine implements RSClient {
 					Keybinding.restoreDefault();
 					Keybinding.updateInterface();
 					sendMessage("Default keys loaded.", 0, "");
-					savePlayerData();
+                    UserPreferences.INSTANCE.save();
 					break;
 				case Keybinding.ESCAPE_CONFIG:
 					Keybinding.checkDuplicates(13, -1);
-					Configuration.escapeCloseInterface = !Configuration.escapeCloseInterface;
-					Widget.interfaceCache[Keybinding.ESCAPE_CONFIG].active = Configuration.escapeCloseInterface;
-					savePlayerData();
+                    preferences.setEscapeCloseInterface(!preferences.getEscapeCloseInterface());
+					Widget.interfaceCache[Keybinding.ESCAPE_CONFIG].active = preferences.getEscapeCloseInterface();
+					UserPreferences.INSTANCE.save();
 					break;
 
 				/** Faster spec bars toggle **/
@@ -8282,7 +8163,7 @@ public class Client extends GameEngine implements RSClient {
 
     private final void minimapHovers() {
         final boolean fixed = !isResized();
-        final boolean specOrb = Configuration.enableSpecOrb;
+        final boolean specOrb = preferences.getEnableSpecOrb();
 
         hpHover = fixed ? mouseInRegion(520, 569, 47, 72) : mouseInRegion(canvasWidth - 213, canvasWidth - 164, 45, 71);
 
@@ -8304,7 +8185,7 @@ public class Client extends GameEngine implements RSClient {
     private void processTabClick() {
         if (MouseHandler.clickMode3 == 1) {
             if (!isResized()
-                    || isResized() && !stackSideStones) {
+                    || isResized() && !preferences.getStackSideStones()) {
                 int xOffset = !isResized() ? 0 : canvasWidth - 765;
                 int yOffset = !isResized() ? 0 : canvasHeight - 503;
                 for (int i = 0; i < tabClickX.length; i++) {
@@ -8327,7 +8208,7 @@ public class Client extends GameEngine implements RSClient {
                         break;
                     }
                 }
-            } else if (stackSideStones && canvasWidth < 1000) {
+            } else if (preferences.getStackSideStones() && canvasWidth < 1000) {
                 if (MouseHandler.saveClickX >= canvasWidth - 226
                         && MouseHandler.saveClickX <= canvasWidth - 195
                         && MouseHandler.saveClickY >= canvasHeight - 72
@@ -8509,7 +8390,7 @@ public class Client extends GameEngine implements RSClient {
                     tabAreaAltered = true;
 
                 }
-            } else if (stackSideStones && canvasWidth >= 1000) {
+            } else if (preferences.getStackSideStones() && canvasWidth >= 1000) {
                 if (MouseHandler.mouseY >= canvasHeight - 37 && MouseHandler.mouseY <= canvasHeight) {
                     if (MouseHandler.mouseX >= canvasWidth - 417
                             && MouseHandler.mouseX <= canvasWidth - 386) {
@@ -8763,7 +8644,7 @@ public class Client extends GameEngine implements RSClient {
             	int w = 512, h = 334;
 				int x = (canvasWidth / 2) - 256, y = (canvasHeight / 2) - 167;
 				int x2 = (canvasWidth / 2) + 256, y2 = (canvasHeight / 2) + 167;
-				int count = stackSideStones ? 3 : 4;
+				int count = preferences.getStackSideStones() ? 3 : 4;
 				if (isResized()) {
 					for (int i = 0; i < count; i++) {
 						if (x + w > (canvasWidth - 225)) {
@@ -8797,7 +8678,7 @@ public class Client extends GameEngine implements RSClient {
         }
         anInt886 = 0;
         anInt1315 = 0;
-        if (!stackSideStones) {
+        if (!preferences.getStackSideStones()) {
             final int yOffset = !isResized() ? 0 : canvasHeight - 503;
             final int xOffset = !isResized() ? 0 : canvasWidth - 765;
             if (MouseHandler.mouseX > 548 + xOffset && MouseHandler.mouseX < 740 + xOffset
@@ -8812,7 +8693,7 @@ public class Client extends GameEngine implements RSClient {
                             MouseHandler.mouseX, 207 + yOffset, MouseHandler.mouseY, 0);
                 }
             }
-        } else if (stackSideStones && isResized()) {
+        } else if (preferences.getStackSideStones() && isResized()) {
             final int yOffset = canvasWidth >= 1000 ? 37 : 74;
             if (MouseHandler.mouseX > canvasWidth - 197 && MouseHandler.mouseY > canvasHeight - yOffset - 267
                     && MouseHandler.mouseX < canvasWidth - 7
@@ -9641,12 +9522,12 @@ public class Client extends GameEngine implements RSClient {
                     if (entityDef.actions[i1] != null && entityDef.actions[i1].equalsIgnoreCase("attack")) {
 
                         char c = '\0';
-                        if (Configuration.npcAttackOptionPriority == 0) {
+                        if (preferences.getNpcAttackOptionPriority() == 0) {
                             if (entityDef.combatLevel > localPlayer.combatLevel)
                                 c = '\u07D0';
-                        } else if (Configuration.npcAttackOptionPriority == 1) {
+                        } else if (preferences.getNpcAttackOptionPriority() == 1) {
                             c = '\u07D0';
-                        } else if (Configuration.npcAttackOptionPriority == 3) {
+                        } else if (preferences.getNpcAttackOptionPriority() == 3) {
                             continue;
                         }
 
@@ -9721,12 +9602,12 @@ public class Client extends GameEngine implements RSClient {
                     char c = '\0';
                     if (playerOptions[type].equalsIgnoreCase("attack")) {
 
-                        if (Configuration.playerAttackOptionPriority == 0) {
+                        if (preferences.getPlayerAttackOptionPriority() == 0) {
                             if (player.combatLevel > localPlayer.combatLevel)
                                 c = '\u07D0';
-                        } else if (Configuration.playerAttackOptionPriority == 1) {
+                        } else if (preferences.getPlayerAttackOptionPriority() == 1) {
                             c = '\u07D0';
-                        } else if (Configuration.playerAttackOptionPriority == 3) {
+                        } else if (preferences.getPlayerAttackOptionPriority() == 3) {
                             continue;
                         }
 
@@ -11681,7 +11562,7 @@ public class Client extends GameEngine implements RSClient {
 				int w = 512, h = 334;
 				int x = !isResized() ? 0 : (canvasWidth / 2) - 256;
 				int y = !isResized() ? 0 : (canvasHeight / 2) - 167;
-				int count = stackSideStones ? 3 : 4;
+				int count = preferences.getStackSideStones() ? 3 : 4;
 				if (isResized()) {
 					for (int i = 0; i < count; i++) {
 						if (x + w > (canvasWidth - 225)) {
@@ -11732,7 +11613,7 @@ public class Client extends GameEngine implements RSClient {
             int textColour = 0xffff00;
             displayFps();
             regularText.render(textColour, "Client Zoom: " + cameraZoom, 90, 5);
-            regularText.render(textColour, "Brightness: " + brightnessState, 105, 5);
+            regularText.render(textColour, "Brightness: " + preferences.getBrightnessState(), 105, 5);
 
             regularText.render(textColour, "Resize Mouse X: " + (MouseHandler.mouseX - canvasWidth) + " , Resize Mouse Y: " + (MouseHandler.mouseY - canvasHeight), 15, 5);
             regularText.render(textColour, "Mouse X: " + MouseHandler.mouseX + " , Mouse Y: " + MouseHandler.mouseY, 30, 5);
@@ -11774,7 +11655,7 @@ public class Client extends GameEngine implements RSClient {
         int w = 512, h = 334;
 		int x = fixed ? 0 : (canvasWidth / 2) - 256;
 		int y = fixed ? 0 : (canvasHeight / 2) - 167;
-		int count = stackSideStones ? 3 : 4;
+		int count = preferences.getStackSideStones() ? 3 : 4;
 		if (!fixed) {
 			for (int i = 0; i < count; i++) {
 				if (x + w > (canvasWidth - 225)) {
@@ -12076,7 +11957,7 @@ public class Client extends GameEngine implements RSClient {
     }
 
     private int setCameraLocation() {
-        if (!Configuration.enableRoofs)
+        if (!preferences.getEnableRoofs())
             return plane;
         int j = 3;
         if (yCameraCurve < 310) {
@@ -12146,7 +12027,7 @@ public class Client extends GameEngine implements RSClient {
     }
 
     private int resetCameraHeight() {
-        if (!Configuration.enableRoofs)
+        if (!preferences.getEnableRoofs())
             return plane;
         int orientation = getCenterHeight(plane, yCameraPos, xCameraPos);
         if (orientation - zCameraPos < 800
@@ -12343,7 +12224,7 @@ public class Client extends GameEngine implements RSClient {
     
     private void drawHoverMenu(int x, int y) {
 		boolean active = hoverMenuActive;
-		if (Configuration.enableTooltipHovers && menuActionRow > 0 && MouseHandler.mouseX >= 0 && MouseHandler.mouseY >= 0) {
+		if (preferences.getEnableTooltipHovers() && menuActionRow > 0 && MouseHandler.mouseX >= 0 && MouseHandler.mouseY >= 0) {
 			buildHoverMenu(x, y);
 		} else {
 			hoverMenuActive = false;
@@ -12448,7 +12329,7 @@ public class Client extends GameEngine implements RSClient {
                 spriteCache.draw(44, canvasWidth - 181, 0);
                 spriteCache.draw(45, canvasWidth - 158, 7);
             }
-            if (isResized() && stackSideStones) {
+            if (isResized() && preferences.getStackSideStones()) {
                 if (MouseHandler.mouseX >= canvasWidth - 26 && MouseHandler.mouseX <= canvasWidth - 1
                         && MouseHandler.mouseY >= 2 && MouseHandler.mouseY <= 24 || tabId == 15) {
                     spriteCache.draw(27, canvasWidth - 25, 2);
@@ -12576,7 +12457,7 @@ public class Client extends GameEngine implements RSClient {
         compass.rotate(33, cameraHorizontal, anIntArray1057, 256, anIntArray968,
                 (!isResized() ? 25 : 24), 4,
                 (!isResized() ? xOffset + 29 : canvasWidth - 176), 33, 25);
-        if (isResized() && stackSideStones) {
+        if (isResized() && preferences.getStackSideStones()) {
             if (MouseHandler.mouseX >= canvasWidth - 26 && MouseHandler.mouseX <= canvasWidth - 1
                     && MouseHandler.mouseY >= 2 && MouseHandler.mouseY <= 24 || tabId == 10) {
                 spriteCache.draw(27, canvasWidth - 25, 2);
@@ -12591,14 +12472,14 @@ public class Client extends GameEngine implements RSClient {
     private void loadAllOrbs() {
 
         boolean fixed = !isResized();
-        boolean specOrb = Configuration.enableSpecOrb;
+        boolean specOrb = preferences.getEnableSpecOrb();
         int xOffset = fixed ? 516 : canvasWidth - 217;
 
         if (specOrb) {
             loadSpecialOrb(xOffset);
         }
 
-        if (!Configuration.enableOrbs) {
+        if (!preferences.getEnableOrbs()) {
             return;
         }
 
@@ -12897,63 +12778,7 @@ public class Client extends GameEngine implements RSClient {
     private boolean rememberMe = true;
 
     private void drawLoginScreen() {
-
-        //Draw bg
-        spriteCache.lookup(339).drawAdvancedSprite(0, 0);
-
-        //newBoldFont.drawBasicString("MouseX: "+MouseHandler.mouseX+", MouseY: "+MouseHandler.mouseY, 20, 200);
-
-        if(registeringAccount) {
-
-        } else {
-
-            //Hovers
-
-
-            //Draw login box
-            spriteCache.lookup(644).drawAdvancedSprite(0, 0);
-
-            //Draw username text box
-            spriteCache.lookup(usernameInputHover ? 636 : 635).drawAdvancedSprite(270, 215);
-            //Username
-            newBoldFont.drawBasicString(myUsername, 278, 248, 0xD3D3D3);
-            if((loginScreenCursorPos == 0) & (tick % 40 < 20)) {
-                newBoldFont.drawBasicString(myUsername + "|", 278, 248, 0xD3D3D3);
-            }
-
-            //Draw password text box
-            spriteCache.lookup(passwordInputHover ? 636 : 635).drawAdvancedSprite(272, 260);
-            //password
-            String password = StringUtils.passwordAsterisks(myPassword);
-            newBoldFont.drawBasicString(password, 278, 295, 0xD3D3D3);
-            if((loginScreenCursorPos == 1) & (tick % 40 < 20)) {
-                newBoldFont.drawBasicString(password + "|", 278, 295, 0xD3D3D3);
-            }
-
-            //Remember me button
-            if(rememberMe) {
-                spriteCache.lookup(rememberMeHover ? 640 : 641).drawAdvancedSprite(397, 300);
-            } else {
-                spriteCache.lookup(rememberMeHover ? 639 : 642).drawAdvancedSprite(397, 300);
-            }
-
-            //Login button
-            spriteCache.lookup(loginHover ? 637 : 638).drawAdvancedSprite(300, 330);
-
-            //Draw errors
-            int errorY = 380;
-            if(firstLoginMessage.length() > 0) {
-                newFancyFont.drawBasicString(firstLoginMessage, 267, errorY, 0xffff00);
-                errorY += 22;
-            }
-            if(secondLoginMessage.length() > 0) {
-                newFancyFont.drawBasicString(secondLoginMessage, 267, errorY, 0xffff00);
-            }
-        }
-    }
-
-    private void drawFlames() {
-
+        loginScreen.drawLogin();
     }
 
     public void raiseWelcomeScreen() {
@@ -13299,63 +13124,7 @@ public class Client extends GameEngine implements RSClient {
 
 
     private void processLoginScreenInput() {
-        usernameInputHover = mouseInRegion(270, 473, 231, 254);
-        passwordInputHover = mouseInRegion(270, 473, 278, 301);
-        rememberMeHover = newmouseInRegion(397, 310, spriteCache.lookup(639));
-        loginHover = newmouseInRegion(300, 330, spriteCache.lookup(637));
-        if (MouseHandler.clickMode3 == 1) {
-            if(usernameInputHover) {
-                loginScreenCursorPos = 0;
-            } else if(passwordInputHover) {
-                loginScreenCursorPos = 1;
-            } else if(rememberMeHover) {
-                rememberMe = !rememberMe;
-                savePlayerData();
-            } else if(loginHover) {
-                login(myUsername, myPassword, false);
-            }
-        }
-
-        do {
-            int l1 = KeyHandler.instance.readChar();
-            if (l1 == -1)
-                break;
-            boolean flag1 = false;
-            for (int i2 = 0; i2 < validUserPassChars.length(); i2++) {
-                if (l1 != validUserPassChars.charAt(i2))
-                    continue;
-                flag1 = true;
-                break;
-            }
-
-            if (loginScreenCursorPos == 0) {
-                if (l1 == 8 && myUsername.length() > 0)
-                    myUsername = myUsername.substring(0, myUsername.length() - 1);
-                if (l1 == 9 || l1 == 10 || l1 == 13)
-                    loginScreenCursorPos = 1;
-                if (flag1)
-                    myUsername += (char) l1;
-                if (myUsername.length() > 12)
-                    myUsername = myUsername.substring(0, 12);
-                if(myUsername.length() > 0) {
-                    myUsername = StringUtils.formatText(StringUtils.capitalize(myUsername));
-                }
-            } else if (loginScreenCursorPos == 1) {
-                if (l1 == 8 && myPassword.length() > 0)
-                    myPassword = myPassword.substring(0, myPassword.length() - 1);
-                if(l1 == 9) {
-                    loginScreenCursorPos = 0;
-                } else if (l1 == 10 || l1 == 13) {
-                    login(myUsername, myPassword, false);
-                    return;
-                }
-                if (flag1)
-                    myPassword += (char) l1;
-                if (myPassword.length() > 15)
-                    myPassword = myPassword.substring(0, 15);
-            }
-        } while (true);
-        return;
+        loginScreen.handleInput();
     }
 
     private void removeObject(int y, int z, int k, int l, int x, int group, int previousId) {
@@ -13699,7 +13468,7 @@ public class Client extends GameEngine implements RSClient {
             if (opcode == PacketConstants.SEND_EXP_DROP) {
                 int skillId = incoming.readUnsignedByte();
                 int experience = incoming.readInt();
-                if (Configuration.enableSkillOrbs) {
+                if (preferences.getEnableSkillOrbs()) {
                     SkillOrbs.orbs[skillId].receivedExperience();
                 }
                 if (Configuration.expCounterOpen) {
@@ -13957,7 +13726,7 @@ public class Client extends GameEngine implements RSClient {
                 int id = incoming.readLEUShort();
                 if (id == 65535)
                     id = -1;
-                if (id != currentSong && Configuration.enableMusic && !lowMemory && prevSong == 0) {
+                if (id != currentSong && preferences.getEnableMusic() && !lowMemory && prevSong == 0) {
                     nextSong = id;
                     fadeMusic = true;
                     //resourceProvider.provide(2, nextSong);
@@ -13970,7 +13739,7 @@ public class Client extends GameEngine implements RSClient {
             if (opcode == PacketConstants.NEXT_OR_PREVIOUS_SONG) {
                 int id = incoming.readLEUShortA();
                 int delay = incoming.readUShortA();
-                if (Configuration.enableMusic && !lowMemory) {
+                if (preferences.getEnableMusic() && !lowMemory) {
                     nextSong = id;
                     fadeMusic = false;
                     //resourceProvider.provide(2, nextSong);
@@ -15153,7 +14922,7 @@ public class Client extends GameEngine implements RSClient {
         rasterProvider.setRaster();
         scene.clearGameObjectCache();
 
-        if (Configuration.enableGroundItemNames) {
+        if (preferences.getEnableGroundItemNames()) {
             renderGroundItemNames();
         }
         updateEntities();
@@ -15168,7 +14937,7 @@ public class Client extends GameEngine implements RSClient {
             if (shouldDrawCombatBox()) {
                 drawCombatBox();
             }
-            if (Configuration.enableSkillOrbs) {
+            if (preferences.getEnableSkillOrbs()) {
                 SkillOrbs.process();
             }
             if (Configuration.expCounterOpen) {
@@ -15247,38 +15016,38 @@ public class Client extends GameEngine implements RSClient {
             menuActionTypes[1] = 696;
             menuActionRow = 2;
         }
-        if (isResized() && stackSideStones) {
+        if (isResized() && preferences.getStackSideStones()) {
             if (MouseHandler.mouseX >= canvasWidth - 26 && MouseHandler.mouseX <= canvasWidth - 1 && MouseHandler.mouseY >= 2 && MouseHandler.mouseY <= 24) {
                 menuActionText[1] = "Logout";
                 menuActionTypes[1] = 700;
                 menuActionRow = 2;
             }
         }
-        if (worldHover && Configuration.enableOrbs) {
+        if (worldHover && preferences.getEnableOrbs()) {
             menuActionText[1] = "Floating @lre@World Map";
             menuActionTypes[1] = 850;
             menuActionRow = 2;
         }
-        if (specialHover && Configuration.enableSpecOrb) {
+        if (specialHover && preferences.getEnableSpecOrb()) {
             menuActionText[1] = "Use @gre@Special Attack";
             menuActionTypes[1] = 851;
             menuActionRow = 2;
         }
-        if (hpHover && Configuration.enableOrbs) {
-            menuActionText[1] = (Configuration.hpAboveHeads ? "Deactivate" : "Activate") + " Health HUD";
+        if (hpHover && preferences.getEnableOrbs()) {
+            menuActionText[1] = (preferences.getHpAboveHeads() ? "Deactivate" : "Activate") + " Health HUD";
             menuActionTypes[1] = 1508;
             menuActionRow = 2;
         }
         if (expCounterHover) {
             menuActionText[3] = (Configuration.expCounterOpen ? "Hide" : "Show") + " @lre@Exp counter";
             menuActionTypes[3] = 258;
-            menuActionText[2] = (Configuration.mergeExpDrops ? "Unmerge" : "Merge") + " @lre@Exp Drops";
+            menuActionText[2] = (preferences.getMergeExpDrops() ? "Unmerge" : "Merge") + " @lre@Exp Drops";
             menuActionTypes[2] = 257;
             menuActionText[1] = "Toggle @lre@XP Lock";
             menuActionTypes[1] = 476;
             menuActionRow = 4;
         }
-        if (prayHover && Configuration.enableOrbs) {
+        if (prayHover && preferences.getEnableOrbs()) {
             menuActionText[2] = (prayClicked ? "Deactivate" : "Activate") + " Quick-prayers";
             menuActionTypes[2] = 1500;
             menuActionRow = 2;
@@ -15286,7 +15055,7 @@ public class Client extends GameEngine implements RSClient {
             menuActionTypes[1] = 1506;
             menuActionRow = 3;
         }
-        if (runHover && Configuration.enableOrbs) {
+        if (runHover && preferences.getEnableOrbs()) {
             menuActionText[1] = "Toggle Run";
             menuActionTypes[1] = 1050;
             menuActionRow = 2;
@@ -15543,7 +15312,7 @@ public class Client extends GameEngine implements RSClient {
         newSmallFont.drawCenteredString("(" + (x + 4) + ", " + (y + 4) + ")", x + 4, y - 1, 0xffff00, 0);
     }
     
-    private void processOnDemandQueue() {
+    public void processOnDemandQueue() {
         do {
             Resource resource;
             do {
@@ -15577,6 +15346,11 @@ public class Client extends GameEngine implements RSClient {
                         break;
                     }
 
+                }
+                if(resource.dataType == 4) {
+                    if (resource.buffer != null) {
+                        ImageCache.setImage(new Sprite(resource.buffer,resource.ID), resource.ID);
+                    }
                 }
             } while (resource.dataType != 93
                     || !resourceProvider.landscapePresent(resource.ID));
@@ -17232,7 +17006,7 @@ public class Client extends GameEngine implements RSClient {
 
     @Override
     public RSClientPreferences getPreferences() {
-        return null;
+        return preferences;
     }
 
     @Override
