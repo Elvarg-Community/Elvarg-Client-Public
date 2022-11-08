@@ -2217,4 +2217,20 @@ public final class Rasterizer3D extends Rasterizer2D {
             COSINE[k] = (int) (65536D * Math.cos((double) k * 0.0030679614999999999D));
         }
     }
+
+    public static final int method4025(int var0, int var1, int var2, int var3) {
+        return var0 * var2 - var3 * var1 >> 16; // L: 2666
+    }
+
+    public static final int method4044(int var0, int var1, int var2, int var3) {
+        return var3 * var0 + var2 * var1 >> 16; // L: 2670
+    }
+
+    public static final int method4045(int var0, int var1, int var2, int var3) {
+        return var0 * var2 + var3 * var1 >> 16; // L: 2674
+    }
+
+    public static final int method4046(int var0, int var1, int var2, int var3) {
+        return var2 * var1 - var3 * var0 >> 16; // L: 2678
+    }
 }

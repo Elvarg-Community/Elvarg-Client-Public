@@ -70,9 +70,9 @@ public final class Npc extends Mob implements RSNPC {
                 int frame = spotAnim.animationSequence.primaryFrames[super.currentAnimation];
                 Model model = new Model(true, Frame.noAnimationInProgress(frame),
                         false, graphicModel);
-                model.scaleT(0, -super.graphicHeight, 0);
+                model.offsetBy(0, -super.graphicHeight, 0);
                 model.generateBones();
-                model.applyTransform(frame);
+                model.animate(frame);
                 model.faceGroups = null;
                 model.vertexGroups = null;
                 if (spotAnim.resizeXY != 128 || spotAnim.resizeZ != 128)

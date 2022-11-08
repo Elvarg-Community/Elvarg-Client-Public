@@ -374,9 +374,9 @@ public final class NpcDefinition implements RSNPCComposition {
 		Model empty = Model.emptyModel;
 		empty.replaceModel(model, Frame.noAnimationInProgress(frame) & Frame.noAnimationInProgress(j));
 		if (frame != -1 && j != -1)
-			empty.mix(ai, j, frame);
+			empty.animate2(ai, j, frame);
 		else if (frame != -1)
-			empty.applyTransform(frame);
+			empty.animate(frame);
 		if (widthScale != 128 || heightScale != 128)
 			empty.scale(widthScale, widthScale, heightScale);
 		empty.calculateDiagonals();
@@ -425,9 +425,9 @@ public final class NpcDefinition implements RSNPCComposition {
 		model_1.replaceModel(model,
 				Frame.noAnimationInProgress(secondaryFrame) & Frame.noAnimationInProgress(primaryFrame));
 		if (secondaryFrame != -1 && primaryFrame != -1)
-			model_1.mix(interleaveOrder, primaryFrame, secondaryFrame);
+			model_1.animate2(interleaveOrder, primaryFrame, secondaryFrame);
 		else if (secondaryFrame != -1)
-			model_1.applyTransform(secondaryFrame);
+			model_1.animate(secondaryFrame);
 		if (widthScale != 128 || heightScale != 128)
 			model_1.scale(widthScale, widthScale, heightScale);
 		model_1.calculateDiagonals();
