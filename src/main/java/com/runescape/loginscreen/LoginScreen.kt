@@ -24,7 +24,7 @@ class LoginScreen(val client : Client) {
     var opacity = 0
     private var backgroundSprite = LoginBackground.NORMAL.spriteID
 
-    val eulaText = listOf(
+    private val eulaText = listOf(
         "Before using this app, please read and accept our",
         "@gol@terms of use@whi@, @gol@privacy policy@whi@, and @gol@end user licence",
         "@gol@agreement (EULA)@whi@.",
@@ -113,6 +113,7 @@ class LoginScreen(val client : Client) {
 
             }
             LoginState.WORLD_SELECT -> WorldManager.renderWorldSelect()
+            else -> {}
         }
 
     }
@@ -145,6 +146,7 @@ class LoginScreen(val client : Client) {
                     if(client.newclickInRegion(buttonX,loginBoxY + 131,ImageCache.get(2))) {
                         when(it) {
                             0 -> client.login(client.myUsername,client.myPassword, false)
+                            1 -> exitProcess(0)
                         }
                     }
                 }
@@ -169,7 +171,7 @@ class LoginScreen(val client : Client) {
                     Client.preferences.rememberUsername = !Client.preferences.rememberUsername
                 }
 
-                if(client.newclickInRegion(loginBoxX + 204,loginBoxX + 107,ImageCache.get(21))) {
+                if(client.newclickInRegion(loginBoxX + 204,loginBoxY + 107,ImageCache.get(21))) {
                     Client.preferences.hiddenUsername = !Client.preferences.hiddenUsername
                 }
 
@@ -206,6 +208,8 @@ class LoginScreen(val client : Client) {
                 } while (true)
                 return
             }
+
+            else -> {}
         }
     }
 
@@ -231,6 +235,7 @@ class LoginScreen(val client : Client) {
                 if (increment > 0) {
                     val percentile: Long = backgroundStopWatch!!.time / increment
                     opacity = (percentile * (Byte.MAX_VALUE / 100) * 2).toInt()
+
                     if (percentile > -1 && percentile <= 100) {
                         if (percentile == 100L) {
                             backgroundSprite = backgroundSprite()
@@ -247,7 +252,6 @@ class LoginScreen(val client : Client) {
 
     private fun flash(state: Int): String = if ((client.loginScreenCursorPos == state) and (Client.tick % 40 < 20)) "@yel@|" else ""
 
-    private val validUserPinChars = "1234567890"
     private val validUserPassChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!\"\u00a3$%^&*()-_=+[{]};:'@#~,<.>/?\\| "
 
 }

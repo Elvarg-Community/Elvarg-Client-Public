@@ -784,6 +784,14 @@ public class RSFont extends Rasterizer2D {
         }
     }
 
+    public void drawCenteredString(String string, int drawX, int drawY, int color) {
+        if (string != null) {
+            textColor = defaultColor = color;
+            string = handleOldSyntax(string);
+            drawBasicString(string, drawX - getTextWidth(string) / 2, drawY);
+        }
+    }
+
     public void drawRightAlignedString(String string, int drawX, int drawY, int color, int shadow) {
         if (string != null) {
             setColorAndShadow(color, shadow);

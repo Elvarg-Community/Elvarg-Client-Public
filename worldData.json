@@ -2,6 +2,7 @@
   {
   "ip": "127.0.0.1",
   "name": "Local",
-  "type": "NORMAL"
+  "type": "NORMAL",
+  "description": "Local Development World"
   }
 ]
