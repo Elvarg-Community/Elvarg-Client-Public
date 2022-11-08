@@ -2150,7 +2150,7 @@ public final class SceneGraph implements RSScene {
                 clickedTileX = x;
                 clickedTileY = y;
             }
-            if (inBounds(MouseHandler.mouseX, MouseHandler.mouseY, j6, l6, l5, i6, k6, k5)) {
+            if (inBounds(MouseHandler.mouseX, MouseHandler.mouseY, j5, l5, l6, i5, k5, k6)) {
                 hoverX = x;
                 hoverY = y;
             }
