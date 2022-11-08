@@ -722,7 +722,7 @@ public class Model extends Renderable implements RSModel {
     private int boundsType;
 
     public void calculateDiagonals() {
-        if (this.boundsType != 1) { // L: 354
+        //if (this.boundsType != 1) { // L: 354
             this.boundsType = 1; // L: 355
             super.modelBaseY = 0;
             diagonal2DAboveOrigin = 0;
@@ -742,7 +742,7 @@ public class Model extends Renderable implements RSModel {
                     diagonal2DAboveOrigin = bounds;
                 }
             }
-        }
+        //}
 
         diagonal2DAboveOrigin = (int)(Math.sqrt(diagonal2DAboveOrigin) + 0.98999999999999999);
         diagonal3DAboveOrigin = (int)(Math.sqrt(diagonal2DAboveOrigin * diagonal2DAboveOrigin + super.modelBaseY * super.modelBaseY) + 0.98999999999999999);
