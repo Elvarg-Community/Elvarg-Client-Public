@@ -67,6 +67,8 @@ public final class Sprite extends Rasterizer2D implements RSSpritePixels {
             myPixels = new int[myWidth * myHeight];
             PixelGrabber pixelgrabber = new PixelGrabber(image, 0, 0, myWidth, myHeight, myPixels, 0, myWidth);
             pixelgrabber.grabPixels();
+            Color color = Color.MAGENTA;
+            setTransparency(color.getRed(), color.getGreen(), color.getBlue());
         } catch(Exception _ex) {
             System.out.println("Could not load Image: " + file);
             _ex.printStackTrace();
@@ -251,14 +253,19 @@ public final class Sprite extends Rasterizer2D implements RSSpritePixels {
         return Toolkit.getDefaultToolkit().createImage(spriteData);
     }
 
+    public void drawHoverSprite(int x, int y, Sprite hover) {
+        drawHoverSprite(x,y,0,0,hover);
+    }
+
     public void drawHoverSprite(int x, int y, int offsetX, int offsetY, Sprite hover) {
         if (this == EMPTY_SPRITE) {
             return;
         }
-        this.drawSprite(x, y);
         if (MouseHandler.mouseX >= offsetX + x && MouseHandler.mouseX <= offsetX + x + this.myWidth
                 && MouseHandler.mouseY >= offsetY + y && MouseHandler.mouseY <= offsetY + y + this.myHeight) {
             hover.drawSprite(x, y);
+        } else {
+            this.drawSprite(x, y);
         }
     }
 

@@ -28,11 +28,15 @@ data class PreferencesData(
     var npcAttackOptionPriority: Int = 2,
     var playerAttackOptionPriority: Int = 0,
     var enableShiftClickDrop: Boolean = true,
+    var eulaAccepted : Boolean = false,
+    var rememberUsername : Boolean = false,
+    var hiddenUsername : Boolean = false,
+    var savedUsername : String = "",
     var loginBackground : LoginBackground = LoginBackground.FADING_BACKGROUNDS
 ) : RSClientPreferences {
 
     override fun getRememberedUsername(): String {
-        TODO("Not yet implemented")
+        return savedUsername;
     }
 
     override fun setRememberedUsername(username: String?) {
@@ -64,7 +68,7 @@ data class PreferencesData(
     }
 
     override fun getHideUsername(): Boolean {
-        TODO("Not yet implemented")
+        return false
     }
 }
 

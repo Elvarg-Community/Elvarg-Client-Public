@@ -299,6 +299,7 @@ public class RSFont extends Rasterizer2D {
         text = handleOldSyntax(text, "@cya@", "<col=65535>");
         text = handleOldSyntax(text, "@mag@", "<col=ff00ff>");
         text = handleOldSyntax(text, "@whi@", "<col=ffffff>");
+        text = handleOldSyntax(text,"@gol@","<col=FFD200>");
         text = handleOldSyntax(text, "@lre@", "<col=ff9040>");
         text = handleOldSyntax(text, "@dre@", "<col=800000>");
         text = handleOldSyntax(text, "@bla@", "<col=0>");

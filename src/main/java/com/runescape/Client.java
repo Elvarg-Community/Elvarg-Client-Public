@@ -41,6 +41,7 @@ import com.runescape.io.Buffer;
 import com.runescape.io.PacketConstants;
 import com.runescape.io.PacketSender;
 import com.runescape.loginscreen.LoginScreen;
+import com.runescape.loginscreen.LoginState;
 import com.runescape.model.ChatCrown;
 import com.runescape.model.ChatMessage;
 import com.runescape.model.EffectTimer;
@@ -112,7 +113,6 @@ public class Client extends GameEngine implements RSClient {
     public static LoginScreen loginScreen;
 
     public final void init() {
-        System.out.println("Init");
         nodeID = 10;
         portOffset = 0;
         isMembers = true;
@@ -587,7 +587,7 @@ public class Client extends GameEngine implements RSClient {
     private int regionBaseY;
     private int previousAbsoluteX;
     private int previousAbsoluteY;
-    private int loginFailures;
+    public int loginFailures;
     private int anInt1039;
     private int anInt1040;
     private int anInt1041;
@@ -662,8 +662,8 @@ public class Client extends GameEngine implements RSClient {
     public PacketSender packetSender;
     private int privateMessageCount;
     private int minimapZoom;
-    private String myUsername;
-    private String myPassword;
+    public String myUsername;
+    public String myPassword;
     private boolean showClanOptions;
     private boolean genericLoadingError;
     private int reportAbuseInterfaceID;
@@ -688,7 +688,7 @@ public class Client extends GameEngine implements RSClient {
     private int anInt1213;
     private int[][][] tileHeights;
     private long serverSeed;
-    private int loginScreenCursorPos;
+    public int loginScreenCursorPos;
     private long aLong1220;
     private int hintIconNpcId;
     public int inputDialogState;
@@ -723,8 +723,8 @@ public class Client extends GameEngine implements RSClient {
     private long lastMarkerRotation;
     private int anInt1264;
     private int anInt1265;
-    private String firstLoginMessage;
-    private String secondLoginMessage;
+    public String firstLoginMessage;
+    public String secondLoginMessage;
     private int localX;
     private int localY;
     public GameFont gameFont;
@@ -998,6 +998,26 @@ public class Client extends GameEngine implements RSClient {
             return j / 1000 + "K";
         else
             return j / 0xf4240 + "M";
+    }
+
+    public boolean clickInRegion(int x1, int y1, Sprite drawnSprite) {
+        return MouseHandler.saveClickX >= x1 && MouseHandler.saveClickX <= x1 + drawnSprite.myWidth && MouseHandler.saveClickY >= y1
+                && MouseHandler.saveClickY <= y1 + drawnSprite.myHeight;
+    }
+
+    public boolean mouseInRegion(int x1, int y1, Sprite drawnSprite) {
+        return MouseHandler.mouseX >= x1 && MouseHandler.mouseX <= x1 + drawnSprite.myWidth && MouseHandler.mouseY >= y1
+                && MouseHandler.mouseY <= y1 + drawnSprite.myHeight;
+    }
+
+    public boolean newclickInRegion(int x1, int y1, Sprite drawnSprite) {
+        return MouseHandler.clickMode3 == 1 && (MouseHandler.saveClickX >= x1 && MouseHandler.saveClickX <= x1 + drawnSprite.myWidth && MouseHandler.saveClickY >= y1
+                && MouseHandler.saveClickY <= y1 + drawnSprite.myHeight);
+    }
+
+    public boolean newclickInRegion(int x1, int y1, int x2, int y2) {
+        return MouseHandler.clickMode3 == 1 && (MouseHandler.saveClickX >= x1 && MouseHandler.saveClickX <= x1 + x2 && MouseHandler.saveClickY >= y1
+                && MouseHandler.saveClickY <= y1 + y2);
     }
 
     private static void setHighMem() {
@@ -4034,7 +4054,8 @@ public class Client extends GameEngine implements RSClient {
         } catch (Exception _ex) {
         }
         setGameState(GameState.LOGIN_SCREEN);
-        firstLoginMessage = secondLoginMessage = "";
+        firstLoginMessage = "";
+        secondLoginMessage = "Enter your username/email & password.";
         effects_list.clear();
         socketStream = null;
         loggedIn = false;
@@ -4312,7 +4333,13 @@ public class Client extends GameEngine implements RSClient {
             SceneObject.clientInstance = this;
             ObjectDefinition.clientInstance = this;
             NpcDefinition.clientInstance = this;
-
+            if(!preferences.getEulaAccepted()) {
+                loginScreen.setLoginState(LoginState.EULA);
+            }
+            if(preferences.getSavedUsername() != "") {
+                myUsername = preferences.getSavedUsername();
+            }
+            secondLoginMessage = "Enter your username/email & password.";
             setGameState(GameState.LOGIN_SCREEN);
             
             return;
@@ -8789,7 +8816,7 @@ public class Client extends GameEngine implements RSClient {
      * @param password     The password of the user trying to login.
      * @param reconnecting The flag for the user indicating to attempt to reconnect.
      */
-    private void login(String name, String password, boolean reconnecting) {
+    public void login(String name, String password, boolean reconnecting) {
         try {
             if (name.length() < 3) {
                 firstLoginMessage = "";
@@ -8959,6 +8986,9 @@ public class Client extends GameEngine implements RSClient {
                 drawChatArea();
                 drawMinimap();
                 drawTabArea();
+                if(preferences.getRememberUsername()) {
+                    preferences.setSavedUsername(myUsername);
+                }
                 return;
             }
             if (response == 28) {

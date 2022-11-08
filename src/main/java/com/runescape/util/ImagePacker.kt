@@ -4,20 +4,19 @@ import com.runescape.Client
 import com.runescape.sign.SignLink
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.util.*
 import java.util.zip.GZIPOutputStream
 import javax.imageio.ImageIO
 
 
 object ImagePacker {
 
-    const val REPACK_SPRITES = false
+    private const val REPACK_SPRITES = true
 
-    val validExtensions = listOf("png","jpg")
+    private val validExtensions = listOf("png","jpg")
 
     fun init() {
 
-        var bytesWriten = 0
+        var bytesWritten = 0
 
         val imageLocation = File(SignLink.findcachedir() + "/index6/")
 
@@ -33,23 +32,26 @@ object ImagePacker {
             ImageIO.write(image, "png", baos)
             val bytes = baos.toByteArray()
 
-            val pack = packRaw(bytes)
-            bytesWriten += pack.size;
+            val pack = toGzip(bytes)
+            bytesWritten += pack.size;
             Client.instance.indices[5].writeFile(pack.size, pack, index)
 
             println("Packing Sprite $index")
         }
 
-        println("Bytes Written ${bytesWriten}")
+        println("Bytes Written $bytesWritten")
 
     }
 
-    private fun packRaw(b: ByteArray): ByteArray {
-        val baos = ByteArrayOutputStream()
-        val zos = GZIPOutputStream(baos)
-        zos.write(b)
-        zos.close()
-        return baos.toByteArray()
+    private fun toGzip(b: ByteArray): ByteArray {
+        val byteStream = ByteArrayOutputStream(b.size)
+        byteStream.use { output ->
+            val zipStream = GZIPOutputStream(output)
+            zipStream.use { stream ->
+                stream.write(b)
+            }
+        }
+        return byteStream.toByteArray()
     }
 
 }
