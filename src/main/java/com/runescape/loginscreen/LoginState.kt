@@ -4,5 +4,5 @@ enum class LoginState {
     EULA,
     LOGIN,
     WORLD_SELECT,
-    SETTINGS
+    WELCOME
 }

@@ -8,7 +8,6 @@ import com.runescape.draw.Rasterizer2D
 import com.runescape.engine.GameEngine
 import com.runescape.engine.impl.MouseHandler
 import com.runescape.loginscreen.LoginState
-import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -21,30 +20,30 @@ object WorldManager {
     var CLIENT = OkHttpClient()
     var GSON: Gson = Gson()
 
-    val loadOnline = false
-    val worldJsonUrl = ""
-    var worldsLoaded: Boolean = false
-    var worlds: MutableList<WorldData> = emptyList<WorldData>().toMutableList()
-    var worldSelectStatus = "Click to switch"
+    private const val LOAD_WORLDS_ONLINE = false
+    val WORLD_DATA_URL = ""
+
+    var loadedWorlds: Boolean = false
+    var worldList: MutableList<WorldData> = emptyList<WorldData>().toMutableList()
+    var worldStatusText = "Click to switch"
     var selectedWorld: WorldData? = null
 
     fun openWorldSectionScreen(switchView: Boolean = false) {
-        worldSelectStatus = "Loading..."
+        worldStatusText = "Loading..."
         var worldContent = ""
-        if (loadOnline) {
-            val url: HttpUrl = worldJsonUrl.toHttpUrlOrNull()?.newBuilder()?.build()!!
+        if (LOAD_WORLDS_ONLINE) {
             try {
-                CLIENT.newCall(Request.Builder().url(url).build()).execute().use { res ->
+                CLIENT.newCall(Request.Builder().url(WORLD_DATA_URL.toHttpUrlOrNull()?.newBuilder()?.build()!!).build()).execute().use { res ->
                     if (res.body != null) {
                         worldContent = res.body!!.string()
                     } else {
-                        worldSelectStatus = "Error"
-                        worldsLoaded = false
+                        worldStatusText = "Error"
+                        loadedWorlds = false
                     }
                 }
             } catch (e: IOException) {
-                worldSelectStatus = "Error"
-                worldsLoaded = false
+                worldStatusText = "Error"
+                loadedWorlds = false
             }
         } else {
             worldContent = File("./worldData.json").inputStream().reader().readText()
@@ -52,9 +51,9 @@ object WorldManager {
 
 
         val types: Type = object : TypeToken<ArrayList<WorldData?>?>() {}.type
-        worlds = GSON.fromJson<ArrayList<WorldData>>(worldContent, types)
-        worldSelectStatus = "Click to switch"
-        worldsLoaded = true
+        worldList = GSON.fromJson<ArrayList<WorldData>>(worldContent, types)
+        worldStatusText = "Click to switch"
+        loadedWorlds = true
         if (switchView) {
             Client.loginScreen.loginState = LoginState.WORLD_SELECT
         }
@@ -74,7 +73,7 @@ object WorldManager {
         var xOffset = 0
         var yOffset = 0
 
-        worlds.forEachIndexed { index, world ->
+        worldList.forEachIndexed { index, world ->
 
             val worldButtonX = worldListX + xOffset
             val worldButtonY = worldListY + yOffset

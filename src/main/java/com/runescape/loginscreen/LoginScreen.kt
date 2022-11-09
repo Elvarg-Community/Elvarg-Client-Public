@@ -1,6 +1,7 @@
 package com.runescape.loginscreen
 
 import com.runescape.Client
+import com.runescape.Configuration
 import com.runescape.UserPreferences
 import com.runescape.cache.graphics.ImageCache
 import com.runescape.engine.GameEngine
@@ -8,7 +9,8 @@ import com.runescape.engine.impl.KeyHandler
 import com.runescape.engine.impl.MouseHandler
 import com.runescape.loginscreen.worlds.WorldManager
 import com.runescape.loginscreen.worlds.WorldManager.openWorldSectionScreen
-import com.runescape.loginscreen.worlds.WorldManager.worlds
+import com.runescape.loginscreen.worlds.WorldManager.worldList
+import com.runescape.util.MiscUtils
 import com.runescape.util.StringUtils
 import org.apache.commons.lang3.time.StopWatch
 import kotlin.system.exitProcess
@@ -33,15 +35,12 @@ class LoginScreen(val client : Client) {
     fun drawLogin() {
         if (WorldManager.selectedWorld == null) {
             openWorldSectionScreen()
-            WorldManager.selectedWorld = worlds.first()
+            WorldManager.selectedWorld = worldList.first()
         }
 
         val centerX = GameEngine.canvasWidth / 2
         val centerY = GameEngine.canvasHeight / 2
         val alpha = if (Client.preferences.loginBackground != LoginBackground.FADING_BACKGROUNDS) 225 else opacity
-        if(opacity >= 225) {
-            opacity = 225
-        }
         handleBackgrounds()
         if (backgroundSprite != -1) {
             ImageCache.get(backgroundSprite).drawAdvancedSprite(centerX - (766 / 2),centerY - (503 / 2),alpha)
@@ -64,6 +63,17 @@ class LoginScreen(val client : Client) {
                     ImageCache.get(2).drawSprite(buttonX,loginBoxY + 121)
                     client.newBoldFont.drawCenteredString(buttonText,buttonX + (147 / 2) - 1, loginBoxY + 146,0xFFFFFF,1)
                 }
+            }
+            LoginState.WELCOME -> {
+
+                client.newBoldFont.drawCenteredString("Welcome to ${Configuration.CLIENT_NAME}",loginBoxX + (360 / 2), loginBoxY + 82,0xFFFF00,1)
+
+                listOf("New User","Existing User").forEachIndexed { index, buttonText ->
+                    val buttonX = loginBoxX + 28 + if(index == 1) 160 else 0
+                    ImageCache.get(2).drawSprite(buttonX - 1,loginBoxY + 100)
+                    client.newBoldFont.drawCenteredString(buttonText,buttonX + (147 / 2) - 3, loginBoxY + 124,0xFFFFFF,1)
+                }
+
             }
             LoginState.LOGIN -> {
 
@@ -110,10 +120,10 @@ class LoginScreen(val client : Client) {
                 )
 
                 ImageCache.get(if(Client.preferences.enableMusic) 25 else 26).drawAdvancedSprite(GameEngine.canvasWidth - 38 - 5,GameEngine.canvasHeight - 45 + 7)
-                if(WorldManager.worldsLoaded) {
+                if(WorldManager.loadedWorlds) {
                     ImageCache.get(3).drawAdvancedSprite(centerX - (766 / 2) + 5,GameEngine.canvasHeight - 45 + 8)
                     client.newBoldFont.drawCenteredString("World: ${WorldManager.selectedWorld?.name}", centerX - (766 / 2) + 5 + (100 / 2),GameEngine.canvasHeight - 45 + 23,0xFFFFFF,1)
-                    client.newSmallFont.drawCenteredString(WorldManager.worldSelectStatus, centerX - (766 / 2) + 5 + (100 / 2),GameEngine.canvasHeight - 45 + 38,0xFFFFFF,1)
+                    client.newSmallFont.drawCenteredString(WorldManager.worldStatusText, centerX - (766 / 2) + 5 + (100 / 2),GameEngine.canvasHeight - 45 + 38,0xFFFFFF,1)
 
                 }
 
@@ -134,7 +144,7 @@ class LoginScreen(val client : Client) {
             LoginState.EULA -> {
                 repeat(2) {
                     val buttonX = loginBoxX + 28 + if(it == 1) 160 else 0
-                    if(MouseHandler.clickMode3 == 1 && client.newclickInRegion(buttonX + (147 / 2) - 1, loginBoxY + 146,ImageCache.get(2))) {
+                    if(client.newclickInRegion(buttonX + (147 / 2) - 1, loginBoxY + 146,ImageCache.get(2))) {
                         when(it) {
                             0 -> {
                                 loginState = LoginState.LOGIN
@@ -146,13 +156,24 @@ class LoginScreen(val client : Client) {
                     }
                 }
             }
+            LoginState.WELCOME -> {
+                repeat(2) {
+                    val buttonX = loginBoxX + 28 + if(it == 1) 160 else 0
+                    if(client.newclickInRegion(buttonX - 1,loginBoxY + 100,ImageCache.get(2))) {
+                        when(it) {
+                            0 -> MiscUtils.launchURL("https://www.google.com/")
+                            1 -> loginState = LoginState.LOGIN
+                        }
+                    }
+                }
+            }
             LoginState.LOGIN -> {
                 repeat(2) {
                     val buttonX = loginBoxX + 28 + if(it == 1) 160 else 0
                     if(client.newclickInRegion(buttonX,loginBoxY + 131,ImageCache.get(2))) {
                         when(it) {
                             0 -> client.login(client.myUsername,client.myPassword, false)
-                            1 -> exitProcess(0)
+                            1 -> loginState = LoginState.WELCOME
                         }
                     }
                 }
@@ -240,7 +261,12 @@ class LoginScreen(val client : Client) {
                 val increment: Long = (end - backgroundStopWatch!!.startTime) / 100
                 if (increment > 0) {
                     val percentile: Long = backgroundStopWatch!!.time / increment
-                    opacity = (percentile * (Byte.MAX_VALUE / 100) * 2).toInt()
+                    if(opacity >= 250) {
+                        opacity = 225
+                    } else {
+                        opacity = (percentile * (Byte.MAX_VALUE / 100) * 2).toInt()
+                    }
+
 
                     if (percentile > -1 && percentile <= 100) {
                         if (percentile == 100L) {
