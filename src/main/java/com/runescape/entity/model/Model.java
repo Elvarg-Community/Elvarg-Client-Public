@@ -1689,7 +1689,7 @@ public class Model extends Renderable implements RSModel {
         if (sceneY - size <= 50)
             nearSight = true;
 
-        boolean var27 = nearSight || this.texturesCount > 0;
+        boolean inView = nearSight || this.texturesCount > 0;
 
         boolean var32 = method322(uid);
         boolean highlighted = false;
@@ -1700,21 +1700,18 @@ public class Model extends Renderable implements RSModel {
         if (var32 && mouseInViewport) {
             boolean withinBounds = false;
 
-            int var43;
-            int var44;
-            int var45;
 //			if (!ViewportMouse.ViewportMouse_false0) {
-            byte var41 = 50;
-            short var42 = 3500;
-            var43 = (cursorX - Rasterizer3D.originViewX) * var41 / Rasterizer3D.fieldOfView;
-            var44 = (cursorY - Rasterizer3D.originViewY) * var41 / Rasterizer3D.fieldOfView;
-            var45 = (cursorX - Rasterizer3D.originViewX) * var42 / Rasterizer3D.fieldOfView;
-            int var46 = (cursorY - Rasterizer3D.originViewY) * var42 / Rasterizer3D.fieldOfView;
-            int var47 = Rasterizer3D.method4045(var44, var41, SceneGraph.camUpDownX, SceneGraph.camUpDownY);
-            var53 = Rasterizer3D.method4046(var44, var41, SceneGraph.camUpDownX, SceneGraph.camUpDownY);
+            byte distanceMin = 50;
+            short distanceMax = 3500;
+            int var43 = (cursorX - Rasterizer3D.originViewX) * distanceMin / Rasterizer3D.fieldOfView;
+            int var44 = (cursorY - Rasterizer3D.originViewY) * distanceMin / Rasterizer3D.fieldOfView;
+            int var45 = (cursorX - Rasterizer3D.originViewX) * distanceMax / Rasterizer3D.fieldOfView;
+            int var46 = (cursorY - Rasterizer3D.originViewY) * distanceMax / Rasterizer3D.fieldOfView;
+            int var47 = Rasterizer3D.method4045(var44, distanceMin, SceneGraph.camUpDownX, SceneGraph.camUpDownY);
+            var53 = Rasterizer3D.method4046(var44, distanceMin, SceneGraph.camUpDownX, SceneGraph.camUpDownY);
             var44 = var47;
-            var47 = Rasterizer3D.method4045(var46, var42, SceneGraph.camUpDownX, SceneGraph.camUpDownY);
-            var54 = Rasterizer3D.method4046(var46, var42, SceneGraph.camUpDownX, SceneGraph.camUpDownY);
+            var47 = Rasterizer3D.method4045(var46, distanceMax, SceneGraph.camUpDownX, SceneGraph.camUpDownY);
+            var54 = Rasterizer3D.method4046(var46, distanceMax, SceneGraph.camUpDownX, SceneGraph.camUpDownY);
             var46 = var47;
             var47 = Rasterizer3D.method4025(var43, var53, SceneGraph.camLeftRightX, SceneGraph.camLeftRightY);
             var53 = Rasterizer3D.method4044(var43, var53, SceneGraph.camLeftRightX, SceneGraph.camLeftRightY);
@@ -1782,36 +1779,36 @@ public class Model extends Renderable implements RSModel {
         }
 
         for (int index = 0; index < this.verticesCount; ++index) {
-            int rasterX = this.verticesX[index];
+            int positionX = this.verticesX[index];
             int rasterY = this.verticesY[index];
-            int rasterZ = this.verticesZ[index];
+            int positionZ = this.verticesZ[index];
             if (orientation != 0) {
-                int rotatedX = rasterZ * sineX + rasterX * cosineX >> 16;
-                rasterZ = rasterZ * cosineX - rasterX * sineX >> 16;
-                rasterX = rotatedX;
+                int rotatedX = positionZ * sineX + positionX * cosineX >> 16;
+                positionZ = positionZ * cosineX - positionX * sineX >> 16;
+                positionX = rotatedX;
             }
 
-            rasterX += offsetX;
+            positionX += offsetX;
             rasterY += offsetY;
-            rasterZ += offsetZ;
-            int position = rasterZ * yawSin + yawCos * rasterX >> 16;
-            rasterZ = yawCos * rasterZ - rasterX * yawSin >> 16;
-            rasterX = position;
-            position = pitchCos * rasterY - rasterZ * pitchSine >> 16;
-            rasterZ = rasterY * pitchSine + pitchCos * rasterZ >> 16;
-            vertexScreenZ[index] = rasterZ - sceneY;
-            if (rasterZ >= 50) {
-                vertexScreenX[index] = rasterX * Rasterizer3D.fieldOfView / rasterZ + var51;
-                vertexScreenY[index] = position * Rasterizer3D.fieldOfView / rasterZ + var52;
+            positionZ += offsetZ;
+            int positionY = positionZ * yawSin + yawCos * positionX >> 16;
+            positionZ = yawCos * positionZ - positionX * yawSin >> 16;
+            positionX = positionY;
+            positionY = pitchCos * rasterY - positionZ * pitchSine >> 16;
+            positionZ = rasterY * pitchSine + pitchCos * positionZ >> 16;
+            vertexScreenZ[index] = positionZ - sceneY;
+            if (positionZ >= 50) {
+                vertexScreenX[index] = positionX * Rasterizer3D.fieldOfView / positionZ + var51;
+                vertexScreenY[index] = positionY * Rasterizer3D.fieldOfView / positionZ + var52;
             } else {
                 vertexScreenX[index] = -5000;
                 var25 = true;
             }
 
-            if (var27) {
-                vertexMovedX[index] = rasterX;
-                vertexMovedY[index] = position;
-                vertexMovedZ[index] = rasterZ;
+            if (inView) {
+                vertexMovedX[index] = positionX;
+                vertexMovedY[index] = positionY;
+                vertexMovedZ[index] = positionZ;
             }
         }
 
