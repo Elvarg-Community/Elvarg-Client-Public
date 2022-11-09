@@ -1405,7 +1405,7 @@ public class Model extends Renderable implements RSModel {
         return (var0 & '\uff80') + var1;
     }
 
-    public void setLighting(int i, int j, int k, int l, int i1) {
+    public void setLighting(int intensity, int diffusion, int lightX, int lightY, int lightZ) {
         for (int j1 = 0; j1 < trianglesCount; j1++) {
             int k1 = trianglesX[j1];
             int i2 = trianglesY[j1];
@@ -1413,25 +1413,25 @@ public class Model extends Renderable implements RSModel {
             if (drawType == null) {
                 int i3 = colors[j1];
                 VertexNormal vertexNormal = super.normals[k1];
-                int k2 = i + (k * vertexNormal.x + l * vertexNormal.y + i1 * vertexNormal.z) / (j * vertexNormal.magnitude);
+                int k2 = intensity + (lightX * vertexNormal.x + lightY * vertexNormal.y + lightZ * vertexNormal.z) / (diffusion * vertexNormal.magnitude);
                 colorsX[j1] = mixLightness(i3, k2, 0);
                 vertexNormal = super.normals[i2];
-                k2 = i + (k * vertexNormal.x + l * vertexNormal.y + i1 * vertexNormal.z) / (j * vertexNormal.magnitude);
+                k2 = intensity + (lightX * vertexNormal.x + lightY * vertexNormal.y + lightZ * vertexNormal.z) / (diffusion * vertexNormal.magnitude);
                 colorsY[j1] = mixLightness(i3, k2, 0);
                 vertexNormal = super.normals[j2];
-                k2 = i + (k * vertexNormal.x + l * vertexNormal.y + i1 * vertexNormal.z) / (j * vertexNormal.magnitude);
+                k2 = intensity + (lightX * vertexNormal.x + lightY * vertexNormal.y + lightZ * vertexNormal.z) / (diffusion * vertexNormal.magnitude);
                 colorsZ[j1] = mixLightness(i3, k2, 0);
             } else if ((drawType[j1] & 1) == 0) {
                 int j3 = colors[j1];
                 int k3 = drawType[j1];
                 VertexNormal vertexNormal = super.normals[k1];
-                int l2 = i + (k * vertexNormal.x + l * vertexNormal.y + i1 * vertexNormal.z) / (j * vertexNormal.magnitude);
+                int l2 = intensity + (lightX * vertexNormal.x + lightY * vertexNormal.y + lightZ * vertexNormal.z) / (diffusion * vertexNormal.magnitude);
                 colorsX[j1] = mixLightness(j3, l2, k3);
                 vertexNormal = super.normals[i2];
-                l2 = i + (k * vertexNormal.x + l * vertexNormal.y + i1 * vertexNormal.z) / (j * vertexNormal.magnitude);
+                l2 = intensity + (lightX * vertexNormal.x + lightY * vertexNormal.y + lightZ * vertexNormal.z) / (diffusion * vertexNormal.magnitude);
                 colorsY[j1] = mixLightness(j3, l2, k3);
                 vertexNormal = super.normals[j2];
-                l2 = i + (k * vertexNormal.x + l * vertexNormal.y + i1 * vertexNormal.z) / (j * vertexNormal.magnitude);
+                l2 = intensity + (lightX * vertexNormal.x + lightY * vertexNormal.y + lightZ * vertexNormal.z) / (diffusion * vertexNormal.magnitude);
                 colorsZ[j1] = mixLightness(j3, l2, k3);
             }
         }
