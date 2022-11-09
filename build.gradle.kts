@@ -152,21 +152,9 @@ tasks {
         }
     }
 
-    withType<BootstrapTask> {
-        group = "rsps"
-
-    }
-
     project.extra["gitCommit"] = localGitCommit
     project.extra["rootPath"] = rootDir.toString().replace("\\", "/")
 
-    register<JavaExec>("RuneLite.main()") {
-        group = "rsps"
-
-        classpath = project.sourceSets.main.get().runtimeClasspath
-        enableAssertions = true
-        mainClass.set("net.runelite.client.RuneLite")
-    }
 
 }
 

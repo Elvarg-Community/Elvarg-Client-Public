@@ -10,7 +10,7 @@ import javax.imageio.ImageIO
 
 object ImagePacker {
 
-    private const val REPACK_SPRITES = true
+    private const val REPACK_SPRITES = false
 
     private val validExtensions = listOf("png","jpg")
 

@@ -3,7 +3,6 @@ package com.runescape.loginscreen
 import com.runescape.Client
 import com.runescape.UserPreferences
 import com.runescape.cache.graphics.ImageCache
-import com.runescape.draw.Rasterizer2D
 import com.runescape.engine.GameEngine
 import com.runescape.engine.impl.KeyHandler
 import com.runescape.engine.impl.MouseHandler
@@ -40,12 +39,19 @@ class LoginScreen(val client : Client) {
         val centerX = GameEngine.canvasWidth / 2
         val centerY = GameEngine.canvasHeight / 2
         val alpha = if (Client.preferences.loginBackground != LoginBackground.FADING_BACKGROUNDS) 225 else opacity
+        if(opacity >= 225) {
+            opacity = 225
+        }
         handleBackgrounds()
         if (backgroundSprite != -1) {
             ImageCache.get(backgroundSprite).drawAdvancedSprite(centerX - (766 / 2),centerY - (503 / 2),alpha)
         }
         ImageCache.get(0).drawSprite(centerX - (444 / 2),centerY - (503 / 2) + 17)
         ImageCache.get(1).drawSprite(centerX - (360 / 2),centerY - (200 / 2) + 21)
+
+        Client.loginScreenRunesAnimation.draw(centerX - (766 / 2) -22, Client.tick)
+        Client.loginScreenRunesAnimation.draw(centerX - (766 / 2) + (766 - 110), Client.tick)
+
         val loginBoxX = centerX - (360 / 2)
         val loginBoxY = centerY - (200 / 2) + 21
         when(loginState) {

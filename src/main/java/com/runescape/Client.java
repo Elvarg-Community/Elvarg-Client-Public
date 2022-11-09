@@ -40,8 +40,10 @@ import com.runescape.entity.model.Model;
 import com.runescape.io.Buffer;
 import com.runescape.io.PacketConstants;
 import com.runescape.io.PacketSender;
+import com.runescape.loginscreen.LoginBackground;
 import com.runescape.loginscreen.LoginScreen;
 import com.runescape.loginscreen.LoginState;
+import com.runescape.loginscreen.flames.FlameManager;
 import com.runescape.model.ChatCrown;
 import com.runescape.model.ChatMessage;
 import com.runescape.model.EffectTimer;
@@ -111,6 +113,7 @@ public class Client extends GameEngine implements RSClient {
     public static PreferencesData preferences = new PreferencesData();
 
     public static LoginScreen loginScreen;
+    public static FlameManager loginScreenRunesAnimation;
 
     public final void init() {
         nodeID = 10;
@@ -4146,15 +4149,6 @@ public class Client extends GameEngine implements RSClient {
         }
         ImagePacker.INSTANCE.init();
         try {
-         //   requestCRCs();
-          /*  if (Configuration.JAGCACHED_ENABLED) {
-                JagGrab.onStart();
-            } else {
-                //  CacheDownloader.init(false);
-            }*/
-
-            //fileServer = new FileServer();
-            //fileServer.start();
 
             titleArchive = createArchive(1, "title screen", "title", 25);
             smallText = new GameFont(false, "p11_full", titleArchive);
@@ -4176,6 +4170,9 @@ public class Client extends GameEngine implements RSClient {
             FileArchive wordencArchive = createArchive(7, "chat system", "wordenc", 50);
 
             FileArchive soundArchive = createArchive(8, "sound effects", "sounds", 55);
+
+
+            loginScreenRunesAnimation = new FlameManager();
 
             tileFlags = new byte[4][104][104];
             tileHeights = new int[4][105][105];
@@ -4336,7 +4333,7 @@ public class Client extends GameEngine implements RSClient {
             if(!preferences.getEulaAccepted()) {
                 loginScreen.setLoginState(LoginState.EULA);
             }
-            if(preferences.getSavedUsername() != "") {
+            if(!preferences.getSavedUsername().equals("")) {
                 myUsername = preferences.getSavedUsername();
             }
             secondLoginMessage = "Enter your username/email & password.";
@@ -5340,8 +5337,37 @@ public class Client extends GameEngine implements RSClient {
     }
 
     public void drawLoadingText(int loadingPercent, String loadingText) {
-        this.loadingPercent = loadingPercent;
-        this.loadingText = loadingText;
+        if (titleArchive == null) {
+            super.drawInitial(loadingPercent, loadingText,false);
+            return;
+        }
+        int centerX = GameEngine.canvasWidth / 2;
+        int centerY = GameEngine.canvasHeight / 2;
+
+        ImageCache.get(LoginBackground.NORMAL.getSpriteID()).drawSprite(0,0);
+        ImageCache.get(0).drawSprite(centerX - (444 / 2),centerY - (503 / 2) + 17);
+        ImageCache.get(preferences.getEnableMusic() ? 25 : 26).drawAdvancedSprite(GameEngine.canvasWidth - 38 - 5,GameEngine.canvasHeight - 45 + 7);
+        if(newclickInRegion(GameEngine.canvasWidth - 38 - 5,GameEngine.canvasHeight - 45 + 7,ImageCache.get(25))) {
+            preferences.setEnableMusic(!preferences.getEnableMusic());
+        }
+
+        int barWidth = 304;
+
+        int x = centerX - (barWidth / 2);
+        int y = centerY - (34 / 2);
+
+        Rasterizer2D.drawBox(x,y,barWidth,34,0x8C1111);
+        Rasterizer2D.drawBox(x + 1,y + 1,302,32,0x000000);
+        Rasterizer2D.drawBox(x + 2,y + 2,getPixelAmt(loadingPercent,300),30,0x8C1111);
+
+        newBoldFont.drawCenteredString(loadingText + " - " + loadingPercent + "%",(x + 1) + (302 / 2),y + 21,0xFFFFFF);
+        newBoldFont.drawCenteredString(Configuration.CLIENT_NAME + " is loading - please wait...",(x) + (barWidth / 2),y - 14,0xFFFFFF);
+
+        rasterProvider.drawFull(0, 0);
+    }
+
+    private int getPixelAmt(int current, int pixels) {
+        return (int) (pixels * .01 * current);
     }
 
     public static AbstractRasterProvider rasterProvider;
@@ -8966,6 +8992,7 @@ public class Client extends GameEngine implements RSClient {
                 flashingSidebarId = -1;
                 maleCharacter = true;
                 changeCharacterGender();
+                loginScreenRunesAnimation.reset();
                 for (int index = 0; index < 5; index++)
                     characterDesignColours[index] = 0;
                 for (int index = 0; index < 5; index++) {
@@ -11514,10 +11541,7 @@ public class Client extends GameEngine implements RSClient {
         callbacks.frame();
         updateCamera();
         
-        if (gameState == GameState.STARTING.getState()) {
-            this.drawInitial(loadingPercent, loadingText, redraw);
-            rasterProvider.drawFull(0, 0);
-        } else if (gameState == GameState.LOGIN_SCREEN.getState()) {
+       if (gameState == GameState.LOGIN_SCREEN.getState()) {
             drawLoginScreen();
         } else if (gameState == GameState.CONNECTION_LOST.getState()) {
             drawLoadingMessage("Connection lost" + "<br>" + "Please wait - attempting to reestablish");
