@@ -58,6 +58,8 @@ public class Model extends Renderable implements RSModel {
         } else {
             ModelLoader.decodeOldFormat(this, data);
         }
+
+        resetBounds();
     }
 
     public static void loadModel(final byte[] modelData, final int modelId) {
@@ -1688,42 +1690,34 @@ public class Model extends Renderable implements RSModel {
 
         boolean var32 = method322(uid); // L: 855
         boolean highlighted = false; // L: 856
-        int var37;
-        int var38;
-        int var39;
-        int var40;
+
         int var52;
         int var53;
         int var54;
         if (var32 && mouseInViewport) { // L: 857
             boolean withinBounds = false; // L: 858
-            boolean tempWithinBounds;
 
             int var43;
             int var44;
             int var45;
 //			if (!ViewportMouse.ViewportMouse_false0) { // L: 868
-            var37 = SceneGraph.camUpDownY; // L: 869
-            var38 = SceneGraph.camUpDownX; // L: 870
-            var39 = SceneGraph.camLeftRightY; // L: 871
-            var40 = SceneGraph.camLeftRightX; // L: 872
             byte var41 = 50; // L: 873
             short var42 = 3500; // L: 874
             var43 = (cursorX - Rasterizer3D.originViewX) * var41 / Rasterizer3D.fieldOfView; // L: 875
             var44 = (cursorY - Rasterizer3D.originViewY) * var41 / Rasterizer3D.fieldOfView; // L: 876
             var45 = (cursorX - Rasterizer3D.originViewX) * var42 / Rasterizer3D.fieldOfView; // L: 877
             int var46 = (cursorY - Rasterizer3D.originViewY) * var42 / Rasterizer3D.fieldOfView; // L: 878
-            int var47 = Rasterizer3D.method4045(var44, var41, var38, var37); // L: 880
-            var53 = Rasterizer3D.method4046(var44, var41, var38, var37); // L: 881
+            int var47 = Rasterizer3D.method4045(var44, var41, SceneGraph.camUpDownX, SceneGraph.camUpDownY); // L: 880
+            var53 = Rasterizer3D.method4046(var44, var41, SceneGraph.camUpDownX, SceneGraph.camUpDownY); // L: 881
             var44 = var47; // L: 882
-            var47 = Rasterizer3D.method4045(var46, var42, var38, var37); // L: 883
-            var54 = Rasterizer3D.method4046(var46, var42, var38, var37); // L: 884
+            var47 = Rasterizer3D.method4045(var46, var42, SceneGraph.camUpDownX, SceneGraph.camUpDownY); // L: 883
+            var54 = Rasterizer3D.method4046(var46, var42, SceneGraph.camUpDownX, SceneGraph.camUpDownY); // L: 884
             var46 = var47; // L: 885
-            var47 = Rasterizer3D.method4025(var43, var53, var40, var39); // L: 886
-            var53 = Rasterizer3D.method4044(var43, var53, var40, var39); // L: 887
+            var47 = Rasterizer3D.method4025(var43, var53, SceneGraph.camLeftRightX, SceneGraph.camLeftRightY); // L: 886
+            var53 = Rasterizer3D.method4044(var43, var53, SceneGraph.camLeftRightX, SceneGraph.camLeftRightY); // L: 887
             var43 = var47; // L: 888
-            var47 = Rasterizer3D.method4025(var45, var54, var40, var39); // L: 889
-            var54 = Rasterizer3D.method4044(var45, var54, var40, var39); // L: 890
+            var47 = Rasterizer3D.method4025(var45, var54, SceneGraph.camLeftRightX, SceneGraph.camLeftRightY); // L: 889
+            var54 = Rasterizer3D.method4044(var45, var54, SceneGraph.camLeftRightX, SceneGraph.camLeftRightY); // L: 890
             int ViewportMouse_field2588 = (var43 + var47) / 2; // L: 892
             int GZipDecompressor_field4821 = (var46 + var44) / 2; // L: 893
             int class340_field4138 = (var54 + var53) / 2; // L: 894
@@ -1735,36 +1729,34 @@ public class Model extends Renderable implements RSModel {
             int class136_field1612 = Math.abs(User_field4308); // L: 900
 //			}
 
-            var37 = this.xMid + offsetX; // L: 902
-            var38 = offsetY + this.yMid; // L: 903
-            var39 = offsetZ + this.zMid; // L: 904
-            var40 = this.xMidOffset; // L: 905
+            int var37 = this.xMid + offsetX; // L: 902
+            int var38 = offsetY + this.yMid; // L: 903
+            int var39 = offsetZ + this.zMid; // L: 904
+            int var40 = this.xMidOffset; // L: 905
             var53 = this.yMidOffset; // L: 906
             var54 = this.zMidOffset; // L: 907
             var43 = ViewportMouse_field2588 - var37; // L: 908
             var44 = GZipDecompressor_field4821 - var38; // L: 909
             var45 = class340_field4138 - var39; // L: 910
             if (Math.abs(var43) > var40 + class421_field4607) { // L: 911
-                tempWithinBounds = false; // L: 912
+                withinBounds = false; // L: 912
             } else if (Math.abs(var44) > var53 + ViewportMouse_field2590) { // L: 915
-                tempWithinBounds = false; // L: 916
+                withinBounds = false; // L: 916
             } else if (Math.abs(var45) > var54 + class136_field1612) { // L: 919
-                tempWithinBounds = false; // L: 920
+                withinBounds = false; // L: 920
             } else if (Math.abs(var45 * ItemComposition_field2148 - var44 * User_field4308) > var53 * class136_field1612 + var54 * ViewportMouse_field2590) { // L: 923
-                tempWithinBounds = false; // L: 924
+                withinBounds = false; // L: 924
             } else if (Math.abs(var43 * User_field4308 - var45 * ViewportMouse_field2589) > var54 * class421_field4607 + var40 * class136_field1612) { // L: 927
-                tempWithinBounds = false; // L: 928
+                withinBounds = false; // L: 928
             } else if (Math.abs(var44 * ViewportMouse_field2589 - var43 * ItemComposition_field2148) > var40 * ViewportMouse_field2590 + var53 * class421_field4607) { // L: 931
-                tempWithinBounds = false; // L: 932
+                withinBounds = false; // L: 932
             } else {
-                tempWithinBounds = true; // L: 935
+                withinBounds = true; // L: 935
             }
 //          }
 
-            withinBounds = tempWithinBounds; // L: 937
-
-            if (withinBounds) { // L: 964
-                if (this.singleTile) { // L: 965
+            if (withinBounds) {
+                if (this.singleTile) {
                     //class249.addHoveringObject(uid);
                     hoveringObjects[objectsHovering++] = uid;
                     if (gpu) {
@@ -1786,14 +1778,14 @@ public class Model extends Renderable implements RSModel {
             cosineX = COSINE[orientation]; // L: 975
         }
 
-        for (int index = 0; index < this.verticesCount; ++index) { // L: 977
-            int rasterX = this.verticesX[index]; // L: 978
-            int rasterY = this.verticesY[index]; // L: 979
-            int rasterZ = this.verticesZ[index]; // L: 980
-            if (orientation != 0) { // L: 981
-                int rotatedX = rasterZ * sineX + rasterX * cosineX >> 16; // L: 982
-                rasterZ = rasterZ * cosineX - rasterX * sineX >> 16; // L: 983
-                rasterX = rotatedX; // L: 984
+        for (int index = 0; index < this.verticesCount; ++index) {
+            int rasterX = this.verticesX[index];
+            int rasterY = this.verticesY[index];
+            int rasterZ = this.verticesZ[index];
+            if (orientation != 0) {
+                int rotatedX = rasterZ * sineX + rasterX * cosineX >> 16;
+                rasterZ = rasterZ * cosineX - rasterX * sineX >> 16;
+                rasterX = rotatedX;
             }
 
             rasterX += offsetX; // L: 986
@@ -1809,14 +1801,14 @@ public class Model extends Renderable implements RSModel {
                 vertexScreenX[index] = rasterX * Rasterizer3D.fieldOfView / rasterZ + var51; // L: 997
                 vertexScreenY[index] = position * Rasterizer3D.fieldOfView / rasterZ + var52; // L: 998
             } else {
-                vertexScreenX[index] = -5000; // L: 1001
+                vertexScreenX[index] = -5000;
                 var25 = true; // L: 1002
             }
 
-            if (var27) { // L: 1004
-                vertexMovedX[index] = rasterX; // L: 1005
-                vertexMovedY[index] = position; // L: 1006
-                vertexMovedZ[index] = rasterZ; // L: 1007
+            if (var27) {
+                vertexMovedX[index] = rasterX;
+                vertexMovedY[index] = position;
+                vertexMovedZ[index] = rasterZ;
             }
         }
 
@@ -1831,7 +1823,6 @@ public class Model extends Renderable implements RSModel {
         } catch (Exception ex) { // L: 1013
             ex.printStackTrace();
         }
-
     }
 
     private void withinObject(boolean flag, boolean hoverObject, long uid) {
