@@ -47,6 +47,7 @@ public final class Rasterizer3D extends Rasterizer2D {
     } // L: 92
 
     public static final void setBrightness(double var0) {
+        Client.preferences.setBrightnessState(var0);
         ((TextureProvider)Rasterizer3D.textureLoader).setBrightness(var0);
         Rasterizer3D_buildPalette(var0, 0, 512); // L: 95
     } // L: 96

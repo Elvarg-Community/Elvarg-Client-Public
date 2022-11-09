@@ -10,7 +10,7 @@ import com.runescape.Configuration;
 
 public final class SignLink {
 
-    public static final RandomAccessFile[] indices = new RandomAccessFile[5];
+    public static final RandomAccessFile[] indices = new RandomAccessFile[6];
     public static RandomAccessFile cache_dat = null;
     public static Applet mainapp = null;
     public static String os;
@@ -30,7 +30,7 @@ public final class SignLink {
         try {
 
             cache_dat = new RandomAccessFile(directory + "main_file_cache.dat", "rw");
-            for (int index = 0; index < 5; index++) {
+            for (int index = 0; index < 6; index++) {
                 indices[index] = new RandomAccessFile(directory + "main_file_cache.idx"
                         + index, "rw");
             }

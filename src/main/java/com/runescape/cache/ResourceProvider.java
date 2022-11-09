@@ -72,7 +72,7 @@ public final class ResourceProvider implements Runnable {
         running = true;
         expectingData = false;
         complete = new Deque();
-        gzipInputBuffer = new byte[0x71868];
+        gzipInputBuffer = new byte[999999];
         requests = new Queue();
         versions = new int[4][];
         unrequested = new Deque();
