@@ -293,6 +293,7 @@ public final class ObjectDefinition implements ObjectComposition {
             }
 
             model.normalise();
+            model.resetBounds();
         }
         return model;
     }

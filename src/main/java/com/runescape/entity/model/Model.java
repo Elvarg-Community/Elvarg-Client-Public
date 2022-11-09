@@ -1695,12 +1695,9 @@ public class Model extends Renderable implements RSModel {
         boolean highlighted = false;
 
         int var52;
-        int var53;
-        int var54;
-        if (var32 && mouseInViewport) {
+        if (uid > 0 && var32 && mouseInViewport) {
             boolean withinBounds = false;
 
-//			if (!ViewportMouse.ViewportMouse_false0) {
             byte distanceMin = 50;
             short distanceMax = 3500;
             int var43 = (cursorX - Rasterizer3D.originViewX) * distanceMin / Rasterizer3D.fieldOfView;
@@ -1708,10 +1705,10 @@ public class Model extends Renderable implements RSModel {
             int var45 = (cursorX - Rasterizer3D.originViewX) * distanceMax / Rasterizer3D.fieldOfView;
             int var46 = (cursorY - Rasterizer3D.originViewY) * distanceMax / Rasterizer3D.fieldOfView;
             int var47 = Rasterizer3D.method4045(var44, distanceMin, SceneGraph.camUpDownX, SceneGraph.camUpDownY);
-            var53 = Rasterizer3D.method4046(var44, distanceMin, SceneGraph.camUpDownX, SceneGraph.camUpDownY);
+            int var53 = Rasterizer3D.method4046(var44, distanceMin, SceneGraph.camUpDownX, SceneGraph.camUpDownY);
             var44 = var47;
             var47 = Rasterizer3D.method4045(var46, distanceMax, SceneGraph.camUpDownX, SceneGraph.camUpDownY);
-            var54 = Rasterizer3D.method4046(var46, distanceMax, SceneGraph.camUpDownX, SceneGraph.camUpDownY);
+            int var54 = Rasterizer3D.method4046(var46, distanceMax, SceneGraph.camUpDownX, SceneGraph.camUpDownY);
             var46 = var47;
             var47 = Rasterizer3D.method4025(var43, var53, SceneGraph.camLeftRightX, SceneGraph.camLeftRightY);
             var53 = Rasterizer3D.method4044(var43, var53, SceneGraph.camLeftRightX, SceneGraph.camLeftRightY);
@@ -1727,33 +1724,28 @@ public class Model extends Renderable implements RSModel {
             int class421_field4607 = Math.abs(ViewportMouse_field2589);
             int ViewportMouse_field2590 = Math.abs(ItemComposition_field2148);
             int class136_field1612 = Math.abs(User_field4308);
-//			}
 
-            int var37 = this.xMid + offsetX;
+            int var37 = offsetX + this.xMid;
             int var38 = offsetY + this.yMid;
             int var39 = offsetZ + this.zMid;
-            int var40 = this.xMidOffset;
-            var53 = this.yMidOffset;
-            var54 = this.zMidOffset;
             var43 = ViewportMouse_field2588 - var37;
             var44 = GZipDecompressor_field4821 - var38;
             var45 = class340_field4138 - var39;
-            if (Math.abs(var43) > var40 + class421_field4607) {
+            if (Math.abs(var43) > xMidOffset + class421_field4607) {
                 withinBounds = false;
-            } else if (Math.abs(var44) > var53 + ViewportMouse_field2590) {
+            } else if (Math.abs(var44) > yMidOffset + ViewportMouse_field2590) {
                 withinBounds = false;
-            } else if (Math.abs(var45) > var54 + class136_field1612) {
+            } else if (Math.abs(var45) > zMidOffset + class136_field1612) {
                 withinBounds = false;
-            } else if (Math.abs(var45 * ItemComposition_field2148 - var44 * User_field4308) > var53 * class136_field1612 + var54 * ViewportMouse_field2590) {
+            } else if (Math.abs(var45 * ItemComposition_field2148 - var44 * User_field4308) > yMidOffset * class136_field1612 + zMidOffset * ViewportMouse_field2590) {
                 withinBounds = false;
-            } else if (Math.abs(var43 * User_field4308 - var45 * ViewportMouse_field2589) > var54 * class421_field4607 + var40 * class136_field1612) {
+            } else if (Math.abs(var43 * User_field4308 - var45 * ViewportMouse_field2589) > zMidOffset * class421_field4607 + xMidOffset * class136_field1612) {
                 withinBounds = false;
-            } else if (Math.abs(var44 * ViewportMouse_field2589 - var43 * ItemComposition_field2148) > var40 * ViewportMouse_field2590 + var53 * class421_field4607) {
+            } else if (Math.abs(var44 * ViewportMouse_field2589 - var43 * ItemComposition_field2148) > xMidOffset * ViewportMouse_field2590 + yMidOffset * class421_field4607) {
                 withinBounds = false;
             } else {
                 withinBounds = true;
             }
-//          }
 
             if (withinBounds) {
                 if (this.singleTile) {
@@ -1769,8 +1761,6 @@ public class Model extends Renderable implements RSModel {
             }
         }
 
-        int var51 = Rasterizer3D.originViewX;
-        var52 = Rasterizer3D.originViewY;
         int sineX = 0;
         int cosineX = 0;
         if (orientation != 0) {
@@ -1791,6 +1781,7 @@ public class Model extends Renderable implements RSModel {
             positionX += offsetX;
             rasterY += offsetY;
             positionZ += offsetZ;
+
             int positionY = positionZ * yawSin + yawCos * positionX >> 16;
             positionZ = yawCos * positionZ - positionX * yawSin >> 16;
             positionX = positionY;
@@ -1798,8 +1789,8 @@ public class Model extends Renderable implements RSModel {
             positionZ = rasterY * pitchSine + pitchCos * positionZ >> 16;
             vertexScreenZ[index] = positionZ - sceneY;
             if (positionZ >= 50) {
-                vertexScreenX[index] = positionX * Rasterizer3D.fieldOfView / positionZ + var51;
-                vertexScreenY[index] = positionY * Rasterizer3D.fieldOfView / positionZ + var52;
+                vertexScreenX[index] = positionX * Rasterizer3D.fieldOfView / positionZ + Rasterizer3D.originViewX;
+                vertexScreenY[index] = positionY * Rasterizer3D.fieldOfView / positionZ + Rasterizer3D.originViewY;
             } else {
                 vertexScreenX[index] = -5000;
                 var25 = true;
@@ -1813,7 +1804,6 @@ public class Model extends Renderable implements RSModel {
         }
 
         try {
-           
             if (!gpu || (highlighted && !(Math.sqrt(offsetX * offsetX + offsetZ * offsetZ) > 35 * Perspective.LOCAL_TILE_SIZE))) {
                 withinObject(nearSight, highlighted, uid);
             }
