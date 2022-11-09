@@ -2,6 +2,7 @@ package com.runescape.model.content;
 
 import com.runescape.Client;
 import com.runescape.Configuration;
+import com.runescape.UserPreferences;
 import com.runescape.cache.graphics.widget.Widget;
 
 import java.awt.event.KeyEvent;
@@ -45,7 +46,7 @@ public class Keybinding {
                 KeyEvent.VK_F11,
                 KeyEvent.VK_F12,
         };
-        Configuration.escapeCloseInterface = true;
+        Client.preferences.setEscapeCloseInterface(true);
     }
 
     public static void checkDuplicates(int key, int index) {
@@ -55,16 +56,16 @@ public class Keybinding {
                 Widget.interfaceCache[MIN_FRAME + 3 * i].dropdown.setSelected("None");
             }
         }
-        if (index != -1 && KEYS[key] == KeyEvent.VK_ESCAPE && Configuration.escapeCloseInterface) {
-            Configuration.escapeCloseInterface = !Configuration.escapeCloseInterface;
-            Widget.interfaceCache[ESCAPE_CONFIG].active = Configuration.escapeCloseInterface;
+        if (index != -1 && KEYS[key] == KeyEvent.VK_ESCAPE && Client.preferences.getEscapeCloseInterface()) {
+            Client.preferences.setEscapeCloseInterface(!Client.preferences.getEscapeCloseInterface());
+            Widget.interfaceCache[ESCAPE_CONFIG].active = Client.preferences.getEscapeCloseInterface();
         }
     }
 
     public static void bind(int index, int key) {
         checkDuplicates(key, index);
         KEYBINDINGS[index] = KEYS[key];
-        Client.instance.savePlayerData();
+        UserPreferences.INSTANCE.save();
     }
 
     public static boolean isBound(int key) {
@@ -93,6 +94,6 @@ public class Keybinding {
 
             Widget.interfaceCache[MIN_FRAME + 3 * i].dropdown.setSelected(current);
         }
-        Widget.interfaceCache[ESCAPE_CONFIG].active = Configuration.escapeCloseInterface;
+        Widget.interfaceCache[ESCAPE_CONFIG].active = Client.preferences.getEscapeCloseInterface();
     }
 }

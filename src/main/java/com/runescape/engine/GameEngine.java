@@ -1,6 +1,7 @@
 package com.runescape.engine;
 
 import com.runescape.Client;
+import com.runescape.UserPreferences;
 import com.runescape.draw.ProducingGraphicsBuffer;
 import com.runescape.engine.impl.KeyHandler;
 import com.runescape.engine.impl.MouseHandler;
@@ -590,6 +591,7 @@ public abstract class GameEngine extends Applet implements Runnable, WindowListe
             stopTimeMs = method2692();
             TaskUtils.sleep(5000L);
             kill();
+            UserPreferences.INSTANCE.save();
         }
     }
 

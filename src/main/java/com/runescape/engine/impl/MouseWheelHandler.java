@@ -112,7 +112,7 @@ public class MouseWheelHandler implements MouseWheelListener, RSMouseWheelHandle
             if (tab != null) {
                 offsetX = fixed ? 558 : Client.canvasWidth - 217;
                 offsetY = fixed ? 205 : Client.canvasHeight - 298;
-                if (!fixed && Client.stackSideStones && Client.canvasWidth <= 1000) {
+                if (!fixed && Client.preferences.getStackSideStones() && Client.canvasWidth <= 1000) {
                     offsetX = Client.canvasWidth - 198;
                     offsetY = Client.canvasHeight - 335;
                 }
@@ -139,7 +139,7 @@ public class MouseWheelHandler implements MouseWheelListener, RSMouseWheelHandle
             int w = 512, h = 334;
             int x = (Client.canvasWidth / 2) - 240;
             int y = (Client.canvasHeight / 2) - 167;
-            int count = Client.stackSideStones ? 3 : 4;
+            int count = Client.preferences.getStackSideStones() ? 3 : 4;
             if (!Client.instance.isResized()) {
                 for (int i = 0; i < count; i++) {
                     if (x + w > (Client.canvasWidth - 225)) {

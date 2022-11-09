@@ -11,7 +11,10 @@ import java.awt.image.ImageFilter;
 import java.awt.image.ImageProducer;
 import java.awt.image.PixelGrabber;
 import java.awt.image.RGBImageFilter;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 
+import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
 import com.runescape.Client;
@@ -47,6 +50,29 @@ public final class Sprite extends Rasterizer2D implements RSSpritePixels {
 
         Color color = Color.MAGENTA;
         setTransparency (color.getRed(), color.getGreen(), color.getBlue());
+    }
+
+    public Sprite(byte[] data, int file) {
+        try {
+
+            InputStream is = new ByteArrayInputStream(data);
+            BufferedImage image = ImageIO.read(is);
+
+            myWidth = image.getWidth();
+            myHeight = image.getHeight();
+            maxWidth = myWidth;
+            maxHeight = myHeight;
+            drawOffsetX = 0;
+            drawOffsetY = 0;
+            myPixels = new int[myWidth * myHeight];
+            PixelGrabber pixelgrabber = new PixelGrabber(image, 0, 0, myWidth, myHeight, myPixels, 0, myWidth);
+            pixelgrabber.grabPixels();
+            Color color = Color.MAGENTA;
+            setTransparency(color.getRed(), color.getGreen(), color.getBlue());
+        } catch(Exception _ex) {
+            System.out.println("Could not load Image: " + file);
+            _ex.printStackTrace();
+        }
     }
 
     public Sprite(int i, int j) {
@@ -227,14 +253,19 @@ public final class Sprite extends Rasterizer2D implements RSSpritePixels {
         return Toolkit.getDefaultToolkit().createImage(spriteData);
     }
 
+    public void drawHoverSprite(int x, int y, Sprite hover) {
+        drawHoverSprite(x,y,0,0,hover);
+    }
+
     public void drawHoverSprite(int x, int y, int offsetX, int offsetY, Sprite hover) {
         if (this == EMPTY_SPRITE) {
             return;
         }
-        this.drawSprite(x, y);
         if (MouseHandler.mouseX >= offsetX + x && MouseHandler.mouseX <= offsetX + x + this.myWidth
                 && MouseHandler.mouseY >= offsetY + y && MouseHandler.mouseY <= offsetY + y + this.myHeight) {
             hover.drawSprite(x, y);
+        } else {
+            this.drawSprite(x, y);
         }
     }
 

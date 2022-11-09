@@ -1,5 +1,6 @@
 package com.runescape.draw;
 
+import static com.runescape.Client.preferences;
 import static com.runescape.Client.tick;
 
 import java.text.SimpleDateFormat;
@@ -149,7 +150,7 @@ public class Console {
 			}
 			break;
 		case "music":
-			Configuration.enableMusic = !Configuration.enableMusic;
+			preferences.setEnableMusic(!preferences.getEnableMusic());
 			break;
 		case "rint":
             GameFont gameFont = new GameFont(true, "q8_full", client().titleArchive);
