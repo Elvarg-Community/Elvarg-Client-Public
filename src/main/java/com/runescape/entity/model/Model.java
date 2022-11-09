@@ -755,13 +755,13 @@ public class Model extends Renderable implements RSModel {
             this.boundsType = 2;
             this.diagonal2DAboveOrigin = 0;
 
-            for (int var1 = 0; var1 < this.verticesCount; ++var1) {
-                int var2 = this.verticesX[var1];
-                int var3 = this.verticesY[var1];
-                int var4 = this.verticesZ[var1];
-                int var5 = var2 * var2 + var4 * var4 + var3 * var3;
-                if (var5 > this.diagonal2DAboveOrigin) {
-                    this.diagonal2DAboveOrigin = var5;
+            for (int count = 0; count < this.verticesCount; ++count) {
+                int vertX = this.verticesX[count];
+                int vertY = this.verticesY[count];
+                int vertZ = this.verticesZ[count];
+                int origin = vertX * vertX + vertZ * vertZ + vertY * vertY;
+                if (origin > this.diagonal2DAboveOrigin) {
+                    this.diagonal2DAboveOrigin = origin;
                 }
             }
 
@@ -1584,52 +1584,52 @@ public class Model extends Renderable implements RSModel {
         return var2;
     }
 
-    private void calculateBoundingBox(int var1) {
+    private void calculateBoundingBox(int size) {
         if (this.xMidOffset == -1) {
-            int var2 = 0;
-            int var3 = 0;
-            int var4 = 0;
-            int var5 = 0;
-            int var6 = 0;
-            int var7 = 0;
-            int var8 = COSINE[var1];
-            int var9 = SINE[var1];
+            int minxX = 0;
+            int minZ = 0;
+            int minY = 0;
+            int maxX = 0;
+            int maxZ = 0;
+            int maxY = 0;
+            int var8 = COSINE[size];
+            int var9 = SINE[size];
 
             for (int var10 = 0; var10 < this.verticesCount; ++var10) {
-                int var11 = Rasterizer3D.method4045(this.verticesX[var10], this.verticesZ[var10], var8, var9);
-                int var12 = this.verticesY[var10];
-                int var13 = Rasterizer3D.method4046(this.verticesX[var10], this.verticesZ[var10], var8, var9);
-                if (var11 < var2) {
-                    var2 = var11;
+                int x = Rasterizer3D.method4045(this.verticesX[var10], this.verticesZ[var10], var8, var9);
+                int z = this.verticesY[var10];
+                int y = Rasterizer3D.method4046(this.verticesX[var10], this.verticesZ[var10], var8, var9);
+                if (x < minxX) {
+                    minxX = x;
                 }
 
-                if (var11 > var5) {
-                    var5 = var11;
+                if (x > maxX) {
+                    maxX = x;
                 }
 
-                if (var12 < var3) {
-                    var3 = var12;
+                if (z < minZ) {
+                    minZ = z;
                 }
 
-                if (var12 > var6) {
-                    var6 = var12;
+                if (z > maxZ) {
+                    maxZ = z;
                 }
 
-                if (var13 < var4) {
-                    var4 = var13;
+                if (y < minY) {
+                    minY = y;
                 }
 
-                if (var13 > var7) {
-                    var7 = var13;
+                if (y > maxY) {
+                    maxY = y;
                 }
             }
 
-            this.xMid = (var5 + var2) / 2;
-            this.yMid = (var6 + var3) / 2;
-            this.zMid = (var7 + var4) / 2;
-            this.xMidOffset = (var5 - var2 + 1) / 2;
-            this.yMidOffset = (var6 - var3 + 1) / 2;
-            this.zMidOffset = (var7 - var4 + 1) / 2;
+            this.xMid = (maxX + minxX) / 2;
+            this.yMid = (maxZ + minZ) / 2;
+            this.zMid = (maxY + minY) / 2;
+            this.xMidOffset = (maxX - minxX + 1) / 2;
+            this.yMidOffset = (maxZ - minZ + 1) / 2;
+            this.zMidOffset = (maxY - minY + 1) / 2;
             if (this.xMidOffset < 32) {
                 this.xMidOffset = 32;
             }
