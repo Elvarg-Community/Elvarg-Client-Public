@@ -59,7 +59,6 @@ public class Model extends Renderable implements RSModel {
             ModelLoader.decodeOldFormat(this, data);
         }
 
-        resetBounds();
     }
 
     public static void loadModel(final byte[] modelData, final int modelId) {
@@ -692,7 +691,7 @@ public class Model extends Renderable implements RSModel {
         vertexNormalsZ = model.vertexNormalsZ;
         faceTextureUVCoordinates = model.faceTextureUVCoordinates;
 
-        model.resetBounds(); // L: 311
+        model.resetBounds();
     }
 
     private int getFirstIdenticalVertexId(final Model model, final int vertex) {
@@ -724,8 +723,8 @@ public class Model extends Renderable implements RSModel {
     private int boundsType;
 
     public void calculateDiagonals() {
-        //if (this.boundsType != 1) { // L: 354
-            this.boundsType = 1; // L: 355
+       
+            this.boundsType = 1;
             super.modelBaseY = 0;
             diagonal2DAboveOrigin = 0;
             maxY = 0;
@@ -744,7 +743,7 @@ public class Model extends Renderable implements RSModel {
                     diagonal2DAboveOrigin = bounds;
                 }
             }
-        //}
+       
 
         diagonal2DAboveOrigin = (int)(Math.sqrt(diagonal2DAboveOrigin) + 0.98999999999999999);
         diagonal3DAboveOrigin = (int)(Math.sqrt(diagonal2DAboveOrigin * diagonal2DAboveOrigin + super.modelBaseY * super.modelBaseY) + 0.98999999999999999);
@@ -752,25 +751,25 @@ public class Model extends Renderable implements RSModel {
     }
 
     void method4391() {
-        if (this.boundsType != 2) { // L: 374
-            this.boundsType = 2; // L: 375
-            this.diagonal2DAboveOrigin = 0; // L: 376
+        if (this.boundsType != 2) {
+            this.boundsType = 2;
+            this.diagonal2DAboveOrigin = 0;
 
-            for (int var1 = 0; var1 < this.verticesCount; ++var1) { // L: 377
-                int var2 = this.verticesX[var1]; // L: 378
-                int var3 = this.verticesY[var1]; // L: 379
-                int var4 = this.verticesZ[var1]; // L: 380
-                int var5 = var2 * var2 + var4 * var4 + var3 * var3; // L: 381
-                if (var5 > this.diagonal2DAboveOrigin) { // L: 382
+            for (int var1 = 0; var1 < this.verticesCount; ++var1) {
+                int var2 = this.verticesX[var1];
+                int var3 = this.verticesY[var1];
+                int var4 = this.verticesZ[var1];
+                int var5 = var2 * var2 + var4 * var4 + var3 * var3;
+                if (var5 > this.diagonal2DAboveOrigin) {
                     this.diagonal2DAboveOrigin = var5;
                 }
             }
 
-            this.diagonal2DAboveOrigin = (int)(Math.sqrt((double)this.diagonal2DAboveOrigin) + 0.99D); // L: 384
-            this.diagonal3DAboveOrigin = this.diagonal2DAboveOrigin; // L: 385
-            this.diagonal3D = this.diagonal2DAboveOrigin + this.diagonal2DAboveOrigin; // L: 386
+            this.diagonal2DAboveOrigin = (int)(Math.sqrt((double)this.diagonal2DAboveOrigin) + 0.99D);
+            this.diagonal3DAboveOrigin = this.diagonal2DAboveOrigin;
+            this.diagonal3D = this.diagonal2DAboveOrigin + this.diagonal2DAboveOrigin;
         }
-    } // L: 387
+    }
 
     public void normalise() {
         super.modelBaseY = 0;
@@ -999,15 +998,15 @@ public class Model extends Renderable implements RSModel {
                 if (k3 < faceGroups.length) {
                     int ai4[] = faceGroups[k3];
                     for (int l4 = 0; l4 < ai4.length; l4++) {
-                        int var13 = ai4[l4]; // L: 441
-                        int var14 = (this.triangleAlpha[var13] & 255) + x * 8; // L: 442
+                        int var13 = ai4[l4];
+                        int var14 = (this.triangleAlpha[var13] & 255) + x * 8;
                         if (var14 < 0) {
                             var14 = 0;
                         } else if (var14 > 255) {
                             var14 = 255;
                         }
 
-                        this.triangleAlpha[var13] = (byte)var14; // L: 445
+                        this.triangleAlpha[var13] = (byte)var14;
                     }
 
                 }
@@ -1037,7 +1036,7 @@ public class Model extends Renderable implements RSModel {
             transform(base.transformationType[pos], base.skinList[pos], frame.transformX[index], frame.transformY[index], frame.transformZ[index]);
         }
 
-        this.resetBounds(); // L: 411
+        this.resetBounds();
     }
 
 
@@ -1066,7 +1065,7 @@ public class Model extends Renderable implements RSModel {
         int table = label[id++];
         for (int index = 0; index < anim.transformationCount; index++) {
             int condition;
-            for (condition = anim.transformationIndices[index]; condition > table; table = label[id++]) { // L: 475 476
+            for (condition = anim.transformationIndices[index]; condition > table; table = label[id++]) {
             }
 
             if (condition != table || list.transformationType[condition] == 0) {
@@ -1081,7 +1080,7 @@ public class Model extends Renderable implements RSModel {
         table = label[id++];
         for (int index = 0; index < skin.transformationCount; index++) {
             int condition;
-            for (condition = skin.transformationIndices[index]; condition > table; table = label[id++]) { // L: 485 486
+            for (condition = skin.transformationIndices[index]; condition > table; table = label[id++]) {
             }
 
             if (condition == table || list.transformationType[condition] == 0) {
@@ -1089,7 +1088,7 @@ public class Model extends Renderable implements RSModel {
             }
         }
 
-        this.resetBounds(); // L: 489
+        this.resetBounds();
     }
 
 
@@ -1100,7 +1099,7 @@ public class Model extends Renderable implements RSModel {
             verticesZ[vertex] = -vertexX;
         }
 
-        this.resetBounds(); // L: 664
+        this.resetBounds();
     }
 
     public void rotateZ(final int degrees) {
@@ -1112,7 +1111,7 @@ public class Model extends Renderable implements RSModel {
             verticesY[vertex] = newVertexY;
         }
 
-        this.resetBounds(); // L: 692
+        this.resetBounds();
     }
 
     public void offsetBy(final int x, final int z, final int y) {
@@ -1122,7 +1121,7 @@ public class Model extends Renderable implements RSModel {
             verticesZ[vertex] += z;
         }
 
-        this.resetBounds(); // L: 701
+        this.resetBounds();
     }
 
     public void scale(final int x, final int z, final int y) {
@@ -1132,7 +1131,7 @@ public class Model extends Renderable implements RSModel {
             verticesZ[vertex] = (verticesZ[vertex] * z) / 128;
         }
 
-        this.resetBounds(); // L: 710
+        this.resetBounds();
     }
 
     public void recolor(int found, int replace) {
@@ -1240,7 +1239,7 @@ public class Model extends Renderable implements RSModel {
         }
     }
 
-    public void light(int ambient, int contrast, int x, int y, int z, boolean flag) {
+    public void light(int ambient, int contrast, int x, int y, int z, boolean flat) {
 
         calculateVertexNormals();
         int magnitude = (int) Math.sqrt(x * x + y * y + z * z);
@@ -1339,11 +1338,14 @@ public class Model extends Renderable implements RSModel {
                 colorsZ[var16] = -2;
             }
         }
-        if (flag) {
+
+        if (flat) {
             this.calculateDiagonals();
         } else {
             this.calculateDiagonalsAndBounds(22);
         }
+
+        resetBounds();
 
         if (faceTextureUVCoordinates == null)
         {
@@ -1410,26 +1412,26 @@ public class Model extends Renderable implements RSModel {
             int j2 = trianglesZ[j1];
             if (drawType == null) {
                 int i3 = colors[j1];
-                VertexNormal class33 = super.normals[k1];
-                int k2 = i + (k * class33.x + l * class33.y + i1 * class33.z) / (j * class33.magnitude);
+                VertexNormal vertexNormal = super.normals[k1];
+                int k2 = i + (k * vertexNormal.x + l * vertexNormal.y + i1 * vertexNormal.z) / (j * vertexNormal.magnitude);
                 colorsX[j1] = mixLightness(i3, k2, 0);
-                class33 = super.normals[i2];
-                k2 = i + (k * class33.x + l * class33.y + i1 * class33.z) / (j * class33.magnitude);
+                vertexNormal = super.normals[i2];
+                k2 = i + (k * vertexNormal.x + l * vertexNormal.y + i1 * vertexNormal.z) / (j * vertexNormal.magnitude);
                 colorsY[j1] = mixLightness(i3, k2, 0);
-                class33 = super.normals[j2];
-                k2 = i + (k * class33.x + l * class33.y + i1 * class33.z) / (j * class33.magnitude);
+                vertexNormal = super.normals[j2];
+                k2 = i + (k * vertexNormal.x + l * vertexNormal.y + i1 * vertexNormal.z) / (j * vertexNormal.magnitude);
                 colorsZ[j1] = mixLightness(i3, k2, 0);
             } else if ((drawType[j1] & 1) == 0) {
                 int j3 = colors[j1];
                 int k3 = drawType[j1];
-                VertexNormal class33_1 = super.normals[k1];
-                int l2 = i + (k * class33_1.x + l * class33_1.y + i1 * class33_1.z) / (j * class33_1.magnitude);
+                VertexNormal vertexNormal = super.normals[k1];
+                int l2 = i + (k * vertexNormal.x + l * vertexNormal.y + i1 * vertexNormal.z) / (j * vertexNormal.magnitude);
                 colorsX[j1] = mixLightness(j3, l2, k3);
-                class33_1 = super.normals[i2];
-                l2 = i + (k * class33_1.x + l * class33_1.y + i1 * class33_1.z) / (j * class33_1.magnitude);
+                vertexNormal = super.normals[i2];
+                l2 = i + (k * vertexNormal.x + l * vertexNormal.y + i1 * vertexNormal.z) / (j * vertexNormal.magnitude);
                 colorsY[j1] = mixLightness(j3, l2, k3);
-                class33_1 = super.normals[j2];
-                l2 = i + (k * class33_1.x + l * class33_1.y + i1 * class33_1.z) / (j * class33_1.magnitude);
+                vertexNormal = super.normals[j2];
+                l2 = i + (k * vertexNormal.x + l * vertexNormal.y + i1 * vertexNormal.z) / (j * vertexNormal.magnitude);
                 colorsZ[j1] = mixLightness(j3, l2, k3);
             }
         }
@@ -1500,7 +1502,8 @@ public class Model extends Renderable implements RSModel {
 
 
     public void renderModel(final int rotationY, final int rotationZ, final int rotationXW, final int translationX, final int translationY, final int translationZ) {
-        if (this.boundsType != 2 && this.boundsType != 1) { // L: 715
+
+        if (this.boundsType != 2 && this.boundsType != 1) {
             this.method4391();
         }
 
@@ -1553,32 +1556,32 @@ public class Model extends Renderable implements RSModel {
     private static boolean mouseInViewport = false;
 
     public static void cursorCalculations() {
-        int mouseX = MouseHandler.mouseX; // L: 4567
-        int mouseY = MouseHandler.mouseY; // L: 4568
-        if (MouseHandler.lastButton != 0) { // L: 4569
-            mouseX = MouseHandler.saveClickX; // L: 4570
-            mouseY = MouseHandler.saveClickY; // L: 4571
+        int mouseX = MouseHandler.mouseX;
+        int mouseY = MouseHandler.mouseY;
+        if (MouseHandler.lastButton != 0) {
+            mouseX = MouseHandler.saveClickX;
+            mouseY = MouseHandler.saveClickY;
         }
 
-        if (mouseX >= Client.instance.getViewportXOffset() && mouseX < Client.instance.getViewportXOffset() + Client.instance.getViewportWidth() && mouseY >= Client.instance.getViewportYOffset() && mouseY < Client.instance.getViewportHeight() + Client.instance.getViewportYOffset()) { // L: 4573
-            cursorX = mouseX - Client.instance.getViewportXOffset(); // L: 4577
-            cursorY = mouseY - Client.instance.getViewportYOffset(); // L: 4578
-            mouseInViewport = true; // L: 4579
-            objectsHovering = 0; // L: 4580
+        if (mouseX >= Client.instance.getViewportXOffset() && mouseX < Client.instance.getViewportXOffset() + Client.instance.getViewportWidth() && mouseY >= Client.instance.getViewportYOffset() && mouseY < Client.instance.getViewportHeight() + Client.instance.getViewportYOffset()) {
+            cursorX = mouseX - Client.instance.getViewportXOffset();
+            cursorY = mouseY - Client.instance.getViewportYOffset();
+            mouseInViewport = true;
+            objectsHovering = 0;
         } else {
-            mouseInViewport = false; // L: 4586
-            objectsHovering = 0; // L: 4587
+            mouseInViewport = false;
+            objectsHovering = 0;
         }
     }
 
     public static boolean method322(long var0) {
-        boolean var2 = var0 != 0L; // L: 52
-        if (var2) { // L: 53
-            boolean var3 = (int)(var0 >>> 16 & 1L) == 1; // L: 56
-            var2 = !var3; // L: 58
+        boolean var2 = var0 != 0L;
+        if (var2) {
+            boolean var3 = (int)(var0 >>> 16 & 1L) == 1;
+            var2 = !var3;
         }
 
-        return var2; // L: 60
+        return var2;
     }
 
     private void calculateBoundingBox(int var1) {
@@ -1642,10 +1645,10 @@ public class Model extends Renderable implements RSModel {
         }
     }
 
-    //Scene models
+   
     @Override
     public final void renderAtPoint(int orientation, int pitchSine, int pitchCos, int yawSin, int yawCos, int offsetX, int offsetY, int offsetZ, long uid) {
-        if (this.boundsType != 1) { // L: 823
+        if (this.boundsType != 1) {
             this.calculateBoundsCylinder();
         }
 
@@ -1668,9 +1671,9 @@ public class Model extends Renderable implements RSModel {
 
         int yRot = offsetY * pitchCos - sceneX * pitchSine >> 16;
         int dimensionCosY = diagonal2DAboveOrigin * pitchSine >> 16;
-        //int objHeight = (yRot + dimensionCosY) * Rasterizer3D.fieldOfView;
-        int var20 = (pitchCos * this.maxY >> 16) + dimensionCosY; // L: 837
-        int objHeight = (yRot + var20) * Rasterizer3D.fieldOfView; // L: 838
+       
+        int var20 = (pitchCos * this.maxY >> 16) + dimensionCosY;
+        int objHeight = (yRot + var20) * Rasterizer3D.fieldOfView;
         if (objHeight / pos <= -Rasterizer2D.viewportCenterY)
             return;
 
@@ -1681,101 +1684,101 @@ public class Model extends Renderable implements RSModel {
 
         int size = dimensionSinY + (super.modelBaseY * pitchSine >> 16);
 
-        boolean var25 = false; // L: 844
+        boolean var25 = false;
         boolean nearSight = false;//wrong
         if (sceneY - size <= 50)
             nearSight = true;
 
-        boolean var27 = nearSight || this.texturesCount > 0; // L: 847
+        boolean var27 = nearSight || this.texturesCount > 0;
 
-        boolean var32 = method322(uid); // L: 855
-        boolean highlighted = false; // L: 856
+        boolean var32 = method322(uid);
+        boolean highlighted = false;
 
         int var52;
         int var53;
         int var54;
-        if (var32 && mouseInViewport) { // L: 857
-            boolean withinBounds = false; // L: 858
+        if (var32 && mouseInViewport) {
+            boolean withinBounds = false;
 
             int var43;
             int var44;
             int var45;
-//			if (!ViewportMouse.ViewportMouse_false0) { // L: 868
-            byte var41 = 50; // L: 873
-            short var42 = 3500; // L: 874
-            var43 = (cursorX - Rasterizer3D.originViewX) * var41 / Rasterizer3D.fieldOfView; // L: 875
-            var44 = (cursorY - Rasterizer3D.originViewY) * var41 / Rasterizer3D.fieldOfView; // L: 876
-            var45 = (cursorX - Rasterizer3D.originViewX) * var42 / Rasterizer3D.fieldOfView; // L: 877
-            int var46 = (cursorY - Rasterizer3D.originViewY) * var42 / Rasterizer3D.fieldOfView; // L: 878
-            int var47 = Rasterizer3D.method4045(var44, var41, SceneGraph.camUpDownX, SceneGraph.camUpDownY); // L: 880
-            var53 = Rasterizer3D.method4046(var44, var41, SceneGraph.camUpDownX, SceneGraph.camUpDownY); // L: 881
-            var44 = var47; // L: 882
-            var47 = Rasterizer3D.method4045(var46, var42, SceneGraph.camUpDownX, SceneGraph.camUpDownY); // L: 883
-            var54 = Rasterizer3D.method4046(var46, var42, SceneGraph.camUpDownX, SceneGraph.camUpDownY); // L: 884
-            var46 = var47; // L: 885
-            var47 = Rasterizer3D.method4025(var43, var53, SceneGraph.camLeftRightX, SceneGraph.camLeftRightY); // L: 886
-            var53 = Rasterizer3D.method4044(var43, var53, SceneGraph.camLeftRightX, SceneGraph.camLeftRightY); // L: 887
-            var43 = var47; // L: 888
-            var47 = Rasterizer3D.method4025(var45, var54, SceneGraph.camLeftRightX, SceneGraph.camLeftRightY); // L: 889
-            var54 = Rasterizer3D.method4044(var45, var54, SceneGraph.camLeftRightX, SceneGraph.camLeftRightY); // L: 890
-            int ViewportMouse_field2588 = (var43 + var47) / 2; // L: 892
-            int GZipDecompressor_field4821 = (var46 + var44) / 2; // L: 893
-            int class340_field4138 = (var54 + var53) / 2; // L: 894
-            int ViewportMouse_field2589 = (var47 - var43) / 2; // L: 895
-            int ItemComposition_field2148 = (var46 - var44) / 2; // L: 896
-            int User_field4308 = (var54 - var53) / 2; // L: 897
-            int class421_field4607 = Math.abs(ViewportMouse_field2589); // L: 898
-            int ViewportMouse_field2590 = Math.abs(ItemComposition_field2148); // L: 899
-            int class136_field1612 = Math.abs(User_field4308); // L: 900
+//			if (!ViewportMouse.ViewportMouse_false0) {
+            byte var41 = 50;
+            short var42 = 3500;
+            var43 = (cursorX - Rasterizer3D.originViewX) * var41 / Rasterizer3D.fieldOfView;
+            var44 = (cursorY - Rasterizer3D.originViewY) * var41 / Rasterizer3D.fieldOfView;
+            var45 = (cursorX - Rasterizer3D.originViewX) * var42 / Rasterizer3D.fieldOfView;
+            int var46 = (cursorY - Rasterizer3D.originViewY) * var42 / Rasterizer3D.fieldOfView;
+            int var47 = Rasterizer3D.method4045(var44, var41, SceneGraph.camUpDownX, SceneGraph.camUpDownY);
+            var53 = Rasterizer3D.method4046(var44, var41, SceneGraph.camUpDownX, SceneGraph.camUpDownY);
+            var44 = var47;
+            var47 = Rasterizer3D.method4045(var46, var42, SceneGraph.camUpDownX, SceneGraph.camUpDownY);
+            var54 = Rasterizer3D.method4046(var46, var42, SceneGraph.camUpDownX, SceneGraph.camUpDownY);
+            var46 = var47;
+            var47 = Rasterizer3D.method4025(var43, var53, SceneGraph.camLeftRightX, SceneGraph.camLeftRightY);
+            var53 = Rasterizer3D.method4044(var43, var53, SceneGraph.camLeftRightX, SceneGraph.camLeftRightY);
+            var43 = var47;
+            var47 = Rasterizer3D.method4025(var45, var54, SceneGraph.camLeftRightX, SceneGraph.camLeftRightY);
+            var54 = Rasterizer3D.method4044(var45, var54, SceneGraph.camLeftRightX, SceneGraph.camLeftRightY);
+            int ViewportMouse_field2588 = (var43 + var47) / 2;
+            int GZipDecompressor_field4821 = (var46 + var44) / 2;
+            int class340_field4138 = (var54 + var53) / 2;
+            int ViewportMouse_field2589 = (var47 - var43) / 2;
+            int ItemComposition_field2148 = (var46 - var44) / 2;
+            int User_field4308 = (var54 - var53) / 2;
+            int class421_field4607 = Math.abs(ViewportMouse_field2589);
+            int ViewportMouse_field2590 = Math.abs(ItemComposition_field2148);
+            int class136_field1612 = Math.abs(User_field4308);
 //			}
 
-            int var37 = this.xMid + offsetX; // L: 902
-            int var38 = offsetY + this.yMid; // L: 903
-            int var39 = offsetZ + this.zMid; // L: 904
-            int var40 = this.xMidOffset; // L: 905
-            var53 = this.yMidOffset; // L: 906
-            var54 = this.zMidOffset; // L: 907
-            var43 = ViewportMouse_field2588 - var37; // L: 908
-            var44 = GZipDecompressor_field4821 - var38; // L: 909
-            var45 = class340_field4138 - var39; // L: 910
-            if (Math.abs(var43) > var40 + class421_field4607) { // L: 911
-                withinBounds = false; // L: 912
-            } else if (Math.abs(var44) > var53 + ViewportMouse_field2590) { // L: 915
-                withinBounds = false; // L: 916
-            } else if (Math.abs(var45) > var54 + class136_field1612) { // L: 919
-                withinBounds = false; // L: 920
-            } else if (Math.abs(var45 * ItemComposition_field2148 - var44 * User_field4308) > var53 * class136_field1612 + var54 * ViewportMouse_field2590) { // L: 923
-                withinBounds = false; // L: 924
-            } else if (Math.abs(var43 * User_field4308 - var45 * ViewportMouse_field2589) > var54 * class421_field4607 + var40 * class136_field1612) { // L: 927
-                withinBounds = false; // L: 928
-            } else if (Math.abs(var44 * ViewportMouse_field2589 - var43 * ItemComposition_field2148) > var40 * ViewportMouse_field2590 + var53 * class421_field4607) { // L: 931
-                withinBounds = false; // L: 932
+            int var37 = this.xMid + offsetX;
+            int var38 = offsetY + this.yMid;
+            int var39 = offsetZ + this.zMid;
+            int var40 = this.xMidOffset;
+            var53 = this.yMidOffset;
+            var54 = this.zMidOffset;
+            var43 = ViewportMouse_field2588 - var37;
+            var44 = GZipDecompressor_field4821 - var38;
+            var45 = class340_field4138 - var39;
+            if (Math.abs(var43) > var40 + class421_field4607) {
+                withinBounds = false;
+            } else if (Math.abs(var44) > var53 + ViewportMouse_field2590) {
+                withinBounds = false;
+            } else if (Math.abs(var45) > var54 + class136_field1612) {
+                withinBounds = false;
+            } else if (Math.abs(var45 * ItemComposition_field2148 - var44 * User_field4308) > var53 * class136_field1612 + var54 * ViewportMouse_field2590) {
+                withinBounds = false;
+            } else if (Math.abs(var43 * User_field4308 - var45 * ViewportMouse_field2589) > var54 * class421_field4607 + var40 * class136_field1612) {
+                withinBounds = false;
+            } else if (Math.abs(var44 * ViewportMouse_field2589 - var43 * ItemComposition_field2148) > var40 * ViewportMouse_field2590 + var53 * class421_field4607) {
+                withinBounds = false;
             } else {
-                withinBounds = true; // L: 935
+                withinBounds = true;
             }
 //          }
 
             if (withinBounds) {
                 if (this.singleTile) {
-                    //class249.addHoveringObject(uid);
+                   
                     hoveringObjects[objectsHovering++] = uid;
                     if (gpu) {
                         Client.instance.getDrawCallbacks().draw(this, orientation, pitchSine, pitchCos, yawSin, yawCos, offsetX, offsetY, offsetZ, uid);
                         return;
                     }
                 } else {
-                    highlighted = true; // L: 966
+                    highlighted = true;
                 }
             }
         }
 
-        int var51 = Rasterizer3D.originViewX; // L: 969
-        var52 = Rasterizer3D.originViewY; // L: 970
-        int sineX = 0; // L: 971
-        int cosineX = 0; // L: 972
-        if (orientation != 0) { // L: 973
-            sineX = SINE[orientation]; // L: 974
-            cosineX = COSINE[orientation]; // L: 975
+        int var51 = Rasterizer3D.originViewX;
+        var52 = Rasterizer3D.originViewY;
+        int sineX = 0;
+        int cosineX = 0;
+        if (orientation != 0) {
+            sineX = SINE[orientation];
+            cosineX = COSINE[orientation];
         }
 
         for (int index = 0; index < this.verticesCount; ++index) {
@@ -1788,21 +1791,21 @@ public class Model extends Renderable implements RSModel {
                 rasterX = rotatedX;
             }
 
-            rasterX += offsetX; // L: 986
-            rasterY += offsetY; // L: 987
-            rasterZ += offsetZ; // L: 988
-            int position = rasterZ * yawSin + yawCos * rasterX >> 16; // L: 989
-            rasterZ = yawCos * rasterZ - rasterX * yawSin >> 16; // L: 990
-            rasterX = position; // L: 991
-            position = pitchCos * rasterY - rasterZ * pitchSine >> 16; // L: 992
-            rasterZ = rasterY * pitchSine + pitchCos * rasterZ >> 16; // L: 993
-            vertexScreenZ[index] = rasterZ - sceneY; // L: 995
-            if (rasterZ >= 50) { // L: 996
-                vertexScreenX[index] = rasterX * Rasterizer3D.fieldOfView / rasterZ + var51; // L: 997
-                vertexScreenY[index] = position * Rasterizer3D.fieldOfView / rasterZ + var52; // L: 998
+            rasterX += offsetX;
+            rasterY += offsetY;
+            rasterZ += offsetZ;
+            int position = rasterZ * yawSin + yawCos * rasterX >> 16;
+            rasterZ = yawCos * rasterZ - rasterX * yawSin >> 16;
+            rasterX = position;
+            position = pitchCos * rasterY - rasterZ * pitchSine >> 16;
+            rasterZ = rasterY * pitchSine + pitchCos * rasterZ >> 16;
+            vertexScreenZ[index] = rasterZ - sceneY;
+            if (rasterZ >= 50) {
+                vertexScreenX[index] = rasterX * Rasterizer3D.fieldOfView / rasterZ + var51;
+                vertexScreenY[index] = position * Rasterizer3D.fieldOfView / rasterZ + var52;
             } else {
                 vertexScreenX[index] = -5000;
-                var25 = true; // L: 1002
+                var25 = true;
             }
 
             if (var27) {
@@ -1813,14 +1816,14 @@ public class Model extends Renderable implements RSModel {
         }
 
         try {
-            //this.draw0(var25, highlighted, this.singleTile, uid); // L: 1011
+           
             if (!gpu || (highlighted && !(Math.sqrt(offsetX * offsetX + offsetZ * offsetZ) > 35 * Perspective.LOCAL_TILE_SIZE))) {
                 withinObject(nearSight, highlighted, uid);
             }
             if (gpu) {
                 Client.instance.getDrawCallbacks().draw(this, orientation, pitchSine, pitchCos, yawSin, yawCos, offsetX, offsetY, offsetZ, uid);
             }
-        } catch (Exception ex) { // L: 1013
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
@@ -2544,8 +2547,8 @@ public class Model extends Renderable implements RSModel {
 
     @Override
     public void resetBounds() {
-        this.boundsType = 0; // L: 395
-        this.xMidOffset = -1; // L: 396
+        this.boundsType = 0;
+        this.xMidOffset = -1;
     }
 
     @Override
@@ -2571,7 +2574,7 @@ public class Model extends Renderable implements RSModel {
             this.verticesZ[var1] = -this.verticesZ[var1];
         }
 
-        this.resetBounds(); // L: 672
+        this.resetBounds();
     }
 
     @Override
@@ -2583,7 +2586,7 @@ public class Model extends Renderable implements RSModel {
             this.verticesX[var1] = -var2;
         }
 
-        this.resetBounds(); // L: 681
+        this.resetBounds();
     }
 
     @Override
