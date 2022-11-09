@@ -1567,11 +1567,10 @@ public class Model extends Renderable implements RSModel {
             cursorX = mouseX - Client.instance.getViewportXOffset();
             cursorY = mouseY - Client.instance.getViewportYOffset();
             mouseInViewport = true;
-            objectsHovering = 0;
         } else {
             mouseInViewport = false;
-            objectsHovering = 0;
         }
+        objectsHovering = 0;
     }
 
     public static boolean method322(long var0) {
@@ -1685,7 +1684,7 @@ public class Model extends Renderable implements RSModel {
         int size = dimensionSinY + (super.modelBaseY * pitchSine >> 16);
 
         boolean var25 = false;
-        boolean nearSight = false;//wrong
+        boolean nearSight = false;
         if (sceneY - size <= 50)
             nearSight = true;
 
@@ -1695,12 +1694,9 @@ public class Model extends Renderable implements RSModel {
         boolean highlighted = false;
 
         int var52;
-        int var53;
-        int var54;
-        if (var32 && mouseInViewport) {
+        if (uid > 0 && var32 && mouseInViewport) {
             boolean withinBounds = false;
 
-//			if (!ViewportMouse.ViewportMouse_false0) {
             byte distanceMin = 50;
             short distanceMax = 3500;
             int var43 = (cursorX - Rasterizer3D.originViewX) * distanceMin / Rasterizer3D.fieldOfView;
@@ -1708,10 +1704,10 @@ public class Model extends Renderable implements RSModel {
             int var45 = (cursorX - Rasterizer3D.originViewX) * distanceMax / Rasterizer3D.fieldOfView;
             int var46 = (cursorY - Rasterizer3D.originViewY) * distanceMax / Rasterizer3D.fieldOfView;
             int var47 = Rasterizer3D.method4045(var44, distanceMin, SceneGraph.camUpDownX, SceneGraph.camUpDownY);
-            var53 = Rasterizer3D.method4046(var44, distanceMin, SceneGraph.camUpDownX, SceneGraph.camUpDownY);
+            int var53 = Rasterizer3D.method4046(var44, distanceMin, SceneGraph.camUpDownX, SceneGraph.camUpDownY);
             var44 = var47;
             var47 = Rasterizer3D.method4045(var46, distanceMax, SceneGraph.camUpDownX, SceneGraph.camUpDownY);
-            var54 = Rasterizer3D.method4046(var46, distanceMax, SceneGraph.camUpDownX, SceneGraph.camUpDownY);
+            int var54 = Rasterizer3D.method4046(var46, distanceMax, SceneGraph.camUpDownX, SceneGraph.camUpDownY);
             var46 = var47;
             var47 = Rasterizer3D.method4025(var43, var53, SceneGraph.camLeftRightX, SceneGraph.camLeftRightY);
             var53 = Rasterizer3D.method4044(var43, var53, SceneGraph.camLeftRightX, SceneGraph.camLeftRightY);
@@ -1727,33 +1723,28 @@ public class Model extends Renderable implements RSModel {
             int class421_field4607 = Math.abs(ViewportMouse_field2589);
             int ViewportMouse_field2590 = Math.abs(ItemComposition_field2148);
             int class136_field1612 = Math.abs(User_field4308);
-//			}
 
-            int var37 = this.xMid + offsetX;
+            int var37 = offsetX + this.xMid;
             int var38 = offsetY + this.yMid;
             int var39 = offsetZ + this.zMid;
-            int var40 = this.xMidOffset;
-            var53 = this.yMidOffset;
-            var54 = this.zMidOffset;
             var43 = ViewportMouse_field2588 - var37;
             var44 = GZipDecompressor_field4821 - var38;
             var45 = class340_field4138 - var39;
-            if (Math.abs(var43) > var40 + class421_field4607) {
+            if (Math.abs(var43) > xMidOffset + class421_field4607) {
                 withinBounds = false;
-            } else if (Math.abs(var44) > var53 + ViewportMouse_field2590) {
+            } else if (Math.abs(var44) > yMidOffset + ViewportMouse_field2590) {
                 withinBounds = false;
-            } else if (Math.abs(var45) > var54 + class136_field1612) {
+            } else if (Math.abs(var45) > zMidOffset + class136_field1612) {
                 withinBounds = false;
-            } else if (Math.abs(var45 * ItemComposition_field2148 - var44 * User_field4308) > var53 * class136_field1612 + var54 * ViewportMouse_field2590) {
+            } else if (Math.abs(var45 * ItemComposition_field2148 - var44 * User_field4308) > yMidOffset * class136_field1612 + zMidOffset * ViewportMouse_field2590) {
                 withinBounds = false;
-            } else if (Math.abs(var43 * User_field4308 - var45 * ViewportMouse_field2589) > var54 * class421_field4607 + var40 * class136_field1612) {
+            } else if (Math.abs(var43 * User_field4308 - var45 * ViewportMouse_field2589) > zMidOffset * class421_field4607 + xMidOffset * class136_field1612) {
                 withinBounds = false;
-            } else if (Math.abs(var44 * ViewportMouse_field2589 - var43 * ItemComposition_field2148) > var40 * ViewportMouse_field2590 + var53 * class421_field4607) {
+            } else if (Math.abs(var44 * ViewportMouse_field2589 - var43 * ItemComposition_field2148) > xMidOffset * ViewportMouse_field2590 + yMidOffset * class421_field4607) {
                 withinBounds = false;
             } else {
                 withinBounds = true;
             }
-//          }
 
             if (withinBounds) {
                 if (this.singleTile) {
@@ -1769,8 +1760,6 @@ public class Model extends Renderable implements RSModel {
             }
         }
 
-        int var51 = Rasterizer3D.originViewX;
-        var52 = Rasterizer3D.originViewY;
         int sineX = 0;
         int cosineX = 0;
         if (orientation != 0) {
@@ -1791,6 +1780,7 @@ public class Model extends Renderable implements RSModel {
             positionX += offsetX;
             rasterY += offsetY;
             positionZ += offsetZ;
+
             int positionY = positionZ * yawSin + yawCos * positionX >> 16;
             positionZ = yawCos * positionZ - positionX * yawSin >> 16;
             positionX = positionY;
@@ -1798,8 +1788,8 @@ public class Model extends Renderable implements RSModel {
             positionZ = rasterY * pitchSine + pitchCos * positionZ >> 16;
             vertexScreenZ[index] = positionZ - sceneY;
             if (positionZ >= 50) {
-                vertexScreenX[index] = positionX * Rasterizer3D.fieldOfView / positionZ + var51;
-                vertexScreenY[index] = positionY * Rasterizer3D.fieldOfView / positionZ + var52;
+                vertexScreenX[index] = positionX * Rasterizer3D.fieldOfView / positionZ + Rasterizer3D.originViewX;
+                vertexScreenY[index] = positionY * Rasterizer3D.fieldOfView / positionZ + Rasterizer3D.originViewY;
             } else {
                 vertexScreenX[index] = -5000;
                 var25 = true;
@@ -1813,9 +1803,8 @@ public class Model extends Renderable implements RSModel {
         }
 
         try {
-           
             if (!gpu || (highlighted && !(Math.sqrt(offsetX * offsetX + offsetZ * offsetZ) > 35 * Perspective.LOCAL_TILE_SIZE))) {
-                withinObject(nearSight, highlighted, uid);
+                withinObject(var25, highlighted, uid);
             }
             if (gpu) {
                 Client.instance.getDrawCallbacks().draw(this, orientation, pitchSine, pitchCos, yawSin, yawCos, offsetX, offsetY, offsetZ, uid);
@@ -1825,175 +1814,240 @@ public class Model extends Renderable implements RSModel {
         }
     }
 
-    private void withinObject(boolean flag, boolean hoverObject, long uid) {
-
-        for (int diagonalIndex = 0; diagonalIndex < diagonal3D; diagonalIndex++) {
-            depth[diagonalIndex] = 0;
-        }
-
-        for (int currentTriangle = 0; currentTriangle < trianglesCount; currentTriangle++) {
-            if (drawType == null || drawType[currentTriangle] != -1) {
-                int triX = trianglesX[currentTriangle];
-                int triY = trianglesY[currentTriangle];
-                int triZ = trianglesZ[currentTriangle];
-                int screenXX = vertexScreenX[triX];
-                int screenXY = vertexScreenX[triY];
-                int screenXZ = vertexScreenX[triZ];
-
-                if (flag && (screenXX == -5000 || screenXY == -5000 || screenXZ == -5000)) {
-                    outOfReach[currentTriangle] = true;
-                    int faceIndex = (vertexScreenZ[triX] + vertexScreenZ[triY] + vertexScreenZ[triZ]) / 3 + diagonal3DAboveOrigin;
-                    faceLists[faceIndex][depth[faceIndex]++] = currentTriangle;
-                } else {
-                    if (hoverObject && inBounds(cursorX, cursorY, vertexScreenY[triX], vertexScreenY[triY], vertexScreenY[triZ], screenXX, screenXY, screenXZ)) {
-                        hoveringObjects[objectsHovering++] = uid;
-                        hoverObject = false;
-                    }
-                    if ((screenXX - screenXY) * (vertexScreenY[triZ] - vertexScreenY[triY]) - (vertexScreenY[triX] - vertexScreenY[triY]) * (screenXZ - screenXY) > 0) {
-                        outOfReach[currentTriangle] = false;
-                        hasAnEdgeToRestrict[currentTriangle] = screenXX < 0 || screenXY < 0 || screenXZ < 0 || screenXX > Rasterizer2D.lastX || screenXY > Rasterizer2D.lastX || screenXZ > Rasterizer2D.lastX;
-                        int faceIndex = (vertexScreenZ[triX] + vertexScreenZ[triY] + vertexScreenZ[triZ]) / 3 + diagonal3DAboveOrigin;
-                        faceLists[faceIndex][depth[faceIndex]++] = currentTriangle;
-                    }
-                }
-            }
-        }
-
-        if (renderPriorities == null) {
-            for (int i1 = diagonal3D - 1; i1 >= 0; i1--) {
-                int l1 = depth[i1];
-                if (l1 > 0) {
-                    int[] ai = faceLists[i1];
-                    for (int j3 = 0; j3 < l1; j3++) {
-                        drawFace(ai[j3]);
-                    }
-
-                }
-            }
-            return;
-        }
-
-        for (int currentIndex = 0; currentIndex < 12; currentIndex++) {
-            anIntArray1673[currentIndex] = 0;
-            anIntArray1677[currentIndex] = 0;
-        }
-
-        for (int depthIndex = diagonal3D - 1; depthIndex >= 0; depthIndex--) {
-            int k2 = depth[depthIndex];
-            if (k2 > 0) {
-                int[] ai1 = faceLists[depthIndex];
-                for (int i4 = 0; i4 < k2; i4++) {
-                    int l4 = ai1[i4];
-                    int l5 = renderPriorities[l4];
-                    int j6 = anIntArray1673[l5]++;
-                    anIntArrayArray1674[l5][j6] = l4;
-                    if (l5 < 10) {
-                        anIntArray1677[l5] += depthIndex;
-                    } else if (l5 == 10) {
-                        anIntArray1675[j6] = depthIndex;
-                    } else {
-                        anIntArray1676[j6] = depthIndex;
-                    }
-                }
-
-            }
-        }
-
-        int l2 = 0;
-        if (anIntArray1673[1] > 0 || anIntArray1673[2] > 0) {
-            l2 = (anIntArray1677[1] + anIntArray1677[2]) / (anIntArray1673[1] + anIntArray1673[2]);
-        }
-        int k3 = 0;
-        if (anIntArray1673[3] > 0 || anIntArray1673[4] > 0) {
-            k3 = (anIntArray1677[3] + anIntArray1677[4]) / (anIntArray1673[3] + anIntArray1673[4]);
-        }
-        int j4 = 0;
-        if (anIntArray1673[6] > 0 || anIntArray1673[8] > 0) {
-            j4 = (anIntArray1677[6] + anIntArray1677[8]) / (anIntArray1673[6] + anIntArray1673[8]);
-        }
-        int i6 = 0;
-        int k6 = anIntArray1673[10];
-        int[] ai2 = anIntArrayArray1674[10];
-        int[] ai3 = anIntArray1675;
-        if (i6 == k6) {
-            k6 = anIntArray1673[11];
-            ai2 = anIntArrayArray1674[11];
-            ai3 = anIntArray1676;
-        }
-        int i5;
-        if (i6 < k6) {
-            i5 = ai3[i6];
+    static final boolean method2549(int var0, int var1, int var2, int var3, int var4, int var5, int var6) {
+        int var7 = cursorY + var6;
+        if (var7 < var0 && var7 < var1 && var7 < var2) {
+            return false;
         } else {
-            i5 = -1000;
-        }
-        for (int l6 = 0; l6 < 10; l6++) {
-            while (l6 == 0 && i5 > l2) {
-                drawFace(ai2[i6++]);
-                if (i6 == k6 && ai2 != anIntArrayArray1674[11]) {
-                    i6 = 0;
-                    k6 = anIntArray1673[11];
-                    ai2 = anIntArrayArray1674[11];
-                    ai3 = anIntArray1676;
-                }
-                if (i6 < k6) {
-                    i5 = ai3[i6];
-                } else {
-                    i5 = -1000;
-                }
-            }
-            while (l6 == 3 && i5 > k3) {
-                drawFace(ai2[i6++]);
-                if (i6 == k6 && ai2 != anIntArrayArray1674[11]) {
-                    i6 = 0;
-                    k6 = anIntArray1673[11];
-                    ai2 = anIntArrayArray1674[11];
-                    ai3 = anIntArray1676;
-                }
-                if (i6 < k6) {
-                    i5 = ai3[i6];
-                } else {
-                    i5 = -1000;
-                }
-            }
-            while (l6 == 5 && i5 > j4) {
-                drawFace(ai2[i6++]);
-                if (i6 == k6 && ai2 != anIntArrayArray1674[11]) {
-                    i6 = 0;
-                    k6 = anIntArray1673[11];
-                    ai2 = anIntArrayArray1674[11];
-                    ai3 = anIntArray1676;
-                }
-                if (i6 < k6) {
-                    i5 = ai3[i6];
-                } else {
-                    i5 = -1000;
-                }
-            }
-            int i7 = anIntArray1673[l6];
-            int[] ai4 = anIntArrayArray1674[l6];
-            for (int j7 = 0; j7 < i7; j7++) {
-                drawFace(ai4[j7]);
-            }
-
-        }
-
-        while (i5 != -1000) {
-            drawFace(ai2[i6++]);
-            if (i6 == k6 && ai2 != anIntArrayArray1674[11]) {
-                i6 = 0;
-                ai2 = anIntArrayArray1674[11];
-                k6 = anIntArray1673[11];
-                ai3 = anIntArray1676;
-            }
-            if (i6 < k6) {
-                i5 = ai3[i6];
+            var7 = cursorY - var6;
+            if (var7 > var0 && var7 > var1 && var7 > var2) {
+                return false;
             } else {
-                i5 = -1000;
+                var7 = cursorX + var6;
+                if (var7 < var3 && var7 < var4 && var7 < var5) {
+                    return false;
+                } else {
+                    var7 = cursorX - var6;
+                    return var7 <= var3 || var7 <= var4 || var7 <= var5;
+                }
             }
         }
-
     }
 
+    final void withinObject(boolean var25, boolean highlighted, long uid) {
+        if (diagonal3D < 1600) {
+            for (int diagonalIndex = 0; diagonalIndex < diagonal3D; diagonalIndex++) {
+                depth[diagonalIndex] = 0;
+            }
+
+            int var6 = singleTile ? 20 : 5;
+
+            int var15;
+            int var16;
+            int var18;
+            for (int currentTriangle = 0; currentTriangle < this.trianglesCount; ++currentTriangle) {
+                if (this.colorsZ[currentTriangle] != -2) {
+                    int triX = this.trianglesX[currentTriangle];
+                    int triY = this.trianglesY[currentTriangle];
+                    int triZ = this.trianglesZ[currentTriangle];
+                    int screenXX = vertexScreenX[triX];
+                    int screenXY = vertexScreenX[triY];
+                    int screenXZ = vertexScreenX[triZ];
+                    int var29;
+                    if (!var25 || screenXX != -5000 && screenXY != -5000 && screenXZ != -5000) {
+                        if (highlighted && method2549(vertexScreenY[triX], vertexScreenY[triY], vertexScreenY[triZ], screenXX, screenXY, screenXZ, var6)) {
+                            hoveringObjects[objectsHovering++] = uid;
+                            highlighted = false;
+                        }
+
+                        if ((screenXX - screenXY) * (vertexScreenY[triZ] - vertexScreenY[triY]) - (screenXZ - screenXY) * (vertexScreenY[triX] - vertexScreenY[triY]) > 0) {
+                            outOfReach[currentTriangle] = false;
+                            if (screenXX >= 0 && screenXY >= 0 && screenXZ >= 0 && screenXX <= Rasterizer3D.lastX && screenXY <= Rasterizer3D.lastX && screenXZ <= Rasterizer3D.lastX) {
+                                hasAnEdgeToRestrict[currentTriangle] = false;
+                            } else {
+                                hasAnEdgeToRestrict[currentTriangle] = true;
+                            }
+
+                            var29 = (vertexScreenZ[triX] + vertexScreenZ[triY] + vertexScreenZ[triZ]) / 3 + this.diagonal3DAboveOrigin;
+                            faceLists[var29][depth[var29]++] = currentTriangle;
+                        }
+                    } else {
+                        var29 = vertexMovedX[triX];
+                        var15 = vertexMovedX[triY];
+                        var16 = vertexMovedX[triZ];
+                        int var30 = vertexMovedY[triX];
+                        var18 = vertexMovedY[triY];
+                        int var19 = vertexMovedY[triZ];
+                        int var20 = vertexMovedZ[triX];
+                        int var21 = vertexMovedZ[triY];
+                        int var22 = vertexMovedZ[triZ];
+                        var29 -= var15;
+                        var16 -= var15;
+                        var30 -= var18;
+                        var19 -= var18;
+                        var20 -= var21;
+                        var22 -= var21;
+                        int var23 = var30 * var22 - var20 * var19;
+                        int var24 = var20 * var16 - var29 * var22;
+                        int var25a = var29 * var19 - var30 * var16;
+                        if (var15 * var23 + var18 * var24 + var21 * var25a > 0) {
+                            outOfReach[currentTriangle] = true;
+                            int var26 = (vertexScreenZ[triX] + vertexScreenZ[triY] + vertexScreenZ[triZ]) / 3 + this.diagonal3DAboveOrigin;
+                            faceLists[var26][depth[var26]++] = currentTriangle;
+                        }
+                    }
+                }
+            }
+
+            int[] var27;
+            if (this.renderPriorities == null) {
+                for (int var7 = this.diagonal3D - 1; var7 >= 0; --var7) {
+                    int var8 = depth[var7];
+                    if (var8 > 0) {
+                        var27 = faceLists[var7];
+
+                        for (int var10 = 0; var10 < var8; ++var10) {
+                            this.drawFace(var27[var10]);
+                        }
+                    }
+                }
+
+            } else {
+                for (int currentIndex = 0; currentIndex < 12; ++currentIndex) {
+                    anIntArray1673[currentIndex] = 0;
+                    anIntArray1677[currentIndex] = 0;
+                }
+
+                for (int depthIndex = this.diagonal3D - 1; depthIndex >= 0; --depthIndex) {
+                    int var8 = depth[depthIndex];
+                    if (var8 > 0) {
+                        var27 = faceLists[depthIndex];
+
+                        for (int var10 = 0; var10 < var8; ++var10) {
+                            int var11 = var27[var10];
+                            byte var31 = this.renderPriorities[var11];
+                            int var28 = anIntArray1673[var31]++;
+                            anIntArrayArray1674[var31][var28] = var11;
+                            if (var31 < 10) {
+                                anIntArray1677[var31] += depthIndex;
+                            } else if (var31 == 10) {
+                                anIntArray1675[var28] = depthIndex;
+                            } else {
+                                anIntArray1676[var28] = depthIndex;
+                            }
+                        }
+                    }
+                }
+
+                int var7 = 0;
+                if (anIntArray1673[1] > 0 || anIntArray1673[2] > 0) {
+                    var7 = (anIntArray1677[1] + anIntArray1677[2]) / (anIntArray1673[1] + anIntArray1673[2]);
+                }
+
+                int var8 = 0;
+                if (anIntArray1673[3] > 0 || anIntArray1673[4] > 0) {
+                    var8 = (anIntArray1677[3] + anIntArray1677[4]) / (anIntArray1673[3] + anIntArray1673[4]);
+                }
+
+                int var9 = 0;
+                if (anIntArray1673[6] > 0 || anIntArray1673[8] > 0) {
+                    var9 = (anIntArray1677[8] + anIntArray1677[6]) / (anIntArray1673[8] + anIntArray1673[6]);
+                }
+
+                int var11 = 0;
+                int var12 = anIntArray1673[10];
+                int[] var13 = anIntArrayArray1674[10];
+                int[] var14 = anIntArray1675;
+                if (var11 == var12) {
+                    var11 = 0;
+                    var12 = anIntArray1673[11];
+                    var13 = anIntArrayArray1674[11];
+                    var14 = anIntArray1676;
+                }
+
+                int var10;
+                if (var11 < var12) {
+                    var10 = var14[var11];
+                } else {
+                    var10 = -1000;
+                }
+
+                for (var15 = 0; var15 < 10; ++var15) {
+                    while (var15 == 0 && var10 > var7) {
+                        this.drawFace(var13[var11++]);
+                        if (var11 == var12 && var13 != anIntArrayArray1674[11]) {
+                            var11 = 0;
+                            var12 = anIntArray1673[11];
+                            var13 = anIntArrayArray1674[11];
+                            var14 = anIntArray1676;
+                        }
+
+                        if (var11 < var12) {
+                            var10 = var14[var11];
+                        } else {
+                            var10 = -1000;
+                        }
+                    }
+
+                    while (var15 == 3 && var10 > var8) {
+                        this.drawFace(var13[var11++]);
+                        if (var11 == var12 && var13 != anIntArrayArray1674[11]) {
+                            var11 = 0;
+                            var12 = anIntArray1673[11];
+                            var13 = anIntArrayArray1674[11];
+                            var14 = anIntArray1676;
+                        }
+
+                        if (var11 < var12) {
+                            var10 = var14[var11];
+                        } else {
+                            var10 = -1000;
+                        }
+                    }
+
+                    while (var15 == 5 && var10 > var9) {
+                        this.drawFace(var13[var11++]);
+                        if (var11 == var12 && var13 != anIntArrayArray1674[11]) {
+                            var11 = 0;
+                            var12 = anIntArray1673[11];
+                            var13 = anIntArrayArray1674[11];
+                            var14 = anIntArray1676;
+                        }
+
+                        if (var11 < var12) {
+                            var10 = var14[var11];
+                        } else {
+                            var10 = -1000;
+                        }
+                    }
+
+                    var16 = anIntArray1673[var15];
+                    int[] var17 = anIntArrayArray1674[var15];
+
+                    for (var18 = 0; var18 < var16; ++var18) {
+                        this.drawFace(var17[var18]);
+                    }
+                }
+
+                while (var10 != -1000) {
+                    this.drawFace(var13[var11++]);
+                    if (var11 == var12 && var13 != anIntArrayArray1674[11]) {
+                        var11 = 0;
+                        var13 = anIntArrayArray1674[11];
+                        var12 = anIntArray1673[11];
+                        var14 = anIntArray1676;
+                    }
+
+                    if (var11 < var12) {
+                        var10 = var14[var11];
+                    } else {
+                        var10 = -1000;
+                    }
+                }
+
+            }
+        }
+    }
 
     @Override
     public void drawFace(int face) {
