@@ -379,7 +379,7 @@ public final class NpcDefinition implements RSNPCComposition {
 			empty.animate(frame);
 		if (widthScale != 128 || heightScale != 128)
 			empty.scale(widthScale, widthScale, heightScale);
-		empty.calculateDiagonals();
+		empty.calculateBoundsCylinder();
 		empty.faceGroups = null;
 		empty.vertexGroups = null;
 		if (size == 1)
@@ -430,7 +430,7 @@ public final class NpcDefinition implements RSNPCComposition {
 			model_1.animate(secondaryFrame);
 		if (widthScale != 128 || heightScale != 128)
 			model_1.scale(widthScale, widthScale, heightScale);
-		model_1.calculateDiagonals();
+		model_1.calculateBoundsCylinder();
 		model_1.faceGroups = null;
 		model_1.vertexGroups = null;
 		if (size == 1)

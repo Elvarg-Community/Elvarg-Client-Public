@@ -4336,6 +4336,7 @@ public class Client extends GameEngine implements RSClient {
             if(!preferences.getSavedUsername().equals("")) {
                 myUsername = preferences.getSavedUsername();
             }
+            Rasterizer3D.setBrightness(preferences.getBrightnessState());
             secondLoginMessage = "Enter your username/email & password.";
             setGameState(GameState.LOGIN_SCREEN);
             

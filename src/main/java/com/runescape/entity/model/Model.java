@@ -48,6 +48,12 @@ public class Model extends Renderable implements RSModel {
     }
 
     private Model(int modelId) {
+
+        this.verticesCount = 0;
+        this.trianglesCount = 0;
+        this.facePriority = 0;
+        this.isBoundsCalculated = false;
+
         byte[] data = modelHeaders[modelId].data;
         if (data[data.length - 1] == -3 && data[data.length - 2] == -1) {
             ModelLoader.decodeType3(this, data);
@@ -178,6 +184,7 @@ public class Model extends Renderable implements RSModel {
         xMidOffset = -1;
         yMidOffset = -1;
         zMidOffset = -1;
+        this.isBoundsCalculated = false;
     }
 
     public Model(int length, Model[] model_segments) {
@@ -476,7 +483,7 @@ public class Model extends Renderable implements RSModel {
                 i1 += model.texturesCount;
             }
         }
-        calculateDiagonals();
+        calculateBoundsCylinder();
     }
 
     public Model(boolean colorFlag, boolean alphaFlag, boolean animated, Model model) {
@@ -722,8 +729,8 @@ public class Model extends Renderable implements RSModel {
 
     private int boundsType;
 
-    public void calculateDiagonals() {
-       
+    public void calculateBoundsCylinder() {
+        if (this.boundsType != 1) {
             this.boundsType = 1;
             super.modelBaseY = 0;
             diagonal2DAboveOrigin = 0;
@@ -743,25 +750,26 @@ public class Model extends Renderable implements RSModel {
                     diagonal2DAboveOrigin = bounds;
                 }
             }
-       
 
-        diagonal2DAboveOrigin = (int)(Math.sqrt(diagonal2DAboveOrigin) + 0.98999999999999999);
-        diagonal3DAboveOrigin = (int)(Math.sqrt(diagonal2DAboveOrigin * diagonal2DAboveOrigin + super.modelBaseY * super.modelBaseY) + 0.98999999999999999);
-        diagonal3D = diagonal3DAboveOrigin + (int)(Math.sqrt(diagonal2DAboveOrigin * diagonal2DAboveOrigin + maxY * maxY) + 0.98999999999999999);
+
+            diagonal2DAboveOrigin = (int)(Math.sqrt(diagonal2DAboveOrigin) + 0.98999999999999999);
+            diagonal3DAboveOrigin = (int)(Math.sqrt(diagonal2DAboveOrigin * diagonal2DAboveOrigin + super.modelBaseY * super.modelBaseY) + 0.98999999999999999);
+            diagonal3D = diagonal3DAboveOrigin + (int)(Math.sqrt(diagonal2DAboveOrigin * diagonal2DAboveOrigin + maxY * maxY) + 0.98999999999999999);
+        }
     }
 
-    void method4391() {
+    void calculateDiagonals() {
         if (this.boundsType != 2) {
             this.boundsType = 2;
             this.diagonal2DAboveOrigin = 0;
 
             for (int count = 0; count < this.verticesCount; ++count) {
-                int vertX = this.verticesX[count];
-                int vertY = this.verticesY[count];
-                int vertZ = this.verticesZ[count];
-                int origin = vertX * vertX + vertZ * vertZ + vertY * vertY;
-                if (origin > this.diagonal2DAboveOrigin) {
-                    this.diagonal2DAboveOrigin = origin;
+                int x = this.verticesX[count];
+                int y = this.verticesY[count];
+                int z = this.verticesZ[count];
+                int bounds = x * x + z * z + y * y;
+                if (bounds > this.diagonal2DAboveOrigin) {
+                    this.diagonal2DAboveOrigin = bounds;
                 }
             }
 
@@ -788,45 +796,44 @@ public class Model extends Renderable implements RSModel {
         this.diagonal3D = diagonal3DAboveOrigin + (int)(Math.sqrt(diagonal2DAboveOrigin * diagonal2DAboveOrigin + maxY * maxY) + 0.98999999999999999);
     }
 
-    public void calculateDiagonalsAndBounds(int i) {
-        super.modelBaseY = 0;
-        diagonal2DAboveOrigin = 0;
-        maxY = 0;
-        minX = 0xf423f;
-        maxX = 0xfff0bdc1;
-        maxZ = 0xfffe7961;
-        minZ = 0x1869f;
-        for (int vertex = 0; vertex < verticesCount; vertex++) {
-            final int x = verticesX[vertex];
-            final int y = verticesY[vertex];
-            final int z = verticesZ[vertex];
-            if (x < minX) {
-                minX = x;
+    public void calculateBounds() {
+        if (!this.isBoundsCalculated) {
+            super.modelBaseY = 0;
+            diagonal2DAboveOrigin = 0;
+            maxY = 0;
+            minX = 0xf423f;
+            maxX = 0xfff0bdc1;
+            maxZ = 0xfffe7961;
+            minZ = 0x1869f;
+            for (int vertex = 0; vertex < verticesCount; vertex++) {
+                final int x = verticesX[vertex];
+                final int y = verticesY[vertex];
+                final int z = verticesZ[vertex];
+                if (x < minX) {
+                    minX = x;
+                }
+                if (x > maxX) {
+                    maxX = x;
+                }
+                if (z < minZ) {
+                    minZ = z;
+                }
+                if (z > maxZ) {
+                    maxZ = z;
+                }
+                if (-y > super.modelBaseY) {
+                    super.modelBaseY = -y;
+                }
+                if (y > maxY) {
+                    maxY = y;
+                }
+                final int bounds = x * x + z * z;
+                if (bounds > diagonal2DAboveOrigin) {
+                    diagonal2DAboveOrigin = bounds;
+                }
             }
-            if (x > maxX) {
-                maxX = x;
-            }
-            if (z < minZ) {
-                minZ = z;
-            }
-            if (z > maxZ) {
-                maxZ = z;
-            }
-            if (-y > super.modelBaseY) {
-                super.modelBaseY = -y;
-            }
-            if (y > maxY) {
-                maxY = y;
-            }
-            final int bounds = x * x + z * z;
-            if (bounds > diagonal2DAboveOrigin) {
-                diagonal2DAboveOrigin = bounds;
-            }
+            this.isBoundsCalculated = true;
         }
-
-        diagonal2DAboveOrigin = (int) Math.sqrt(this.diagonal2DAboveOrigin);
-        diagonal3DAboveOrigin = (int) Math.sqrt(this.diagonal2DAboveOrigin * diagonal2DAboveOrigin + super.modelBaseY * super.modelBaseY);
-        diagonal3D = diagonal3DAboveOrigin + (int) Math.sqrt(diagonal2DAboveOrigin * diagonal2DAboveOrigin + maxY * maxY);
     }
 
     public void generateBones() {
@@ -1037,6 +1044,7 @@ public class Model extends Renderable implements RSModel {
         }
 
         this.resetBounds();
+        invalidate();
     }
 
 
@@ -1089,6 +1097,7 @@ public class Model extends Renderable implements RSModel {
         }
 
         this.resetBounds();
+        invalidate();
     }
 
 
@@ -1100,6 +1109,7 @@ public class Model extends Renderable implements RSModel {
         }
 
         this.resetBounds();
+        invalidate();
     }
 
     public void rotateZ(final int degrees) {
@@ -1112,6 +1122,7 @@ public class Model extends Renderable implements RSModel {
         }
 
         this.resetBounds();
+        invalidate();
     }
 
     public void offsetBy(final int x, final int z, final int y) {
@@ -1122,6 +1133,7 @@ public class Model extends Renderable implements RSModel {
         }
 
         this.resetBounds();
+        invalidate();
     }
 
     public void scale(final int x, final int z, final int y) {
@@ -1132,6 +1144,7 @@ public class Model extends Renderable implements RSModel {
         }
 
         this.resetBounds();
+        invalidate();
     }
 
     public void recolor(int found, int replace) {
@@ -1339,12 +1352,6 @@ public class Model extends Renderable implements RSModel {
             }
         }
 
-        if (flat) {
-            this.calculateDiagonals();
-        } else {
-            this.calculateDiagonalsAndBounds(22);
-        }
-
         resetBounds();
 
         if (faceTextureUVCoordinates == null)
@@ -1504,7 +1511,7 @@ public class Model extends Renderable implements RSModel {
     public void renderModel(final int rotationY, final int rotationZ, final int rotationXW, final int translationX, final int translationY, final int translationZ) {
 
         if (this.boundsType != 2 && this.boundsType != 1) {
-            this.method4391();
+            this.calculateDiagonals();
         }
 
         final int centerX = Rasterizer3D.originViewX;
@@ -1814,21 +1821,21 @@ public class Model extends Renderable implements RSModel {
         }
     }
 
-    static final boolean method2549(int var0, int var1, int var2, int var3, int var4, int var5, int var6) {
-        int var7 = cursorY + var6;
-        if (var7 < var0 && var7 < var1 && var7 < var2) {
+    private boolean inBounds(int x, int y, int z, int screenX, int screenY, int screenZ, int size) {
+        int height = cursorY + size;
+        if (height < x && height < y && height < z) {
             return false;
         } else {
-            var7 = cursorY - var6;
-            if (var7 > var0 && var7 > var1 && var7 > var2) {
+            height = cursorY - size;
+            if (height > x && height > y && height > z) {
                 return false;
             } else {
-                var7 = cursorX + var6;
-                if (var7 < var3 && var7 < var4 && var7 < var5) {
+                height = cursorX + size;
+                if (height < screenX && height < screenY && height < screenZ) {
                     return false;
                 } else {
-                    var7 = cursorX - var6;
-                    return var7 <= var3 || var7 <= var4 || var7 <= var5;
+                    height = cursorX - size;
+                    return height <= screenX || height <= screenY || height <= screenZ;
                 }
             }
         }
@@ -1840,7 +1847,7 @@ public class Model extends Renderable implements RSModel {
                 depth[diagonalIndex] = 0;
             }
 
-            int var6 = singleTile ? 20 : 5;
+            int size = singleTile ? 20 : 5;
 
             int var15;
             int var16;
@@ -1853,9 +1860,9 @@ public class Model extends Renderable implements RSModel {
                     int screenXX = vertexScreenX[triX];
                     int screenXY = vertexScreenX[triY];
                     int screenXZ = vertexScreenX[triZ];
-                    int var29;
+                    int index;
                     if (!var25 || screenXX != -5000 && screenXY != -5000 && screenXZ != -5000) {
-                        if (highlighted && method2549(vertexScreenY[triX], vertexScreenY[triY], vertexScreenY[triZ], screenXX, screenXY, screenXZ, var6)) {
+                        if (highlighted && inBounds(vertexScreenY[triX], vertexScreenY[triY], vertexScreenY[triZ], screenXX, screenXY, screenXZ, size)) {
                             hoveringObjects[objectsHovering++] = uid;
                             highlighted = false;
                         }
@@ -1868,11 +1875,11 @@ public class Model extends Renderable implements RSModel {
                                 hasAnEdgeToRestrict[currentTriangle] = true;
                             }
 
-                            var29 = (vertexScreenZ[triX] + vertexScreenZ[triY] + vertexScreenZ[triZ]) / 3 + this.diagonal3DAboveOrigin;
-                            faceLists[var29][depth[var29]++] = currentTriangle;
+                            index = (vertexScreenZ[triX] + vertexScreenZ[triY] + vertexScreenZ[triZ]) / 3 + this.diagonal3DAboveOrigin;
+                            faceLists[index][depth[index]++] = currentTriangle;
                         }
                     } else {
-                        var29 = vertexMovedX[triX];
+                        index = vertexMovedX[triX];
                         var15 = vertexMovedX[triY];
                         var16 = vertexMovedX[triZ];
                         int var30 = vertexMovedY[triX];
@@ -1881,15 +1888,15 @@ public class Model extends Renderable implements RSModel {
                         int var20 = vertexMovedZ[triX];
                         int var21 = vertexMovedZ[triY];
                         int var22 = vertexMovedZ[triZ];
-                        var29 -= var15;
+                        index -= var15;
                         var16 -= var15;
                         var30 -= var18;
                         var19 -= var18;
                         var20 -= var21;
                         var22 -= var21;
                         int var23 = var30 * var22 - var20 * var19;
-                        int var24 = var20 * var16 - var29 * var22;
-                        int var25a = var29 * var19 - var30 * var16;
+                        int var24 = var20 * var16 - index * var22;
+                        int var25a = index * var19 - var30 * var16;
                         if (var15 * var23 + var18 * var24 + var21 * var25a > 0) {
                             outOfReach[currentTriangle] = true;
                             int var26 = (vertexScreenZ[triX] + vertexScreenZ[triY] + vertexScreenZ[triZ]) / 3 + this.diagonal3DAboveOrigin;
@@ -1899,15 +1906,12 @@ public class Model extends Renderable implements RSModel {
                 }
             }
 
-            int[] var27;
             if (this.renderPriorities == null) {
-                for (int var7 = this.diagonal3D - 1; var7 >= 0; --var7) {
-                    int var8 = depth[var7];
-                    if (var8 > 0) {
-                        var27 = faceLists[var7];
-
-                        for (int var10 = 0; var10 < var8; ++var10) {
-                            this.drawFace(var27[var10]);
+                for (int faceIndex = this.diagonal3D - 1; faceIndex >= 0; --faceIndex) {
+                    int depth = Model.depth[faceIndex];
+                    if (depth > 0) {
+                        for (int index = 0; index < depth; ++index) {
+                            this.drawFace(faceLists[faceIndex][index]);
                         }
                     }
                 }
@@ -1921,10 +1925,9 @@ public class Model extends Renderable implements RSModel {
                 for (int depthIndex = this.diagonal3D - 1; depthIndex >= 0; --depthIndex) {
                     int var8 = depth[depthIndex];
                     if (var8 > 0) {
-                        var27 = faceLists[depthIndex];
 
                         for (int var10 = 0; var10 < var8; ++var10) {
-                            int var11 = var27[var10];
+                            int var11 = faceLists[depthIndex][var10];
                             byte var31 = this.renderPriorities[var11];
                             int var28 = anIntArray1673[var31]++;
                             anIntArrayArray1674[var31][var28] = var11;
@@ -2118,7 +2121,6 @@ public class Model extends Renderable implements RSModel {
 
         }
     }
-
 
     private final void faceRotation(int triangle) {
         int centreX = Rasterizer3D.originViewX;
@@ -2321,9 +2323,7 @@ public class Model extends Renderable implements RSModel {
         }
     }
 
-    private boolean inBounds(int cursorX, int cursorY, int z1, int z2, int z3, int screenXX, int screenXY, int screenXZ) {
-        return (cursorY >= z1 || cursorY >= z2 || cursorY >= z3) && (cursorY <= z1 || cursorY <= z2 || cursorY <= z3) && (cursorX >= screenXX || cursorX >= screenXY || cursorX >= screenXZ) && (cursorX <= screenXX || cursorX <= screenXY || cursorX <= screenXZ);
-    }
+    boolean isBoundsCalculated;
 
     public int animayaGroups[][];
 
@@ -2562,11 +2562,6 @@ public class Model extends Renderable implements RSModel {
     }
 
     @Override
-    public void calculateBoundsCylinder() {
-        calculateDiagonals();
-    }
-
-    @Override
     public byte[] getFaceRenderPriorities() {
         return this.renderPriorities;
     }
@@ -2602,6 +2597,13 @@ public class Model extends Renderable implements RSModel {
         this.xMidOffset = -1;
     }
 
+    void invalidate() {
+        this.vertexNormalsOffsets = null;
+        this.normals = null;
+        this.faceNormals = null;
+        this.isBoundsCalculated = false;
+    }
+
     @Override
     public RSModel toSharedModel(boolean b) {
         return null;
@@ -2626,6 +2628,7 @@ public class Model extends Renderable implements RSModel {
         }
 
         this.resetBounds();
+        invalidate();
     }
 
     @Override
@@ -2638,6 +2641,7 @@ public class Model extends Renderable implements RSModel {
         }
 
         this.resetBounds();
+        invalidate();
     }
 
     @Override

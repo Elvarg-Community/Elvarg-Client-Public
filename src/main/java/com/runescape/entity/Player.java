@@ -361,7 +361,7 @@ public final class Player extends Mob implements RSPlayer {
         } else if (currentFrame != -1) {
             emptyModel.animate(currentFrame);
         }
-        emptyModel.calculateDiagonals();
+        emptyModel.calculateBoundsCylinder();
         emptyModel.faceGroups = null;
         emptyModel.vertexGroups = null;
         return emptyModel;
