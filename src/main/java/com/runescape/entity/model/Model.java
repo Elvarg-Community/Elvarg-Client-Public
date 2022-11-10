@@ -348,39 +348,42 @@ public class Model extends Renderable implements RSModel {
         }
     }
 
-
-    public Model(Model[] amodel) {
+    public Model(Model models[]) {
         int modelCount = 2;
         singleTile = false;
-        boolean flag1 = false;
-        boolean flag2 = false;
-        boolean flag3 = false;
-        boolean flag4 = false;
+        anInt1620++;
+        boolean renderTypeFlag = false;
+        boolean priorityFlag = false;
+        boolean alphaFlag = false;
+        boolean colorFlag = false;
         boolean textureFlag = false;
         boolean coordinateFlag = false;
         verticesCount = 0;
         trianglesCount = 0;
-        texturesCount = 0;
+        trianglesCount = 0;
         facePriority = -1;
-        for (int count = 0; count < modelCount; count++) {
-            Model model = amodel[count];
-            if (model != null) {
-                verticesCount += model.verticesCount;
-                trianglesCount += model.trianglesCount;
-                texturesCount += model.texturesCount;
-                flag1 |= model.drawType != null;
-                if (model.renderPriorities != null) {
-                    flag2 = true;
+
+        Model build;
+        for (int currentModel = 0; currentModel < modelCount; currentModel++) {
+            build = models[currentModel];
+            if (build != null) {
+                verticesCount += build.verticesCount;
+                trianglesCount += build.trianglesCount;
+                texturesCount += build.texturesCount;
+                renderTypeFlag |= drawType != null;
+                if (build.renderPriorities != null) {
+                    priorityFlag = true;
                 } else {
                     if (facePriority == -1)
-                        facePriority = model.facePriority;
-                    if (facePriority != model.facePriority)
-                        flag2 = true;
+                        facePriority = build.facePriority;
+
+                    if (facePriority != build.facePriority)
+                        priorityFlag = true;
                 }
-                flag3 |= model.triangleAlpha != null;
-                flag4 |= model.colors != null;
-                textureFlag |= model.materials != null;
-                coordinateFlag |= model.textures != null;
+                alphaFlag |= build.triangleAlpha != null;
+                colorFlag |= build.colors != null;
+                textureFlag |= build.materials != null;
+                coordinateFlag |= build.textures != null;
             }
         }
 
@@ -396,91 +399,96 @@ public class Model extends Renderable implements RSModel {
         texturesX = new short[texturesCount];
         texturesY = new short[texturesCount];
         texturesZ = new short[texturesCount];
-        if (flag1)
+
+        if (renderTypeFlag)
             drawType = new int[trianglesCount];
-        if (flag2)
+
+        if (priorityFlag)
             renderPriorities = new byte[trianglesCount];
-        if (flag3)
+
+        if (alphaFlag)
             triangleAlpha = new byte[trianglesCount];
-        if (flag4)
-            colors = new short[trianglesCount];
+
         if (textureFlag)
             materials = new short[trianglesCount];
 
         if (coordinateFlag)
             textures = new byte[trianglesCount];
+
+        if(texturesCount > 0) {
+            textureTypes = new byte[texturesCount];
+            texturesX = new short[texturesCount];
+            texturesY = new short[texturesCount];
+            texturesZ = new short[texturesCount];
+        }
+
+        if (colorFlag)
+            colors = new short[trianglesCount];
+
         verticesCount = 0;
         trianglesCount = 0;
         texturesCount = 0;
-        int i1 = 0;
+
         for (int currentModel = 0; currentModel < modelCount; currentModel++) {
-            Model model = amodel[currentModel];
-            if (model != null) {
-                int vCount = verticesCount;
-                for (int indexx = 0; indexx < model.verticesCount; indexx++) {
-                    int x = model.verticesX[indexx];
-                    int y = model.verticesY[indexx];
-                    int z = model.verticesZ[indexx];
-                    verticesX[verticesCount] = x;
-                    verticesY[verticesCount] = y;
-                    verticesZ[verticesCount] = z;
-                    ++verticesCount;
+            build = models[currentModel];
+            if (build != null) {
+                int vertex = verticesCount;
+                for (int point = 0; point < build.verticesCount; point++) {
+                    verticesX[verticesCount] = build.verticesX[point];
+                    verticesY[verticesCount] = build.verticesY[point];
+                    verticesZ[verticesCount] = build.verticesZ[point];
+                    verticesCount++;
                 }
+                for (int face = 0; face < build.trianglesCount; face++) {
+                    trianglesX[trianglesCount] = build.trianglesX[face] + vertex;
+                    trianglesY[trianglesCount] = build.trianglesY[face] + vertex;
+                    trianglesZ[trianglesCount] = build.trianglesZ[face] + vertex;
+                    colorsX[trianglesCount] = build.colorsX[face];
+                    colorsY[trianglesCount] = build.colorsY[face];
+                    colorsZ[trianglesCount] = build.colorsZ[face];
 
-                for (int index = 0; index < model.trianglesCount; index++) {
-                    trianglesX[trianglesCount] = model.trianglesX[index] + vCount;
-                    trianglesY[trianglesCount] = model.trianglesY[index] + vCount;
-                    trianglesZ[trianglesCount] = model.trianglesZ[index] + vCount;
-                    colorsX[trianglesCount] = model.colorsX[index];
-                    colorsY[trianglesCount] = model.colorsY[index];
-                    colorsZ[trianglesCount] = model.colorsZ[index];
-                    if (flag1)
-                        if (model.drawType == null) {
-                            drawType[trianglesCount] = 0;
-                        } else {
-                            int j2 = model.drawType[index];
-                            if ((j2 & 2) == 2)
-                                j2 += i1 << 2;
-                            drawType[trianglesCount] = j2;
-                        }
-                    if (flag2)
-                        if (model.renderPriorities == null)
-                            renderPriorities[trianglesCount] = model.facePriority;
-                        else
-                            renderPriorities[trianglesCount] = model.renderPriorities[index];
-                    if (flag3)
-                        if (model.triangleAlpha == null)
-                            triangleAlpha[trianglesCount] = 0;
-                        else
-                            triangleAlpha[trianglesCount] = model.triangleAlpha[index];
-                    if (flag4 && model.colors != null)
-                        colors[trianglesCount] = model.colors[index];
-
-                    if (textureFlag) {
-                        if (model.materials != null) {
-                            materials[trianglesCount] = model.materials[trianglesCount];
-                        } else {
-                            materials[trianglesCount] = -1;
-                        }
+                    if(renderTypeFlag && build.drawType != null) {
+                        drawType[trianglesCount] = build.drawType[face];
                     }
 
-                    if (coordinateFlag) {
-                        if (model.textures != null && model.textures[trianglesCount] != -1)
-                            textures[trianglesCount] = (byte) (model.textures[trianglesCount] + texturesCount);
+                    if (alphaFlag && build.triangleAlpha != null) {
+                        triangleAlpha[trianglesCount] = build.triangleAlpha[face];
+                    }
+
+                    if (priorityFlag)
+                        if (build.renderPriorities == null)
+                            renderPriorities[trianglesCount] = build.facePriority;
                         else
+                            renderPriorities[trianglesCount] = build.renderPriorities[face];
+
+                    if (colorFlag && build.colors != null)
+                        colors[trianglesCount] = build.colors[face];
+
+                    if(textureFlag) {
+                        if(build.materials != null) {
+                            materials[trianglesCount] = build.materials[face];
+                        } else
+                            materials[trianglesCount] = -1;
+                    }
+                    if(coordinateFlag) {
+                        if(build.textures != null && build.textures[face] != -1) {
+                            textures[trianglesCount] = (byte) (build.textures[face] + texturesCount);
+
+                        } else
                             textures[trianglesCount] = -1;
 
                     }
 
                     trianglesCount++;
                 }
-                for (int index2 = 0; currentModel < model.texturesCount; index2++) {
-                    texturesX[texturesCount] = (short) (model.texturesX[index2] + vCount);
-                    texturesY[texturesCount] = (short) (model.texturesY[index2] + vCount);
-                    texturesZ[texturesCount] = (short) (model.texturesZ[index2] + vCount);
+
+                for (int texture = 0; texture < build.texturesCount; texture++) {
+                    texturesX[texturesCount] = (short) (build.texturesX[texture] + vertex);
+                    texturesY[texturesCount] = (short) (build.texturesY[texture] + vertex);
+                    texturesZ[texturesCount] = (short) (build.texturesZ[texture] + vertex);
                     texturesCount++;
                 }
-                i1 += model.texturesCount;
+                texturesCount += build.texturesCount;
             }
         }
         calculateBoundsCylinder();
@@ -1125,7 +1133,7 @@ public class Model extends Renderable implements RSModel {
         invalidate();
     }
 
-    public void offsetBy(final int x, final int z, final int y) {
+    public void offsetBy(final int x, final int y, final int z) {
         for (int vertex = 0; vertex < this.verticesCount; vertex++) {
             verticesX[vertex] += x;
             verticesY[vertex] += y;
