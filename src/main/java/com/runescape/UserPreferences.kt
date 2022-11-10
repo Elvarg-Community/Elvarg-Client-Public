@@ -1,6 +1,7 @@
 package com.runescape
 
 import com.beust.klaxon.Klaxon
+import com.runescape.draw.Rasterizer3D
 import com.runescape.loginscreen.LoginBackground
 import com.runescape.sign.SignLink
 import net.runelite.rs.api.RSClientPreferences
@@ -32,7 +33,7 @@ data class PreferencesData(
     var rememberUsername : Boolean = false,
     var hiddenUsername : Boolean = false,
     var savedUsername : String = "",
-    var loginBackground : LoginBackground = LoginBackground.FADING_BACKGROUNDS
+    var loginBackground : LoginBackground = LoginBackground.NORMAL
 ) : RSClientPreferences {
 
     override fun getRememberedUsername(): String {
@@ -84,6 +85,7 @@ object UserPreferences {
         }
 
         Client.preferences = Klaxon().parse<PreferencesData>(file.readText())!!
+
     }
 
 

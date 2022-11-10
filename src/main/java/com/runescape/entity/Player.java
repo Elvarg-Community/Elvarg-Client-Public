@@ -90,11 +90,11 @@ public final class Player extends Mob implements RSPlayer {
             if (spotAnimationModel != null) {
 
                 Model model_3 = new Model(true, Frame.noAnimationInProgress(super.currentAnimation), false, spotAnimationModel);
-                model_3.scaleT(0, -super.graphicHeight, 0);
+                model_3.offsetBy(0, -super.graphicHeight, 0);
                 model_3.generateBones();
                 /*model_3.applyAnimationFrame(spotAnim.animationSequence.primaryFrames[super.currentAnimation], nextFrame,
                         cycle1, cycle2);*/
-                model_3.applyTransform(spotAnim.animationSequence.primaryFrames[super.currentAnimation]);
+                model_3.animate(spotAnim.animationSequence.primaryFrames[super.currentAnimation]);
                 model_3.faceGroups = null;
                 model_3.vertexGroups = null;
                 if (spotAnim.resizeXY != 128 || spotAnim.resizeZ != 128)
@@ -110,7 +110,7 @@ public final class Player extends Mob implements RSPlayer {
                 playerModel = null;
             if (Client.tick >= objectModelStart && Client.tick < objectModelStop) {
                 Model model_1 = playerModel;
-                model_1.scaleT(objectXPos - super.x, objectCenterHeight - anInt1709, objectYPos - super.y);
+                model_1.offsetBy(objectXPos - super.x, objectCenterHeight - anInt1709, objectYPos - super.y);
                 if (super.nextStepOrientation == 512) {
                     model_1.rotate90Degrees();
                     model_1.rotate90Degrees();
@@ -132,7 +132,7 @@ public final class Player extends Mob implements RSPlayer {
                     model_1.rotate90Degrees();
                     model_1.rotate90Degrees();
                 }
-                model_1.scaleT(super.x - objectXPos, anInt1709 - objectCenterHeight, super.y - objectYPos);
+                model_1.offsetBy(super.x - objectXPos, anInt1709 - objectCenterHeight, super.y - objectYPos);
             }
         }
         animatedModel.singleTile = true;
@@ -357,11 +357,11 @@ public final class Player extends Mob implements RSPlayer {
 
         emptyModel.replaceModel(model_1, Frame.noAnimationInProgress(currentFrame) & Frame.noAnimationInProgress(i1));
         if (currentFrame != -1 && i1 != -1) {
-            emptyModel.mix(Animation.animations[super.emoteAnimation].interleaveOrder, i1, currentFrame);
+            emptyModel.animate2(Animation.animations[super.emoteAnimation].interleaveOrder, i1, currentFrame);
         } else if (currentFrame != -1) {
-            emptyModel.applyTransform(currentFrame);
+            emptyModel.animate(currentFrame);
         }
-        emptyModel.calculateDiagonals();
+        emptyModel.calculateBoundsCylinder();
         emptyModel.faceGroups = null;
         emptyModel.vertexGroups = null;
         return emptyModel;

@@ -293,6 +293,7 @@ public final class ObjectDefinition implements ObjectComposition {
             }
 
             model.normalise();
+            model.resetBounds();
         }
         return model;
     }
@@ -399,7 +400,7 @@ public final class ObjectDefinition implements ObjectComposition {
                 && !flag2, textureFind == null, model);
         if (k != -1) {
             model_3.generateBones();
-            model_3.applyTransform(k);
+            model_3.animate(k);
             model_3.faceGroups = null;
             model_3.vertexGroups = null;
         }
@@ -421,7 +422,7 @@ public final class ObjectDefinition implements ObjectComposition {
         if (flag)
             model_3.scale(scaleX, scaleZ, scaleY);
         if (flag2)
-            model_3.scaleT(translateX, translateY, translateZ);
+            model_3.offsetBy(translateX, translateY, translateZ);
         model_3.light(85 + ambient, 768 + contrast, -50, -10, -50, !mergeNormals);
         if (supportItems == 1)
             model_3.itemDropHeight = model_3.modelBaseY;

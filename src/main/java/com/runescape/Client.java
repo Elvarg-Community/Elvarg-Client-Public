@@ -4336,6 +4336,7 @@ public class Client extends GameEngine implements RSClient {
             if(!preferences.getSavedUsername().equals("")) {
                 myUsername = preferences.getSavedUsername();
             }
+            Rasterizer3D.setBrightness(preferences.getBrightnessState());
             secondLoginMessage = "Enter your username/email & password.";
             setGameState(GameState.LOGIN_SCREEN);
             
@@ -7936,7 +7937,7 @@ public class Client extends GameEngine implements RSClient {
                     }
 
                 model.generateBones();
-                model.applyTransform(Animation.animations[localPlayer.idleAnimation].primaryFrames[0]);
+                model.animate(Animation.animations[localPlayer.idleAnimation].primaryFrames[0]);
                 model.light(64, 850, -30, -50, -30, true);
                 widget.defaultMediaType = 5;
                 widget.defaultMedia = 0;
@@ -7962,7 +7963,7 @@ public class Client extends GameEngine implements RSClient {
                     }
                 int staticFrame = localPlayer.idleAnimation;
                 characterDisplay.generateBones();
-                characterDisplay.applyTransform(Animation.animations[staticFrame].primaryFrames[0]);
+                characterDisplay.animate(Animation.animations[staticFrame].primaryFrames[0]);
                 // characterDisplay.light(64, 850, -30, -50, -30, true);
                 rsInterface.defaultMediaType = 5;
                 rsInterface.defaultMedia = 0;
@@ -14956,10 +14957,8 @@ public class Client extends GameEngine implements RSClient {
                         yCameraCurve = 383;
                 }
             }
-        Model.objectExist = true;
-        Model.objectsHovering = 0;
-        Model.cursorX = MouseHandler.mouseX - (!isResized() ? 4 : 0);
-        Model.cursorY = MouseHandler.mouseY - (!isResized() ? 4 : 0);
+
+        Model.cursorCalculations();
 
         Rasterizer2D.clear();
         if (Rasterizer3D.fieldOfView != cameraZoom) {

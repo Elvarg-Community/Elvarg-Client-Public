@@ -445,9 +445,9 @@ public final class ItemDefinition implements RSItemComposition {
                 primaryModel_ = new Model(2, models);
             }
         if (gender == 0 && maleOffset != 0)
-            primaryModel_.scaleT(0, maleOffset, 0);
+            primaryModel_.offsetBy(0, maleOffset, 0);
         if (gender == 1 && femaleOffset != 0)
-            primaryModel_.scaleT(0, femaleOffset, 0);
+            primaryModel_.offsetBy(0, femaleOffset, 0);
 
         if (colorReplace != null) {
             for (int i1 = 0; i1 < colorReplace.length; i1++)

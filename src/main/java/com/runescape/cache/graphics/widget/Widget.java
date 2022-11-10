@@ -4365,9 +4365,9 @@ public class Widget {
 		if (k != -1 || j != -1)
 			model_1.generateBones();
 		if (k != -1)
-			model_1.applyTransform(k);
+			model_1.animate(k);
 		if (j != -1)
-			model_1.applyTransform(j);
+			model_1.animate(j);
 		model_1.light(64, 850, -30, -50, -30, true);
 		return model_1;
 	}
