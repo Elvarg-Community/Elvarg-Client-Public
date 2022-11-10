@@ -187,16 +187,16 @@ public class Model extends Renderable implements RSModel {
         this.isBoundsCalculated = false;
     }
 
-    public Model(int length, Model[] model_segments) {
+    public Model(int length, Model[] models) {
         try {
             singleTile = false;
-            boolean type_flag = false;
-            boolean priority_flag = false;
-            boolean alpha_flag = false;
-            boolean tSkin_flag = false;
-            boolean color_flag = false;
-            boolean texture_flag = false;
-            boolean coordinate_flag = false;
+            boolean typeFlag = false;
+            boolean priorityFlag = false;
+            boolean alphaFlag = false;
+            boolean tSkinFlag = false;
+            boolean colorFlag = false;
+            boolean textureFlag = false;
+            boolean coordinateFlag = false;
             verticesCount = 0;
             trianglesCount = 0;
             texturesCount = 0;
@@ -205,27 +205,27 @@ public class Model extends Renderable implements RSModel {
             yMidOffset = -1;
             zMidOffset = -1;
             Model build;
-            for (int segment_index = 0; segment_index < length; segment_index++) {
-                build = model_segments[segment_index];
+            for (int count = 0; count < length; count++) {
+                build = models[count];
                 if (build != null) {
                     verticesCount += build.verticesCount;
                     trianglesCount += build.trianglesCount;
                     texturesCount += build.texturesCount;
-                    type_flag |= build.drawType != null;
-                    alpha_flag |= build.triangleAlpha != null;
+                    typeFlag |= build.drawType != null;
+                    alphaFlag |= build.triangleAlpha != null;
                     if (build.renderPriorities != null) {
-                        priority_flag = true;
+                        priorityFlag = true;
                     } else {
                         if (facePriority == -1)
                             facePriority = build.facePriority;
 
                         if (facePriority != build.facePriority)
-                            priority_flag = true;
+                            priorityFlag = true;
                     }
-                    tSkin_flag |= build.triangleData != null;
-                    color_flag |= build.colors != null;
-                    texture_flag |= build.materials != null;
-                    coordinate_flag |= build.textures != null;
+                    tSkinFlag |= build.triangleData != null;
+                    colorFlag |= build.colors != null;
+                    textureFlag |= build.materials != null;
+                    coordinateFlag |= build.textures != null;
                 }
             }
 
@@ -236,25 +236,25 @@ public class Model extends Renderable implements RSModel {
             trianglesX = new int[trianglesCount];
             trianglesY = new int[trianglesCount];
             trianglesZ = new int[trianglesCount];
-            if (color_flag)
+            if (colorFlag)
                 colors = new short[trianglesCount];
 
-            if (type_flag)
+            if (typeFlag)
                 drawType = new int[trianglesCount];
 
-            if (priority_flag)
+            if (priorityFlag)
                 renderPriorities = new byte[trianglesCount];
 
-            if (alpha_flag)
+            if (alphaFlag)
                 triangleAlpha = new byte[trianglesCount];
 
-            if (tSkin_flag)
+            if (tSkinFlag)
                 triangleData = new int[trianglesCount];
 
-            if (texture_flag)
+            if (textureFlag)
                 materials = new short[trianglesCount];
 
-            if (coordinate_flag)
+            if (coordinateFlag)
                 textures = new byte[trianglesCount];
 
             if (texturesCount > 0) {
@@ -266,35 +266,35 @@ public class Model extends Renderable implements RSModel {
             verticesCount = 0;
             trianglesCount = 0;
             texturesCount = 0;
-            int texture_face = 0;
-            for (int segment_index = 0; segment_index < length; segment_index++) {
-                build = model_segments[segment_index];
+            int textureFace = 0;
+            for (int index = 0; index < length; index++) {
+                build = models[index];
                 if (build != null) {
                     for (int face = 0; face < build.trianglesCount; face++) {
-                        if (type_flag && build.drawType != null)
+                        if (typeFlag && build.drawType != null)
                             drawType[trianglesCount] = build.drawType[face];
 
-                        if (priority_flag)
+                        if (priorityFlag)
                             if (build.renderPriorities == null)
                                 renderPriorities[trianglesCount] = build.facePriority;
                             else
                                 renderPriorities[trianglesCount] = build.renderPriorities[face];
 
-                        if (alpha_flag && build.triangleAlpha != null)
+                        if (alphaFlag && build.triangleAlpha != null)
                             triangleAlpha[trianglesCount] = build.triangleAlpha[face];
 
-                        if (tSkin_flag && build.triangleData != null)
+                        if (tSkinFlag && build.triangleData != null)
                             triangleData[trianglesCount] = build.triangleData[face];
 
-                        if (texture_flag) {
+                        if (textureFlag) {
                             if (build.materials != null)
                                 materials[trianglesCount] = build.materials[face];
                             else
                                 materials[trianglesCount] = -1;
                         }
-                        if (coordinate_flag) {
+                        if (coordinateFlag) {
                             if (build.textures != null && build.textures[face] != -1) {
-                                textures[trianglesCount] = (byte) (build.textures[face] + texture_face);
+                                textures[trianglesCount] = (byte) (build.textures[face] + textureFace);
                             } else {
                                 textures[trianglesCount] = -1;
                             }
@@ -306,13 +306,13 @@ public class Model extends Renderable implements RSModel {
                         trianglesZ[trianglesCount] = getFirstIdenticalVertexId(build, build.trianglesZ[face]);
                         trianglesCount++;
                     }
-                    for (int texture_edge = 0; texture_edge < build.texturesCount; texture_edge++) {
-                        texturesX[texturesCount] = (short) getFirstIdenticalVertexId(build, build.texturesX[texture_edge]);
-                        texturesY[texturesCount] = (short) getFirstIdenticalVertexId(build, build.texturesY[texture_edge]);
-                        texturesZ[texturesCount] = (short) getFirstIdenticalVertexId(build, build.texturesZ[texture_edge]);
+                    for (int textureEdge = 0; textureEdge < build.texturesCount; textureEdge++) {
+                        texturesX[texturesCount] = (short) getFirstIdenticalVertexId(build, build.texturesX[textureEdge]);
+                        texturesY[texturesCount] = (short) getFirstIdenticalVertexId(build, build.texturesY[textureEdge]);
+                        texturesZ[texturesCount] = (short) getFirstIdenticalVertexId(build, build.texturesZ[textureEdge]);
                         texturesCount++;
                     }
-                    texture_face += build.texturesCount;
+                    textureFace += build.texturesCount;
                 }
             }
 
@@ -324,7 +324,7 @@ public class Model extends Renderable implements RSModel {
 
                 for (int i = 0; i < length; ++i)
                 {
-                    RSModel model = model_segments[i];
+                    RSModel model = models[i];
                     if (model != null)
                     {
                         float[] modelUV = model.getFaceTextureUVCoordinates();
