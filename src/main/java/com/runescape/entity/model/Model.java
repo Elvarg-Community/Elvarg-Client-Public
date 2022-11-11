@@ -2114,6 +2114,10 @@ public class Model extends Renderable implements RSModel {
                             vertexMovedZ[textureA], vertexMovedZ[textureB], vertexMovedZ[textureC],
                             materials[face]);
                 }
+            } else if(colorsZ[face] == -1) {
+                Rasterizer3D.drawFlatTriangle(vertexScreenY[triX],vertexScreenY[triY],vertexScreenY[triZ],
+                        vertexScreenX[triX],vertexScreenX[triY],vertexScreenX[triZ],
+                        modelColors[colorsX[face]]);
             } else {
                 if (type == 0) {
                     Rasterizer3D.drawShadedTriangle(vertexScreenY[triX], vertexScreenY[triY],
