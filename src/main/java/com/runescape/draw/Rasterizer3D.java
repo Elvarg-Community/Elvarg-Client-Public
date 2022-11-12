@@ -1838,28 +1838,28 @@ public final class Rasterizer3D extends Rasterizer2D {
                     if(var17 > 0) {
                         do {
                             var3 = var1[(var2 & 4032) + (var2 >>> 26)];
-                            var0[var4++] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                            drawAlpha(var0, var4++, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             var2 += var23;
                             var3 = var1[(var2 & 4032) + (var2 >>> 26)];
-                            var0[var4++] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                            drawAlpha(var0, var4++, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             var2 += var23;
                             var3 = var1[(var2 & 4032) + (var2 >>> 26)];
-                            var0[var4++] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                            drawAlpha(var0, var4++, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             var2 += var23;
                             var3 = var1[(var2 & 4032) + (var2 >>> 26)];
-                            var0[var4++] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                            drawAlpha(var0, var4++, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             var2 += var23;
                             var3 = var1[(var2 & 4032) + (var2 >>> 26)];
-                            var0[var4++] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                            drawAlpha(var0, var4++, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             var2 += var23;
                             var3 = var1[(var2 & 4032) + (var2 >>> 26)];
-                            var0[var4++] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                            drawAlpha(var0, var4++, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             var2 += var23;
                             var3 = var1[(var2 & 4032) + (var2 >>> 26)];
-                            var0[var4++] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                            drawAlpha(var0, var4++, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             var2 += var23;
                             var3 = var1[(var2 & 4032) + (var2 >>> 26)];
-                            var0[var4++] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                            drawAlpha(var0, var4++, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             var20 = var22;
                             var18 = var16;
                             var9 += var12;
@@ -1891,7 +1891,7 @@ public final class Rasterizer3D extends Rasterizer2D {
                     if(var17 > 0) {
                         do {
                             var3 = var1[(var2 & 4032) + (var2 >>> 26)];
-                            var0[var4++] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                            drawAlpha(var0, var4++, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             var2 += var23;
                             --var17;
                         } while(var17 > 0);
@@ -1901,49 +1901,49 @@ public final class Rasterizer3D extends Rasterizer2D {
                     if(var17 > 0) {
                         do {
                             if((var3 = var1[(var2 & 4032) + (var2 >>> 26)]) != 0) {
-                                var0[var4] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                                drawAlpha(var0, var4, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             }
 
                             ++var4;
                             var2 += var23;
                             if((var3 = var1[(var2 & 4032) + (var2 >>> 26)]) != 0) {
-                                var0[var4] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                                drawAlpha(var0, var4, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             }
 
                             ++var4;
                             var2 += var23;
                             if((var3 = var1[(var2 & 4032) + (var2 >>> 26)]) != 0) {
-                                var0[var4] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                                drawAlpha(var0, var4, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             }
 
                             ++var4;
                             var2 += var23;
                             if((var3 = var1[(var2 & 4032) + (var2 >>> 26)]) != 0) {
-                                var0[var4] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                                drawAlpha(var0, var4, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             }
 
                             ++var4;
                             var2 += var23;
                             if((var3 = var1[(var2 & 4032) + (var2 >>> 26)]) != 0) {
-                                var0[var4] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                                drawAlpha(var0, var4, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             }
 
                             ++var4;
                             var2 += var23;
                             if((var3 = var1[(var2 & 4032) + (var2 >>> 26)]) != 0) {
-                                var0[var4] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                                drawAlpha(var0, var4, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             }
 
                             ++var4;
                             var2 += var23;
                             if((var3 = var1[(var2 & 4032) + (var2 >>> 26)]) != 0) {
-                                var0[var4] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                                drawAlpha(var0, var4, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             }
 
                             ++var4;
                             var2 += var23;
                             if((var3 = var1[(var2 & 4032) + (var2 >>> 26)]) != 0) {
-                                var0[var4] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                                drawAlpha(var0, var4, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             }
 
                             ++var4;
@@ -1978,7 +1978,7 @@ public final class Rasterizer3D extends Rasterizer2D {
                     if(var17 > 0) {
                         do {
                             if((var3 = var1[(var2 & 4032) + (var2 >>> 26)]) != 0) {
-                                var0[var4] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                                drawAlpha(var0, var4, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             }
 
                             ++var4;
@@ -2033,28 +2033,28 @@ public final class Rasterizer3D extends Rasterizer2D {
                     if(var17 > 0) {
                         do {
                             var3 = var1[(var2 & 16256) + (var2 >>> 25)];
-                            var0[var4++] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                            drawAlpha(var0, var4++, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             var2 += var23;
                             var3 = var1[(var2 & 16256) + (var2 >>> 25)];
-                            var0[var4++] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                            drawAlpha(var0, var4++, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             var2 += var23;
                             var3 = var1[(var2 & 16256) + (var2 >>> 25)];
-                            var0[var4++] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                            drawAlpha(var0, var4++, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             var2 += var23;
                             var3 = var1[(var2 & 16256) + (var2 >>> 25)];
-                            var0[var4++] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                            drawAlpha(var0, var4++, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             var2 += var23;
                             var3 = var1[(var2 & 16256) + (var2 >>> 25)];
-                            var0[var4++] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                            drawAlpha(var0, var4++, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             var2 += var23;
                             var3 = var1[(var2 & 16256) + (var2 >>> 25)];
-                            var0[var4++] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                            drawAlpha(var0, var4++, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             var2 += var23;
                             var3 = var1[(var2 & 16256) + (var2 >>> 25)];
-                            var0[var4++] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                            drawAlpha(var0, var4++, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             var2 += var23;
                             var3 = var1[(var2 & 16256) + (var2 >>> 25)];
-                            var0[var4++] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                            drawAlpha(var0, var4++, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             var20 = var22;
                             var18 = var16;
                             var9 += var12;
@@ -2086,7 +2086,7 @@ public final class Rasterizer3D extends Rasterizer2D {
                     if(var17 > 0) {
                         do {
                             var3 = var1[(var2 & 16256) + (var2 >>> 25)];
-                            var0[var4++] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                            drawAlpha(var0, var4++, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             var2 += var23;
                             --var17;
                         } while(var17 > 0);
@@ -2096,49 +2096,49 @@ public final class Rasterizer3D extends Rasterizer2D {
                     if(var17 > 0) {
                         do {
                             if((var3 = var1[(var2 & 16256) + (var2 >>> 25)]) != 0) {
-                                var0[var4] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                                drawAlpha(var0, var4, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             }
 
                             ++var4;
                             var2 += var23;
                             if((var3 = var1[(var2 & 16256) + (var2 >>> 25)]) != 0) {
-                                var0[var4] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                                drawAlpha(var0, var4, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             }
 
                             ++var4;
                             var2 += var23;
                             if((var3 = var1[(var2 & 16256) + (var2 >>> 25)]) != 0) {
-                                var0[var4] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                                drawAlpha(var0, var4, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             }
 
                             ++var4;
                             var2 += var23;
                             if((var3 = var1[(var2 & 16256) + (var2 >>> 25)]) != 0) {
-                                var0[var4] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                                drawAlpha(var0, var4, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             }
 
                             ++var4;
                             var2 += var23;
                             if((var3 = var1[(var2 & 16256) + (var2 >>> 25)]) != 0) {
-                                var0[var4] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                                drawAlpha(var0, var4, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             }
 
                             ++var4;
                             var2 += var23;
                             if((var3 = var1[(var2 & 16256) + (var2 >>> 25)]) != 0) {
-                                var0[var4] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                                drawAlpha(var0, var4, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             }
 
                             ++var4;
                             var2 += var23;
                             if((var3 = var1[(var2 & 16256) + (var2 >>> 25)]) != 0) {
-                                var0[var4] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                                drawAlpha(var0, var4, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             }
 
                             ++var4;
                             var2 += var23;
                             if((var3 = var1[(var2 & 16256) + (var2 >>> 25)]) != 0) {
-                                var0[var4] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                                drawAlpha(var0, var4, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             }
 
                             ++var4;
@@ -2173,7 +2173,7 @@ public final class Rasterizer3D extends Rasterizer2D {
                     if(var17 > 0) {
                         do {
                             if((var3 = var1[(var2 & 16256) + (var2 >>> 25)]) != 0) {
-                                var0[var4] = ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8;
+                                drawAlpha(var0, var4, ((var3 & 16711935) * var21 & -16711936) + ((var3 & '\uff00') * var21 & 16711680) >> 8, 255);
                             }
 
                             ++var4;
@@ -2187,7 +2187,6 @@ public final class Rasterizer3D extends Rasterizer2D {
         }
     }
 
-    public static int texture_amt = 94;
     public static boolean lowMem = false;
     public static boolean textureOutOfDrawingBounds;
     private static boolean isTransparent;
