@@ -2701,7 +2701,7 @@ public final class SceneGraph implements RSScene {
     private final int maxZ;
     private final int[][][] heightMap;
     private final Tile[][][] tileArray;
-    private int minLevel;
+    public int minLevel;
     private int interactableObjectCacheCurrPos;
     private final GameObject[] gameObjectsCache;
     private final int[][][] anIntArrayArrayArray445;

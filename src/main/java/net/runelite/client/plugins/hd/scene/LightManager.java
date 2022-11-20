@@ -172,7 +172,7 @@ public class LightManager
 
 	public void update()
 	{
-		if (client.getGameState() != GameState.LOGGED_IN)
+		if (client.getGameState() != GameState.LOGGED_IN || client.getCinematicState() != CinematicState.ACTIVE)
 		{
 			return;
 		}

@@ -1322,6 +1322,32 @@ public final class MapRegion {
         }
     }
 
+    public static void requestModelPreload(byte[] is) {
+        label0: {
+            Buffer stream = new Buffer(is);
+            int l = -1;
+            do {
+                int i1 = stream.readUSmart();
+                if (i1 == 0)
+                    break label0;
+                l += i1;
+                int j1 = 0;
+                do {
+                    int k1 = stream.readUSmart();
+                    if (k1 == 0)
+                        break;
+                    j1 += k1 - 1;
+                    int j2 = j1 >> 12;
+                    int k2 = stream.readUnsignedByte();
+                    ObjectDefinition class46 = ObjectDefinition.lookup(l);
+                    class46.method579();
+
+
+                } while (true);
+            } while (true);
+        }
+    }
+
     public static boolean method189(int i, byte[] is, int i_250_) // xxx bad
     // method,
     // decompiled

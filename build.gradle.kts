@@ -25,9 +25,13 @@ plugins {
     id("org.ajoberstar.grgit") version "4.1.0"
     kotlin("jvm") version "1.3.72"
     kotlin("plugin.lombok") version "1.5.21"
+    id("org.openjfx.javafxplugin") version "0.0.13"
     application
 }
 
+javafx {
+    modules("javafx.base")
+}
 
 apply<BootstrapPlugin>()
 

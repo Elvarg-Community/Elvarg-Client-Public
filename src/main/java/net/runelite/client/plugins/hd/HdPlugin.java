@@ -546,7 +546,7 @@ public class HdPlugin extends Plugin implements DrawCallbacks
 				modelOverrideManager.startUp();
 				modelPusher.startUp();
 
-				if (client.getGameState() == GameState.LOGGED_IN)
+				if (client.getGameState() == GameState.LOGGED_IN || client.getCinematicState() == CinematicState.ACTIVE)
 				{
 					uploadScene();
 				}
@@ -1637,7 +1637,7 @@ public class HdPlugin extends Plugin implements DrawCallbacks
 
 		// Draw 3d scene
 		final TextureProvider textureProvider = client.getTextureProvider();
-		if (textureProvider != null && client.getGameState().getState() >= GameState.LOADING.getState())
+		if (textureProvider != null && client.getGameState().getState() >= GameState.LOADING.getState() || client.getCinematicState() == CinematicState.ACTIVE)
 		{
 			// lazy init textures as they may not be loaded at plugin start.
 			textureManager.ensureTexturesLoaded(textureProvider);
@@ -1817,7 +1817,7 @@ public class HdPlugin extends Plugin implements DrawCallbacks
 			lastAntiAliasingMode = antiAliasingMode;
 
 			// Clear scene
-			float[] fogColor = hasLoggedIn ? environmentManager.getFogColor() : EnvironmentManager.BLACK_COLOR;
+			float[] fogColor = (hasLoggedIn || client.getCinematicState() == CinematicState.ACTIVE) ? environmentManager.getFogColor() : EnvironmentManager.BLACK_COLOR;
 			for (int i = 0; i < fogColor.length; i++)
 			{
 				fogColor[i] = HDUtils.linearToSrgb(fogColor[i]);

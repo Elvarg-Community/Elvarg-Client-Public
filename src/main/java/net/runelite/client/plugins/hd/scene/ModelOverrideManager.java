@@ -3,6 +3,7 @@ package net.runelite.client.plugins.hd.scene;
 import com.google.inject.Inject;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.CinematicState;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.coords.WorldPoint;
@@ -50,7 +51,7 @@ public class ModelOverrideManager {
                     for (int objectId : entry.objectIds)
                         addEntry(ModelHash.packUuid(objectId, ModelHash.TYPE_OBJECT), entry);
                 }
-                if (client.getGameState() == GameState.LOGGED_IN)
+                if (client.getGameState() == GameState.LOGGED_IN || client.getCinematicState() == CinematicState.ACTIVE)
                     plugin.reloadSceneNextGameTick();
                 log.debug("Loaded {} model overrides", modelOverrides.size());
             } catch (IOException ex) {

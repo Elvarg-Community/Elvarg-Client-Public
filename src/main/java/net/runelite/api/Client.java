@@ -153,6 +153,13 @@ public interface Client extends GameEngine
 	GameState getGameState();
 
 	/**
+	 * Gets the current cinematic state.
+	 *
+	 * @return the cinematic state
+	 */
+	CinematicState getCinematicState();
+
+	/**
 	 * Gets the current game state as an int
 	 *
 	 * @return the game state
@@ -165,6 +172,14 @@ public interface Client extends GameEngine
 	 * @param gameState
 	 */
 	void setGameState(GameState gameState);
+
+	/**
+	 * Sets the current game state
+	 *
+	 * @param gameState
+	 */
+	void setCinematicState(CinematicState gameState);
+
 
 	/**
 	 * Sets the current game state

@@ -41,17 +41,7 @@ import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import javax.swing.SwingUtilities;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.BufferProvider;
-import net.runelite.api.Client;
-import net.runelite.api.GameState;
-import net.runelite.api.Model;
-import net.runelite.api.Perspective;
-import net.runelite.api.Renderable;
-import net.runelite.api.Scene;
-import net.runelite.api.SceneTileModel;
-import net.runelite.api.SceneTilePaint;
-import net.runelite.api.Texture;
-import net.runelite.api.TextureProvider;
+import net.runelite.api.*;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.hooks.DrawCallbacks;
 import net.runelite.client.callback.ClientThread;
@@ -384,7 +374,7 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 
 				textureArrayId = -1;
 
-				if (client.getGameState() == GameState.LOGGED_IN)
+				if (client.getGameState() == GameState.LOGGED_IN || client.getCinematicState() == CinematicState.ACTIVE)
 				{
 					uploadScene();
 				}
@@ -1112,7 +1102,7 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 
 		// Draw 3d scene
 		final GameState gameState = client.getGameState();
-		if (gameState.getState() >= GameState.LOADING.getState())
+		if (gameState.getState() >= GameState.LOADING.getState() || client.getCinematicState() == CinematicState.ACTIVE)
 		{
 			final TextureProvider textureProvider = client.getTextureProvider();
 			if (textureArrayId == -1)
@@ -1181,7 +1171,7 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 			GL43C.glUniform1f(uniSmoothBanding, config.smoothBanding() ? 0f : 1f);
 			GL43C.glUniform1i(uniColorBlindMode, config.colorBlindMode().ordinal());
 			GL43C.glUniform1f(uniTextureLightMode, config.brightTextures() ? 1f : 0f);
-			if (gameState == GameState.LOGGED_IN)
+			if (gameState == GameState.LOGGED_IN || client.getCinematicState() == CinematicState.ACTIVE)
 			{
 				// avoid textures animating during loading
 				GL43C.glUniform1i(uniTick, client.getGameCycle());

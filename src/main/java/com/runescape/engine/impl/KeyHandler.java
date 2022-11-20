@@ -50,6 +50,24 @@ public final class KeyHandler implements KeyListener, FocusListener, RSKeyHandle
         Client.instance.getCallbacks().keyPressed(event);
         idleCycles = 0;
         int i = event.getKeyCode();
+        if (i == KeyEvent.VK_F1 && Client.instance.gameState == GameState.LOGIN_SCREEN.getState()) {
+            if(Client.preferences.getLoginBackground() == LoginBackground.FADING_BACKGROUNDS) {
+                Client.preferences.setLoginBackground(LoginBackground.NORMAL);
+            } else {
+                Client.preferences.setLoginBackground(LoginBackground.FADING_BACKGROUNDS);
+            }
+        }
+
+        if (i == KeyEvent.VK_F2 && Client.instance.gameState == GameState.LOGIN_SCREEN.getState()) {
+            if(Client.preferences.getLoginBackground() != LoginBackground.ANIMATED_GAME_WORLD) {
+                System.out.println("ANIMATED");
+                Client.preferences.setLoginBackground(LoginBackground.ANIMATED_GAME_WORLD);
+            } else {
+                Client.preferences.setLoginBackground(LoginBackground.FADING_BACKGROUNDS);
+            }
+            UserPreferences.INSTANCE.save();
+        }
+
         if(i == KeyEvent.VK_SHIFT) {
             keyPressed = KeyCode.KC_SHIFT;
             Client.shiftDown = true;
@@ -71,23 +89,6 @@ public final class KeyHandler implements KeyListener, FocusListener, RSKeyHandle
                 Client.instance. packetSender.sendInterfaceClear();
                 return;
             }
-        }
-
-        if (i == KeyEvent.VK_1 && Client.instance.gameState == GameState.LOGIN_SCREEN.getState()) {
-            if(Client.preferences.getLoginBackground() == LoginBackground.FADING_BACKGROUNDS) {
-                Client.preferences.setLoginBackground(LoginBackground.NORMAL);
-            } else {
-                Client.preferences.setLoginBackground(LoginBackground.FADING_BACKGROUNDS);
-            }
-        }
-
-        if (i == KeyEvent.VK_ESCAPE && Client.instance.gameState == GameState.LOGIN_SCREEN.getState()) {
-            if(Client.preferences.getLoginBackground() == LoginBackground.ANIMATED_GAME_WORLD) {
-                Client.preferences.setLoginBackground(LoginBackground.ANIMATED_GAME_WORLD);
-            } else {
-                Client.preferences.setLoginBackground(LoginBackground.FADING_BACKGROUNDS);
-            }
-            UserPreferences.INSTANCE.save();
         }
 
         if (keyChar < 30)
