@@ -10,6 +10,8 @@ import java.awt.*;
 import java.util.Arrays;
 import java.util.Random;
 
+import static com.runescape.draw.Rasterizer2D.drawAlpha;
+
 public class FlameManager {
 
     private int[] sprites;
@@ -83,7 +85,7 @@ public class FlameManager {
     }
 
 
-    public void draw(int xPosition, int cycle) {
+    public void draw(int xPosition, int cycle, int alpha) {
         if (flameStrengths == null) {
             initColors();
         }
@@ -102,10 +104,8 @@ public class FlameManager {
             method2207(lastCycle);
         }
 
-        initializeFlames(xPosition);
+        initializeFlames(xPosition,alpha);
     }
-
-    Random rand = new Random();
 
     final void method2207(int var1) {
         field1229 += var1 * 128;
@@ -243,7 +243,7 @@ public class FlameManager {
     }
 
 
-    final void initializeFlames(int xPosition) {
+    final void initializeFlames(int xPosition, int alpha) {
         int length = flameColours.currentFlameColours.length;
         if (random1 > 0) {
             changeColours(random1, flameColours.greenFlameColours);
@@ -253,7 +253,7 @@ public class FlameManager {
             System.arraycopy(flameColours.redFlameColours, 0, flameColours.currentFlameColours, 0, length);
         }
 
-        drawFlames(xPosition);
+        drawFlames(xPosition,alpha);
     }
 
     final void changeColours(int random1, int[] colors) {
@@ -272,7 +272,7 @@ public class FlameManager {
     }
 
 
-    final void drawFlames(int xPosition) {
+    final void drawFlames(int xPosition, int alpha) {
         int pixels = 0;
 
         for (int var3 = 1; var3 < 255; ++var3) {
@@ -299,7 +299,7 @@ public class FlameManager {
                     int off = 256 - strength;
                     int colour = flameColours.getCurrentColour(strength);
                     int bg = Client.rasterProvider.pixels[pos];
-                    Client.rasterProvider.pixels[pos++] = -16777216 | (strength * (colour & 65280) + off * (bg & 65280) & 16711680) + ((colour & 16711935) * strength + (bg & 16711935) * off & -16711936) >> 8;
+                    drawAlpha(Client.rasterProvider.pixels, pos++, -16777216 | (strength * (colour & 65280) + off * (bg & 65280) & 16711680) + ((colour & 16711935) * strength + (bg & 16711935) * off & -16711936) >> 8, alpha);
                 } else {
                     ++pos;
                 }

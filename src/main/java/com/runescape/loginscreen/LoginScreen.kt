@@ -35,6 +35,7 @@ class LoginScreen(val client : Client) {
         if (WorldManager.selectedWorld == null) {
             openWorldSectionScreen()
             WorldManager.selectedWorld = worldList.first()
+            WorldManager.selectedWorld = worldList.first()
         }
 
         val centerX = GameEngine.canvasWidth / 2
@@ -45,8 +46,8 @@ class LoginScreen(val client : Client) {
             if (backgroundSprite != -1) {
                 ImageCache.get(backgroundSprite).drawAdvancedSprite(centerX - (GameEngine.canvasWidth / 2),centerY - (GameEngine.canvasHeight / 2),alpha)
             }
-            Client.loginScreenRunesAnimation.draw(centerX - (GameEngine.canvasWidth / 2) -22, Client.tick)
-            Client.loginScreenRunesAnimation.draw(centerX - (GameEngine.canvasWidth / 2) + (GameEngine.canvasWidth - 110), Client.tick)
+            Client.loginScreenRunesAnimation.draw(centerX - (GameEngine.canvasWidth / 2) -22, Client.tick,alpha)
+            Client.loginScreenRunesAnimation.draw(centerX - (GameEngine.canvasWidth / 2) + (GameEngine.canvasWidth - 110), Client.tick,alpha)
         }
         ImageCache.get(0).drawAdvancedSprite(centerX - (444 / 2),centerY - (GameEngine.canvasHeight / 2) + 17)
         ImageCache.get(1).drawSprite(centerX - (360 / 2),centerY - (200 / 2) + 21)
