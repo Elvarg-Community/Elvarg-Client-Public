@@ -33,7 +33,7 @@ data class PreferencesData(
     var rememberUsername : Boolean = false,
     var hiddenUsername : Boolean = false,
     var savedUsername : String = "",
-    var loginBackground : LoginBackground = LoginBackground.NORMAL
+    var loginBackground : LoginBackground = LoginBackground.ANIMATED_GAME_WORLD
 ) : RSClientPreferences {
 
     override fun getRememberedUsername(): String {

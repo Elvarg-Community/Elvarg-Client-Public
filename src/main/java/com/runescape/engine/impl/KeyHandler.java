@@ -2,8 +2,11 @@ package com.runescape.engine.impl;
 
 import com.runescape.Client;
 import com.runescape.Configuration;
+import com.runescape.UserPreferences;
 import com.runescape.draw.Console;
+import com.runescape.loginscreen.LoginBackground;
 import com.runescape.model.content.Keybinding;
+import net.runelite.api.GameState;
 import net.runelite.api.KeyCode;
 import net.runelite.rs.api.RSKeyHandler;
 
@@ -68,6 +71,23 @@ public final class KeyHandler implements KeyListener, FocusListener, RSKeyHandle
                 Client.instance. packetSender.sendInterfaceClear();
                 return;
             }
+        }
+
+        if (i == KeyEvent.VK_1 && Client.instance.gameState == GameState.LOGIN_SCREEN.getState()) {
+            if(Client.preferences.getLoginBackground() == LoginBackground.FADING_BACKGROUNDS) {
+                Client.preferences.setLoginBackground(LoginBackground.NORMAL);
+            } else {
+                Client.preferences.setLoginBackground(LoginBackground.FADING_BACKGROUNDS);
+            }
+        }
+
+        if (i == KeyEvent.VK_ESCAPE && Client.instance.gameState == GameState.LOGIN_SCREEN.getState()) {
+            if(Client.preferences.getLoginBackground() == LoginBackground.ANIMATED_GAME_WORLD) {
+                Client.preferences.setLoginBackground(LoginBackground.ANIMATED_GAME_WORLD);
+            } else {
+                Client.preferences.setLoginBackground(LoginBackground.FADING_BACKGROUNDS);
+            }
+            UserPreferences.INSTANCE.save();
         }
 
         if (keyChar < 30)
