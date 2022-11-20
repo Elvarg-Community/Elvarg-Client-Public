@@ -6,7 +6,6 @@ import com.runescape.UserPreferences
 import com.runescape.cache.graphics.ImageCache
 import com.runescape.engine.GameEngine
 import com.runescape.engine.impl.KeyHandler
-import com.runescape.engine.impl.MouseHandler
 import com.runescape.loginscreen.worlds.WorldManager
 import com.runescape.loginscreen.worlds.WorldManager.openWorldSectionScreen
 import com.runescape.loginscreen.worlds.WorldManager.worldList
@@ -42,17 +41,27 @@ class LoginScreen(val client : Client) {
         val centerY = GameEngine.canvasHeight / 2
         val alpha = if (Client.preferences.loginBackground != LoginBackground.FADING_BACKGROUNDS) 225 else opacity
         handleBackgrounds()
-        if (backgroundSprite != -1) {
-            ImageCache.get(backgroundSprite).drawAdvancedSprite(centerX - (766 / 2),centerY - (503 / 2),alpha)
+        if (Client.preferences.loginBackground != LoginBackground.ANIMATED_GAME_WORLD) {
+            if (backgroundSprite != -1) {
+                ImageCache.get(backgroundSprite).drawAdvancedSprite(centerX - (GameEngine.canvasWidth / 2),centerY - (GameEngine.canvasHeight / 2),alpha)
+            }
+            Client.loginScreenRunesAnimation.draw(centerX - (GameEngine.canvasWidth / 2) -22, Client.tick)
+            Client.loginScreenRunesAnimation.draw(centerX - (GameEngine.canvasWidth / 2) + (GameEngine.canvasWidth - 110), Client.tick)
         }
-        ImageCache.get(0).drawSprite(centerX - (444 / 2),centerY - (503 / 2) + 17)
+        ImageCache.get(0).drawAdvancedSprite(centerX - (444 / 2),centerY - (GameEngine.canvasHeight / 2) + 17)
         ImageCache.get(1).drawSprite(centerX - (360 / 2),centerY - (200 / 2) + 21)
-
-        Client.loginScreenRunesAnimation.draw(centerX - (766 / 2) -22, Client.tick)
-        Client.loginScreenRunesAnimation.draw(centerX - (766 / 2) + (766 - 110), Client.tick)
 
         val loginBoxX = centerX - (360 / 2)
         val loginBoxY = centerY - (200 / 2) + 21
+
+        ImageCache.get(if(Client.preferences.enableMusic) 25 else 26).drawAdvancedSprite(GameEngine.canvasWidth - 38 - 5,GameEngine.canvasHeight - 45 + 7)
+        if(WorldManager.loadedWorlds) {
+            ImageCache.get(3).drawAdvancedSprite(centerX - (GameEngine.canvasWidth / 2) + 5,GameEngine.canvasHeight - 45 + 8)
+            client.newBoldFont.drawCenteredString("World: ${WorldManager.selectedWorld?.name}", centerX - (GameEngine.canvasWidth / 2) + 5 + (100 / 2),GameEngine.canvasHeight - 45 + 23,0xFFFFFF,1)
+            client.newSmallFont.drawCenteredString(WorldManager.worldStatusText, centerX - (GameEngine.canvasWidth / 2) + 5 + (100 / 2),GameEngine.canvasHeight - 45 + 38,0xFFFFFF,1)
+
+        }
+
         when(loginState) {
             LoginState.EULA -> {
                 eulaText.forEachIndexed { index, line ->
@@ -104,28 +113,20 @@ class LoginScreen(val client : Client) {
                     loginBoxX + 123 + 20, loginBoxY + 98,
                     0xFFFFFF, 1
                 )
-                ImageCache.get(if(!Client.preferences.rememberUsername) 21 else 23).drawHoverSprite(loginBoxX + 63,loginBoxX + 107 - 31,ImageCache.get(if(!Client.preferences.rememberUsername) 22 else 24))
+                ImageCache.get(if(!Client.preferences.rememberUsername) 21 else 23).drawHoverSprite(loginBoxX + 63,loginBoxY + 107,ImageCache.get(if(!Client.preferences.rememberUsername) 22 else 24))
                 ImageCache.get(if(!Client.preferences.hiddenUsername) 21 else 23).drawHoverSprite(loginBoxX + 204,loginBoxY + 107,ImageCache.get(if(!Client.preferences.hiddenUsername) 22 else 24))
 
                 client.newSmallFont.drawBasicString(
                     "Remember Username",
-                    loginBoxX + 63 + 22, loginBoxX + 107 - 18,
+                    loginBoxX + 63 + 22, loginBoxY + 119,
                     0xFFFF00, 1
                 )
 
                 client.newSmallFont.drawBasicString(
                     "Hide Username",
-                    loginBoxX + 204 + 22, loginBoxX + 107 - 18,
+                    loginBoxX + 204 + 22, loginBoxY + 119,
                     0xFFFF00, 1
                 )
-
-                ImageCache.get(if(Client.preferences.enableMusic) 25 else 26).drawAdvancedSprite(GameEngine.canvasWidth - 38 - 5,GameEngine.canvasHeight - 45 + 7)
-                if(WorldManager.loadedWorlds) {
-                    ImageCache.get(3).drawAdvancedSprite(centerX - (766 / 2) + 5,GameEngine.canvasHeight - 45 + 8)
-                    client.newBoldFont.drawCenteredString("World: ${WorldManager.selectedWorld?.name}", centerX - (766 / 2) + 5 + (100 / 2),GameEngine.canvasHeight - 45 + 23,0xFFFFFF,1)
-                    client.newSmallFont.drawCenteredString(WorldManager.worldStatusText, centerX - (766 / 2) + 5 + (100 / 2),GameEngine.canvasHeight - 45 + 38,0xFFFFFF,1)
-
-                }
 
             }
             LoginState.WORLD_SELECT -> WorldManager.renderWorldSelect()
@@ -139,6 +140,14 @@ class LoginScreen(val client : Client) {
         val centerY = GameEngine.canvasHeight / 2
         val loginBoxX = centerX - (360 / 2)
         val loginBoxY = centerY - (200 / 2) + 21
+
+        if(client.newclickInRegion(centerX - (GameEngine.canvasWidth / 2) + 5,GameEngine.canvasHeight - 45 + 8,ImageCache.get(3))) {
+            openWorldSectionScreen(true)
+        }
+
+        if(client.newclickInRegion(GameEngine.canvasWidth - 38 - 5,GameEngine.canvasHeight - 45 + 7,ImageCache.get(25))) {
+            Client.preferences.enableMusic = !Client.preferences.enableMusic
+        }
 
         when(loginState) {
             LoginState.EULA -> {
@@ -178,10 +187,6 @@ class LoginScreen(val client : Client) {
                     }
                 }
 
-                if(client.newclickInRegion(centerX - (766 / 2) + 5,GameEngine.canvasHeight - 45 + 8,ImageCache.get(3))) {
-                    openWorldSectionScreen(true)
-                }
-
                 if(client.newclickInRegion(loginBoxX + 110, loginBoxY + 70,200,15)) {
                     client.loginScreenCursorPos = 0
                 }
@@ -190,11 +195,8 @@ class LoginScreen(val client : Client) {
                     client.loginScreenCursorPos = 1
                 }
 
-                if(client.newclickInRegion(GameEngine.canvasWidth - 38 - 5,GameEngine.canvasHeight - 45 + 7,ImageCache.get(25))) {
-                    Client.preferences.enableMusic = !Client.preferences.enableMusic
-                }
 
-                if(client.newclickInRegion(loginBoxX + 63,loginBoxX + 107 - 31,ImageCache.get(21))) {
+                if(client.newclickInRegion(loginBoxX + 63,loginBoxY + 107,ImageCache.get(21))) {
                     Client.preferences.rememberUsername = !Client.preferences.rememberUsername
                 }
 
@@ -277,7 +279,7 @@ class LoginScreen(val client : Client) {
                     }
                 }
             }
-            LoginBackground.ANIMATED_GAME_WORLD -> { println("TO DO") }
+            //LoginBackground.ANIMATED_GAME_WORLD -> { Client.instance.cinematicScene.render() }
             else -> {}
         }
     }
