@@ -79,7 +79,23 @@ public class CinematicScene {
 
     }
 
+    public void toggle(boolean enabled) {
+        if (enabled) {
+            client.setCinematicState(CinematicState.LOADING);
+            prepareLoginScene();
+        } else {
+            regions.clear();
+            loadedScenegraph = false;
+            client.setCinematicState(CinematicState.UNKNOWN);
+            resetFade();
+            resizeFade();
+        }
+    }
+
     public void prepareLoginScene() {
+        if (client.getCinematicState() == CinematicState.UNKNOWN) {
+            return;
+        }
         client.setCinematicState(CinematicState.LOADING);
 
         if(client.resourceProvider == null) {
@@ -90,7 +106,6 @@ public class CinematicScene {
             try {
                 if(this.regions.isEmpty()) {
 
-                    startResourceProvider();
                     for(int x = 0;x< TOTAL_REGIONS;x++) {
                         for(int y = 0;y< TOTAL_REGIONS;y++) {
                             int newX = (worldX + (64 * x)) / 64;
@@ -212,20 +227,6 @@ public class CinematicScene {
             nextMove.reset();
             cameraMove = nextMove;
         }
-    }
-
-    private void startResourceProvider() {
-        Thread t = new Thread(() ->  {
-            while(!gameLoaded) {
-                client.processLoginOnDemandQueue();
-                try {
-                    Thread.sleep(30);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        t.start();
     }
 
     public void proceedToNextScene() {

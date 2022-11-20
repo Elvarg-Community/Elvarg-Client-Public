@@ -836,6 +836,7 @@ public class Client extends GameEngine implements RSClient {
         maleCharacter = true;
         minimapLeft = new int[152];
         minimapLineWidth = new int[152];
+        cinematicScene = new CinematicScene(this);
         flashingSidebarId = -1;
         incompleteAnimables = new Deque();
         anIntArray1057 = new int[33];
@@ -4145,33 +4146,6 @@ public class Client extends GameEngine implements RSClient {
         processOnDemandQueue();
     }
 
-    public void processLoginOnDemandQueue() {
-        do {
-            Resource resource;
-            do {
-                resource = resourceProvider.next();
-                if (resource == null)
-                    return;
-                if (resource.dataType == 0) {
-                    Model.loadModel(resource.buffer, resource.ID);
-                    if (backDialogueId != -1)
-                        updateChatbox = true;
-                }
-                if (resource.dataType == 1) {
-                    Frame.load(resource.ID, resource.buffer);
-                }
-                if (resource.dataType == 2 && resource.ID == nextSong
-                        && resource.buffer != null)
-                    saveMidi(fadeMusic, resource.buffer);
-                if (resource.dataType == 3) {
-                    cinematicScene.provideMap(resource);
-                }
-            } while (resource.dataType != 93
-                    || !resourceProvider.landscapePresent(resource.ID));
-            //  MapRegion.passiveRequestGameObjectModels(new Buffer(resource.buffer), resourceProvider);
-        } while (true);
-    }
-
     protected void startUp() {
         setGameState(GameState.STARTING);
 
@@ -4318,7 +4292,6 @@ public class Client extends GameEngine implements RSClient {
             ItemDefinition.isMembers = isMembers;
             drawLoadingText(95, "Unpacking interfaces");
 
-            cinematicScene = new CinematicScene(this);
             cinematicScene.prepareLoginScene();
 
             GameFont gameFonts[] = {smallText, regularText, boldText, gameFont};
@@ -4373,8 +4346,12 @@ public class Client extends GameEngine implements RSClient {
             if(!preferences.getSavedUsername().equals("")) {
                 myUsername = preferences.getSavedUsername();
             }
+            if(preferences.getLoginBackground() == LoginBackground.ANIMATED_GAME_WORLD) {
+                cinematicScene.toggle(true);
+            }
             Rasterizer3D.setBrightness(preferences.getBrightnessState());
             secondLoginMessage = "Enter your username/email & password.";
+            loginScreen.setUp();
             setGameState(GameState.LOGIN_SCREEN);
             gameLoaded = true;
             return;
@@ -15423,6 +15400,10 @@ public class Client extends GameEngine implements RSClient {
                 if (resource.dataType == 2 && resource.ID == nextSong
                         && resource.buffer != null)
                     saveMidi(fadeMusic, resource.buffer);
+                if (resource.dataType == 3 && getCinematicState() != CinematicState.UNKNOWN && getGameState() == GameState.LOGIN_SCREEN) {
+                    cinematicScene.provideMap(resource);
+                    return;
+                }
                 if (resource.dataType == 3 && loadingStage == 1) {
                     for (int i = 0; i < terrainData.length; i++) {
                         if (terrainIndices[i] == resource.ID) {

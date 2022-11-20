@@ -4,17 +4,12 @@ import com.runescape.Client;
 import com.runescape.cache.graphics.ImageCache;
 import com.runescape.cache.graphics.sprite.Sprite;
 import com.runescape.draw.Rasterizer2D;
-import net.runelite.api.IndexedSprite;
 
-import java.awt.*;
 import java.util.Arrays;
-import java.util.Random;
 
 import static com.runescape.draw.Rasterizer2D.drawAlpha;
 
 public class FlameManager {
-
-    private int[] sprites;
 
     private int[] field1234;
 
@@ -49,13 +44,6 @@ public class FlameManager {
         field1226 = 0;
         currentCycle = 0;
 
-        int index = 0;
-        sprites = new int[RuneImages.values().length];
-        for (RuneImages image : RuneImages.values()) {
-            sprites[index] = image.getId();
-            index++;
-        }
-
         initColors();
     }
 
@@ -85,7 +73,7 @@ public class FlameManager {
     }
 
 
-    public void draw(int xPosition, int cycle, int alpha) {
+    public void draw(int xPosition, int yPosition,int cycle, int alpha) {
         if (flameStrengths == null) {
             initColors();
         }
@@ -104,7 +92,7 @@ public class FlameManager {
             method2207(lastCycle);
         }
 
-        initializeFlames(xPosition,alpha);
+        initializeFlames(xPosition,yPosition,alpha);
     }
 
     final void method2207(int var1) {
@@ -112,8 +100,7 @@ public class FlameManager {
         int var2;
         if (field1229 > titleFlames.length) {
             field1229 -= titleFlames.length;
-            int flameIndex = (int) (Math.random()* sprites.length);
-            updateFlameShape(ImageCache.get(sprites[flameIndex]));
+            updateFlameShape(ImageCache.get(FlameImages.Companion.getRandomImage()));
         }
 
         var2 = 0;
@@ -243,7 +230,7 @@ public class FlameManager {
     }
 
 
-    final void initializeFlames(int xPosition, int alpha) {
+    final void initializeFlames(int xPosition, int yPosition, int alpha) {
         int length = flameColours.currentFlameColours.length;
         if (random1 > 0) {
             changeColours(random1, flameColours.greenFlameColours);
@@ -253,7 +240,7 @@ public class FlameManager {
             System.arraycopy(flameColours.redFlameColours, 0, flameColours.currentFlameColours, 0, length);
         }
 
-        drawFlames(xPosition,alpha);
+        drawFlames(xPosition,yPosition,alpha);
     }
 
     final void changeColours(int random1, int[] colors) {
@@ -272,7 +259,7 @@ public class FlameManager {
     }
 
 
-    final void drawFlames(int xPosition, int alpha) {
+    final void drawFlames(int xPosition, int yPosition, int alpha) {
         int pixels = 0;
 
         for (int var3 = 1; var3 < 255; ++var3) {

@@ -56,14 +56,17 @@ public final class KeyHandler implements KeyListener, FocusListener, RSKeyHandle
             } else {
                 Client.preferences.setLoginBackground(LoginBackground.FADING_BACKGROUNDS);
             }
+            Client.instance.cinematicScene.toggle(false);
         }
 
         if (i == KeyEvent.VK_F2 && Client.instance.gameState == GameState.LOGIN_SCREEN.getState()) {
             if(Client.preferences.getLoginBackground() != LoginBackground.ANIMATED_GAME_WORLD) {
                 System.out.println("ANIMATED");
                 Client.preferences.setLoginBackground(LoginBackground.ANIMATED_GAME_WORLD);
+                Client.instance.cinematicScene.toggle(true);
             } else {
                 Client.preferences.setLoginBackground(LoginBackground.FADING_BACKGROUNDS);
+                Client.instance.cinematicScene.toggle(false);
             }
             UserPreferences.INSTANCE.save();
         }

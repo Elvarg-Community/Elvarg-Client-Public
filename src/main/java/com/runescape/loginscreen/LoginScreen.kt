@@ -4,6 +4,7 @@ import com.runescape.Client
 import com.runescape.Configuration
 import com.runescape.UserPreferences
 import com.runescape.cache.graphics.ImageCache
+import com.runescape.draw.Rasterizer2D
 import com.runescape.engine.GameEngine
 import com.runescape.engine.impl.KeyHandler
 import com.runescape.loginscreen.worlds.WorldManager
@@ -11,13 +12,31 @@ import com.runescape.loginscreen.worlds.WorldManager.openWorldSectionScreen
 import com.runescape.loginscreen.worlds.WorldManager.worldList
 import com.runescape.util.MiscUtils
 import com.runescape.util.StringUtils
+import javafx.beans.property.DoubleProperty
+import javafx.beans.property.SimpleDoubleProperty
+import javafx.beans.value.ObservableValue
 import org.apache.commons.lang3.time.StopWatch
+import kotlin.math.ceil
 import kotlin.system.exitProcess
 
 const val BACKGROUND_ACTIVE_TIME_SECONDS = 10
 
 class LoginScreen(val client : Client) {
 
+
+    fun setUp() {
+        fadeToBlack.addListener { observable: ObservableValue<out Number>?, oldVal: Number?, newVal: Number ->
+            if (newVal.toDouble() >= 256) {
+                backgroundSprite = backgroundSprite()
+                backgroundStopWatch!!.reset()
+                backgroundStopWatch!!.start()
+            }
+            if (newVal.toDouble() <= 0) {
+                fadeToBlack.set(256.0)
+            }
+
+        }
+    }
 
     private var backgroundStopWatch: StopWatch? = null
     var loginState = LoginState.LOGIN
@@ -40,14 +59,15 @@ class LoginScreen(val client : Client) {
 
         val centerX = GameEngine.canvasWidth / 2
         val centerY = GameEngine.canvasHeight / 2
-        val alpha = if (Client.preferences.loginBackground != LoginBackground.FADING_BACKGROUNDS) 225 else opacity
+        val alpha = if (Client.preferences.loginBackground != LoginBackground.FADING_BACKGROUNDS) 226 else opacity
         handleBackgrounds()
         if (Client.preferences.loginBackground != LoginBackground.ANIMATED_GAME_WORLD) {
+            Rasterizer2D.drawBox(0,0,GameEngine.canvasWidth,GameEngine.canvasHeight,0x000000)
             if (backgroundSprite != -1) {
-                ImageCache.get(backgroundSprite).drawAdvancedSprite(centerX - (GameEngine.canvasWidth / 2),centerY - (GameEngine.canvasHeight / 2),alpha)
+                ImageCache.get(backgroundSprite).drawAdvancedSprite(centerX - (766 / 2),centerY - (503 / 2),alpha)
             }
-            Client.loginScreenRunesAnimation.draw(centerX - (GameEngine.canvasWidth / 2) -22, Client.tick,alpha)
-            Client.loginScreenRunesAnimation.draw(centerX - (GameEngine.canvasWidth / 2) + (GameEngine.canvasWidth - 110), Client.tick,alpha)
+            Client.loginScreenRunesAnimation.draw(centerX - (766 / 2) -15, 0,Client.tick,alpha)
+            Client.loginScreenRunesAnimation.draw(GameEngine.canvasWidth - 110, 0,Client.tick,alpha)
         }
         ImageCache.get(0).drawAdvancedSprite(centerX - (444 / 2),centerY - (GameEngine.canvasHeight / 2) + 17)
         ImageCache.get(1).drawSprite(centerX - (360 / 2),centerY - (200 / 2) + 21)
@@ -263,21 +283,8 @@ class LoginScreen(val client : Client) {
                 val end: Long = backgroundStopWatch!!.startTime + 1000L * BACKGROUND_ACTIVE_TIME_SECONDS
                 val increment: Long = (end - backgroundStopWatch!!.startTime) / 100
                 if (increment > 0) {
-                    val percentile: Long = backgroundStopWatch!!.time / increment
-                    if(opacity >= 250) {
-                        opacity = 225
-                    } else {
-                        opacity = (percentile * (Byte.MAX_VALUE / 100) * 2).toInt()
-                    }
-
-
-                    if (percentile > -1 && percentile <= 100) {
-                        if (percentile == 100L) {
-                            backgroundSprite = backgroundSprite()
-                            backgroundStopWatch!!.reset()
-                            backgroundStopWatch!!.start()
-                        }
-                    }
+                    fadeToBlack.set(fadeToBlack.get() - 0.9)
+                    opacity = ceil(fadeToBlack.get()).toInt()
                 }
             }
             LoginBackground.ANIMATED_GAME_WORLD -> {
@@ -290,5 +297,7 @@ class LoginScreen(val client : Client) {
     private fun flash(state: Int): String = if ((client.loginScreenCursorPos == state) and (Client.tick % 40 < 20)) "@yel@|" else ""
 
     private val validUserPassChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!\"\u00a3$%^&*()-_=+[{]};:'@#~,<.>/?\\| "
+
+    private val fadeToBlack: DoubleProperty = SimpleDoubleProperty(256.0)
 
 }
