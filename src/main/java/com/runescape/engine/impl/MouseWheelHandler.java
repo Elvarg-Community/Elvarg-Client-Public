@@ -19,9 +19,9 @@ public class MouseWheelHandler implements MouseWheelListener, RSMouseWheelHandle
     public static int mouseWheelY;
 
     public synchronized int useRotation() {
-        int rotation = this.rotation; 
-        this.rotation = 0; 
-        return rotation; 
+        int rotation = this.rotation;
+        this.rotation = 0;
+        return rotation;
     }
 
     public void addTo(Component component) {
@@ -60,20 +60,17 @@ public class MouseWheelHandler implements MouseWheelListener, RSMouseWheelHandle
                     }
                     /** ZOOMING **/
                     boolean zoom = !Client.instance.isResized() ? (mouseX < 512) : (mouseX < Client.canvasWidth - 200);
-                    if(zoom && Client.openInterfaceId == -1) {
+                    if (zoom) {
                         int zoom_in = !Client.instance.isResized() ? 195 : 240;
-
                         int zoom_out = !Client.instance.isResized() ? 1105 : 1220;
 
-                        if(Client.openInterfaceId == -1) {
-                            if (event.getWheelRotation() != -1) {
-                                if (Client.cameraZoom > zoom_in) {
-                                    Client.cameraZoom -= 45;
-                                }
-                            } else {
-                                if (Client.cameraZoom < zoom_out) {
-                                    Client.cameraZoom += 45;
-                                }
+                        if (event.getWheelRotation() != -1) {
+                            if (Client.cameraZoom > zoom_in) {
+                                Client.cameraZoom -= 45;
+                            }
+                        } else {
+                            if (Client.cameraZoom < zoom_out) {
+                                Client.cameraZoom += 45;
                             }
                         }
                     }
@@ -106,16 +103,14 @@ public class MouseWheelHandler implements MouseWheelListener, RSMouseWheelHandle
         int offsetY = 0;
         int childID = 0;
         int tabInterfaceID = Client.tabInterfaceIDs[Client.tabId];
-        boolean fixed = Client.instance.isResized();
+        boolean fixed = !Client.instance.isResized();
         if (tabInterfaceID != -1) {
+
             Widget tab = Widget.interfaceCache[tabInterfaceID];
             if (tab != null) {
                 offsetX = fixed ? 558 : Client.canvasWidth - 217;
                 offsetY = fixed ? 205 : Client.canvasHeight - 298;
-                if (!fixed && Client.preferences.getStackSideStones() && Client.canvasWidth <= 1000) {
-                    offsetX = Client.canvasWidth - 198;
-                    offsetY = Client.canvasHeight - 335;
-                }
+
                 for (int index = 0; index < tab.children.length; index++) {
                     if (Widget.interfaceCache[tab.children[index]].scrollMax > 0) {
                         childID = index;
@@ -139,8 +134,8 @@ public class MouseWheelHandler implements MouseWheelListener, RSMouseWheelHandle
             int w = 512, h = 334;
             int x = (Client.canvasWidth / 2) - 240;
             int y = (Client.canvasHeight / 2) - 167;
-            int count = Client.preferences.getStackSideStones() ? 3 : 4;
-            if (!Client.instance.isResized()) {
+            int count = /*Client.stackSideStones ? 3 :*/ 4;
+            if (Client.instance.isResized()) {
                 for (int i = 0; i < count; i++) {
                     if (x + w > (Client.canvasWidth - 225)) {
                         x = x - 30;
@@ -156,30 +151,77 @@ public class MouseWheelHandler implements MouseWheelListener, RSMouseWheelHandle
                     }
                 }
             }
-            Widget rsi = Widget.interfaceCache[Client.openInterfaceId];
-            if (rsi != null) {
-                offsetX = Client.instance.isResized() ? 4 : x;
-                offsetY = Client.instance.isResized() ? 4 : y;
-                for (int index = 0; index < rsi.children.length; index++) {
-                    if (Widget.interfaceCache[rsi.children[index]].scrollMax > 0) {
-                        childID = index;
-                        positionX = rsi.childX[index];
-                        positionY = rsi.childY[index];
-                        width = Widget.interfaceCache[rsi.children[index]].width;
-                        height = Widget.interfaceCache[rsi.children[index]].height;
-                        break;
+
+            Widget widget = Widget.interfaceCache[Client.openInterfaceId];
+            if (widget == null || widget.children == null)
+                return;
+
+            offsetX = !Client.instance.isResized() ? 20 : x;
+            offsetY = !Client.instance.isResized() ? 4 : y;
+
+            for (int index = 0; index < widget.children.length; index++) {
+                Widget child = Widget.interfaceCache[widget.children[index]];
+                if (child.scrollMax > child.height) {
+                    positionX = widget.childX[index];// + child.horizontalOffset;
+                    positionY = widget.childY[index];// + child.verticalOffset;
+                    width = child.width;
+                    height = child.height;
+                    if (mouseX >= offsetX + positionX && mouseY >= offsetY + positionY && mouseX < offsetX + positionX + width && mouseY < offsetY + positionY + height) {
+                        canZoom = false;
+                        int newRotation = rotation * 30;
+                        if (newRotation > child.scrollMax - child.height - child.scrollPosition) {
+                            newRotation = child.scrollMax - child.height - child.scrollPosition;
+                        } else if (newRotation < -child.scrollPosition) {
+                            newRotation = -child.scrollPosition;
+                        }
+                        if (Client.instance.getActiveInterfaceType() != 0) {
+                            Client.instance.setAnInt1088(Client.instance.getAnInt1088() - newRotation);
+                        }
+                        child.scrollPosition += newRotation;
+                        return;
+                    } else {
+                        canZoom = true;
                     }
                 }
-                if (mouseX > offsetX + positionX && mouseY > offsetY + positionY && mouseX < offsetX + positionX + width
-                        && mouseY < offsetY + positionY + height) {
-                    canZoom = false;
-                    Widget.interfaceCache[rsi.children[childID]].scrollPosition += rotation * 30;
-                } else {
-                    canZoom = true;
+                if (child.children != null) {
+                    handleScrolling(rotation, child.id, offsetX + widget.childX[index] + child.horizontalOffset, offsetY + widget.childY[index] + child.verticalOffset);
                 }
             }
+
         }
     }
 
+    private void handleScrolling(int rotation, int interfaceId, int offsetX, int offsetY) {
+        Widget widget = Widget.interfaceCache[interfaceId];
+        if (widget == null || widget.children == null)
+            return;
 
+        for (int index = 0; index < widget.children.length; index++) {
+            Widget child = Widget.interfaceCache[widget.children[index]];
+            if (child.scrollMax > child.height) {
+                int positionX = widget.childX[index] + child.horizontalOffset;
+                int positionY = widget.childY[index] + child.verticalOffset;
+                int width = child.width;
+                int height = child.height;
+                if (mouseX >= offsetX + positionX && mouseY >= offsetY + positionY
+                        && mouseX < offsetX + positionX + width
+                        && mouseY < offsetY + positionY + height) {
+                    int newRotation = rotation * 30;
+                    if (newRotation > child.scrollMax - child.height - child.scrollPosition) {
+                        newRotation = child.scrollMax - child.height - child.scrollPosition;
+                    } else if (newRotation < -child.scrollPosition) {
+                        newRotation = -child.scrollPosition;
+                    }
+                    if (Client.instance.getActiveInterfaceType() != 0) {
+                        Client.instance.setAnInt1088(Client.instance.getAnInt1088() - newRotation);
+                    }
+                    child.scrollPosition += newRotation;
+                    return;
+                }
+            }
+            if (child.children != null) {
+                handleScrolling(rotation, child.id, offsetX + widget.childX[index] + child.horizontalOffset, offsetY + widget.childY[index] + child.verticalOffset);
+            }
+        }
+    }
 }

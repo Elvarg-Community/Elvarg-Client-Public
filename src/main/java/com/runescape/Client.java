@@ -2063,6 +2063,18 @@ public class Client extends GameEngine implements RSClient {
         }
     }
 
+    public int getActiveInterfaceType() {
+        return activeInterfaceType;
+    }
+
+    public int getAnInt1088() {
+        return anInt1088;
+    }
+
+    public void setAnInt1088(int anInt1088) {
+        this.anInt1088 = anInt1088;
+    }
+
     private void saveMidi(boolean flag, byte abyte0[]) {
         
     }
