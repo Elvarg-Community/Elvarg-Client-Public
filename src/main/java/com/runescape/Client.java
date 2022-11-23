@@ -1213,7 +1213,11 @@ public class Client extends GameEngine implements RSClient {
     }
 
     public void frameMode(boolean resizable) {
-        if(isResized() == resizable) {
+        frameMode(resizable,false);
+    }
+
+    public void frameMode(boolean resizable, boolean force) {
+        if((isResized() == resizable) && !force) {
             return;
         }
 
@@ -8937,6 +8941,8 @@ public class Client extends GameEngine implements RSClient {
                 return;
             }
             if (response == 2) {
+
+                frameMode(false,true);
                 setGameState(GameState.LOGGING_IN);
                 myPrivilege = socketStream.read();
                 //flagged = socketStream.read() == 1;
@@ -9025,6 +9031,7 @@ public class Client extends GameEngine implements RSClient {
                 anInt1188 = 0;
                 anInt1155 = 0;
                 anInt1226 = 0;
+
                 SettingsWidget.updateSettings();
                 setGameState(GameState.LOGGED_IN);
                 Rasterizer2D.clear();
