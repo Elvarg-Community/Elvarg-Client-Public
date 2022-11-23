@@ -1397,6 +1397,12 @@ public class Model extends Renderable implements RSModel {
             }
         }
 
+        if (flat) {
+            calculateBoundsCylinder();
+        } else {
+            calculateBounds();
+        }
+
     }
 
     private int applyLight(int var0) {
@@ -2600,7 +2606,7 @@ public class Model extends Renderable implements RSModel {
 
     @Override
     public void calculateExtreme(int orientation) {
-
+        calculateBoundingBox(orientation);
     }
 
     @Override
