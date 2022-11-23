@@ -841,7 +841,7 @@ public class Client extends GameEngine implements RSClient {
         incompleteAnimables = new Deque();
         anIntArray1057 = new int[33];
         aClass9_1059 = new Widget();
-        mapScenes = new IndexedImage[100];
+        mapScenes = new IndexedImage[104];
         barFillColor = 0x4d4233;
         anIntArray1065 = new int[7];
         minimapHintX = new int[1000];
