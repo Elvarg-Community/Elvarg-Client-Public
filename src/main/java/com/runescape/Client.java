@@ -3223,21 +3223,25 @@ public class Client extends GameEngine implements RSClient {
 
             if (state == 1) {
                 Rasterizer3D.setBrightness(0.9);
+                Client.preferences.setBrightnessState(0.9);
                 UserPreferences.INSTANCE.save();
             }
 
             if (state == 2) {
                 Rasterizer3D.setBrightness(0.8);
+                Client.preferences.setBrightnessState(0.8);
                 UserPreferences.INSTANCE.save();
             }
 
             if (state == 3) {
                 Rasterizer3D.setBrightness(0.7);
+                Client.preferences.setBrightnessState(0.7);
                 UserPreferences.INSTANCE.save();
             }
 
             if (state == 4) {
                 Rasterizer3D.setBrightness(0.6);
+                Client.preferences.setBrightnessState(0.6);
                 UserPreferences.INSTANCE.save();
             }
 
