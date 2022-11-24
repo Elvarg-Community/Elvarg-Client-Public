@@ -492,6 +492,7 @@ public class Model extends Renderable implements RSModel {
             }
         }
         calculateBoundsCylinder();
+        resetBounds();
     }
 
     public Model(boolean colorFlag, boolean alphaFlag, boolean animated, Model model) {
@@ -561,6 +562,9 @@ public class Model extends Renderable implements RSModel {
         textureTypes = model.textureTypes;
         normals = model.normals;
         vertexNormalsOffsets = model.vertexNormalsOffsets;
+
+        model.resetBounds();
+
     }
 
 
