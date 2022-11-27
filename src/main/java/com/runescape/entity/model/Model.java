@@ -601,17 +601,6 @@ public class Model extends Renderable implements RSModel {
                 System.arraycopy(model.drawType, 0, drawType, 0, trianglesCount);
             }
 
-            super.normals = new VertexNormal[verticesCount];
-            for (int vertex = 0; vertex < verticesCount; vertex++) {
-                VertexNormal vertexNormalNew = super.normals[vertex] = new VertexNormal();
-                VertexNormal vertexNormalOld = model.normals[vertex];
-                vertexNormalNew.x = vertexNormalOld.x;
-                vertexNormalNew.y = vertexNormalOld.y;
-                vertexNormalNew.z = vertexNormalOld.z;
-                vertexNormalNew.magnitude = vertexNormalOld.magnitude;
-            }
-
-            vertexNormalsOffsets = model.vertexNormalsOffsets;
         } else {
             colorsX = model.colorsX;
             colorsY = model.colorsY;
@@ -1264,117 +1253,229 @@ public class Model extends Renderable implements RSModel {
         }
     }
 
-    public void light(int ambient, int contrast, int x, int y, int z, boolean flat) {
+    public void light(int ambient, int contrast, int x, int y, int z, boolean flatShading) {
+        this.calculateVertexNormals();
+        int magnitude = (int)Math.sqrt((double)(z * z + x * x + y * y));
+        int var7 = magnitude * contrast >> 8;
+        Model model = new Model();
+        model.colorsX = new int[this.trianglesCount];
+        model.colorsY = new int[this.trianglesCount];
+        model.colorsZ = new int[this.trianglesCount];
+        if (this.texturesCount > 0 && this.textures != null) {
+            int[] var9 = new int[this.texturesCount];
 
-        calculateVertexNormals();
-        int magnitude = (int) Math.sqrt(x * x + y * y + z * z);
-        int k1 = contrast * magnitude >> 8;
-        colorsX = new int[trianglesCount];
-        colorsY = new int[trianglesCount];
-        colorsZ = new int[trianglesCount];
+            int var10;
+            for (var10 = 0; var10 < this.trianglesCount; ++var10) {
+                if (this.textures[var10] != -1) {
+                    ++var9[this.textures[var10] & 255];
+                }
+            }
 
-        for (int var16 = 0; var16 < trianglesCount; ++var16) {
-            int var17;
-            if (drawType == null) {
+            model.texturesCount = 0;
+
+            for (var10 = 0; var10 < this.texturesCount; ++var10) {
+                if (var9[var10] > 0 && this.textureTypes[var10] == 0) {
+                    ++model.texturesCount;
+                }
+            }
+
+            model.texturesX = new short[model.texturesCount]; //should be int (Model is int, ModelData is short)
+            model.texturesY = new short[model.texturesCount]; //should be int
+            model.texturesZ = new short[model.texturesCount]; //should be int
+            var10 = 0;
+
+            int var11;
+            for (var11 = 0; var11 < this.texturesCount; ++var11) {
+                if (var9[var11] > 0 && this.textureTypes[var11] == 0) {
+                    model.texturesX[var10] = (short) (this.texturesX[var11] & '\uffff'); //should be int (short cast redundant)
+                    model.texturesY[var10] = (short) (this.texturesY[var11] & '\uffff'); //should be int (short cast redundant)
+                    model.texturesZ[var10] = (short) (this.texturesZ[var11] & '\uffff'); //should be int (short cast redundant)
+                    var9[var11] = var10++;
+                } else {
+                    var9[var11] = -1;
+                }
+            }
+
+            model.textures = new byte[this.trianglesCount];
+
+            for (var11 = 0; var11 < this.trianglesCount; ++var11) {
+                if (this.textures[var11] != -1) {
+                    model.textures[var11] = (byte)var9[this.textures[var11] & 255];
+                } else {
+                    model.textures[var11] = -1;
+                }
+            }
+        }
+
+        for (int var16 = 0; var16 < this.trianglesCount; ++var16) {
+            int var17; //should be byte
+            if (this.drawType == null) {
                 var17 = 0;
             } else {
-                var17 = drawType[var16];
+                var17 = this.drawType[var16];
+            }
+
+            byte var18;
+            if (this.triangleAlpha == null) {
+                var18 = 0;
+            } else {
+                var18 = this.triangleAlpha[var16];
             }
 
             short var12;
-            if (materials == null) {
+            if (this.materials == null) {
                 var12 = -1;
             } else {
-                var12 = materials[var16];
+                var12 = this.materials[var16];
+            }
+
+            if (var18 == -2) {
+                var17 = 3;
+            }
+
+            if (var18 == -1) {
+                var17 = 2;
             }
 
             VertexNormal var13;
             int var14;
             FaceNormal var19;
             if (var12 == -1) {
-                if (var17 == 0) {
-                    int var15 = colors[var16];
-                    if (vertexNormalsOffsets != null && vertexNormalsOffsets[trianglesX[var16]] != null) {
-                        var13 = vertexNormalsOffsets[trianglesX[var16]];
+                if (var17 != 0) {
+                    if (var17 == 1) {
+                        var19 = this.faceNormals[var16];
+                        var14 = (y * var19.y + z * var19.z + x * var19.x) / (var7 / 2 + var7) + ambient;
+                        model.colorsX[var16] = light(this.colors[var16] & '\uffff', var14);
+                        model.colorsZ[var16] = -1;
+                    } else if (var17 == 3) {
+                        model.colorsX[var16] = 128;
+                        model.colorsZ[var16] = -1;
                     } else {
-                        var13 = normals[trianglesX[var16]];
+                        model.colorsZ[var16] = -2;
+                    }
+                } else {
+                    int var15 = this.colors[var16] & '\uffff';
+                    if (this.vertexNormalsOffsets != null && this.vertexNormalsOffsets[this.trianglesX[var16]] != null) {
+                        var13 = this.vertexNormalsOffsets[this.trianglesX[var16]];
+                    } else {
+                        var13 = this.normals[this.trianglesX[var16]];
                     }
 
-                    var14 = (y * var13.y + z * var13.z + x * var13.x) / (k1 * var13.magnitude) + ambient;
-                    colorsX[var16] = applyLight(var15, var14);
-                    if (vertexNormalsOffsets != null && vertexNormalsOffsets[trianglesY[var16]] != null) {
-                        var13 = vertexNormalsOffsets[trianglesY[var16]];
+                    var14 = (y * var13.y + z * var13.z + x * var13.x) / (var7 * var13.magnitude) + ambient;
+                    model.colorsX[var16] = light(var15, var14);
+                    if (this.vertexNormalsOffsets != null && this.vertexNormalsOffsets[this.trianglesY[var16]] != null) {
+                        var13 = this.vertexNormalsOffsets[this.trianglesY[var16]];
                     } else {
-                        var13 = normals[trianglesY[var16]];
+                        var13 = this.normals[this.trianglesY[var16]];
                     }
 
-                    var14 = (y * var13.y + z * var13.z + x * var13.x) / (k1 * var13.magnitude) + ambient;
-                    colorsY[var16] = applyLight(var15, var14);
-                    if (vertexNormalsOffsets != null && vertexNormalsOffsets[trianglesZ[var16]] != null) {
-                        var13 = vertexNormalsOffsets[trianglesZ[var16]];
+                    var14 = (y * var13.y + z * var13.z + x * var13.x) / (var7 * var13.magnitude) + ambient;
+                    model.colorsY[var16] = light(var15, var14);
+                    if (this.vertexNormalsOffsets != null && this.vertexNormalsOffsets[this.trianglesZ[var16]] != null) {
+                        var13 = this.vertexNormalsOffsets[this.trianglesZ[var16]];
                     } else {
-                        var13 = normals[trianglesZ[var16]];
+                        var13 = this.normals[this.trianglesZ[var16]];
                     }
 
-                    var14 = (y * var13.y + z * var13.z + x * var13.x) / (k1 * var13.magnitude) + ambient;
-                    colorsZ[var16] = applyLight(var15, var14);
-                } else if (var17 == 1) {
-                    var19 = faceNormals[var16];
-                    var14 = (y * var19.y + z * var19.z + x * var19.x) / (k1 / 2 + k1) + ambient;
-                    colorsX[var16] = applyLight(colors[var16], var14);
-                    colorsZ[var16] = -1;
-                } else if (var17 == 3) {
-                    colorsX[var16] = 128;
-                    colorsZ[var16] = -1;
-                } else {
-                    colorsZ[var16] = -2;
+                    var14 = (y * var13.y + z * var13.z + x * var13.x) / (var7 * var13.magnitude) + ambient;
+                    model.colorsZ[var16] = light(var15, var14);
                 }
-            } else if (var17 == 0) {
-                if (vertexNormalsOffsets != null && vertexNormalsOffsets[trianglesX[var16]] != null) {
-                    var13 = vertexNormalsOffsets[trianglesX[var16]];
+            } else if (var17 != 0) {
+                if (var17 == 1) {
+                    var19 = this.faceNormals[var16];
+                    var14 = (y * var19.y + z * var19.z + x * var19.x) / (var7 / 2 + var7) + ambient;
+                    model.colorsX[var16] = light(var14);
+                    model.colorsZ[var16] = -1;
                 } else {
-                    var13 = normals[trianglesX[var16]];
+                    model.colorsZ[var16] = -2;
                 }
-
-                var14 = (y * var13.y + z * var13.z + x * var13.x) / (k1 * var13.magnitude) + ambient;
-                colorsX[var16] = applyLight(var14);
-                if (vertexNormalsOffsets != null && vertexNormalsOffsets[trianglesY[var16]] != null) {
-                    var13 = vertexNormalsOffsets[trianglesY[var16]];
-                } else {
-                    var13 = normals[trianglesY[var16]];
-                }
-
-                var14 = (y * var13.y + z * var13.z + x * var13.x) / (k1 * var13.magnitude) + ambient;
-                colorsY[var16] = applyLight(var14);
-                if (vertexNormalsOffsets != null && vertexNormalsOffsets[trianglesZ[var16]] != null) {
-                    var13 = vertexNormalsOffsets[trianglesZ[var16]];
-                } else {
-                    var13 = normals[trianglesZ[var16]];
-                }
-
-                var14 = (y * var13.y + z * var13.z + x * var13.x) / (k1 * var13.magnitude) + ambient;
-                colorsZ[var16] = applyLight(var14);
-            } else if (var17 == 1) {
-                var19 = faceNormals[var16];
-                var14 = (y * var19.y + z * var19.z + x * var19.x) / (k1 / 2 + k1) + ambient;
-                colorsX[var16] = applyLight(var14);
-                colorsZ[var16] = -1;
             } else {
-                colorsZ[var16] = -2;
+                if (this.vertexNormalsOffsets != null && this.vertexNormalsOffsets[this.trianglesX[var16]] != null) {
+                    var13 = this.vertexNormalsOffsets[this.trianglesX[var16]];
+                } else {
+                    var13 = this.normals[this.trianglesX[var16]];
+                }
+
+                var14 = (y * var13.y + z * var13.z + x * var13.x) / (var7 * var13.magnitude) + ambient;
+                model.colorsX[var16] = light(var14);
+                if (this.vertexNormalsOffsets != null && this.vertexNormalsOffsets[this.trianglesY[var16]] != null) {
+                    var13 = this.vertexNormalsOffsets[this.trianglesY[var16]];
+                } else {
+                    var13 = this.normals[this.trianglesY[var16]];
+                }
+
+                var14 = (y * var13.y + z * var13.z + x * var13.x) / (var7 * var13.magnitude) + ambient;
+                model.colorsY[var16] = light(var14);
+                if (this.vertexNormalsOffsets != null && this.vertexNormalsOffsets[this.trianglesZ[var16]] != null) {
+                    var13 = this.vertexNormalsOffsets[this.trianglesZ[var16]];
+                } else {
+                    var13 = this.normals[this.trianglesZ[var16]];
+                }
+
+                var14 = (y * var13.y + z * var13.z + x * var13.x) / (var7 * var13.magnitude) + ambient;
+                model.colorsZ[var16] = light(var14);
             }
+        }
+
+        this.generateBones();
+        model.verticesCount = this.verticesCount;
+        model.verticesX = this.verticesX;
+        model.verticesY = this.verticesY;
+        model.verticesZ = this.verticesZ;
+        model.trianglesCount = this.trianglesCount;
+        model.trianglesX = this.trianglesX;
+        model.trianglesY = this.trianglesY;
+        model.trianglesZ = this.trianglesZ;
+        model.renderPriorities = this.renderPriorities;
+        model.triangleAlpha = this.triangleAlpha;
+        model.facePriority = this.facePriority;
+        model.vertexGroups = this.vertexGroups;
+        model.faceGroups = this.faceGroups;
+        model.materials = this.materials;
+        model.animayaGroups = this.animayaGroups;
+        model.animayaScales = this.animayaScales;
+        this.colorsX = model.colorsX;
+        this.colorsY = model.colorsY;
+        this.colorsZ = model.colorsZ;
+        this.texturesCount = model.texturesCount;
+        this.textures = model.textures;
+        this.texturesX = model.texturesX;
+        this.texturesY = model.texturesY;
+        this.texturesZ = model.texturesZ;
+
+        if (flatShading) {
+            calculateBoundsCylinder();
+        } else {
+            vertexNormalsOffsets = new VertexNormal[verticesCount];
+            for (int point = 0; point < verticesCount; point++) {
+                VertexNormal norm = super.normals[point];
+                VertexNormal merge = vertexNormalsOffsets[point] = new VertexNormal();
+                merge.x = norm.x;
+                merge.y = norm.y;
+                merge.z = norm.z;
+                merge.magnitude = norm.magnitude;
+            }
+
+            calculateBounds();
         }
 
         resetBounds();
 
+        if (textures == null) {
+            calculateVertexNormals();
+        }
+
+        //Mixins
         if (faceTextureUVCoordinates == null)
         {
             computeTextureUvCoordinates();
         }
 
-        RSVertexNormal[] vertexNormals = super.normals;
-        RSVertexNormal[] vertexVertices = vertexNormalsOffsets;
 
-        if (vertexNormals != null && vertexNormalsX == null)
+        VertexNormal[] vertexNormals2 = normals;
+        VertexNormal[] vertexVertices = vertexNormalsOffsets;
+
+        if (vertexNormals2 != null && vertexNormalsX == null)
         {
             int verticesCount = getVerticesCount();
 
@@ -1382,18 +1483,14 @@ public class Model extends Renderable implements RSModel {
             vertexNormalsY = new int[verticesCount];
             vertexNormalsZ = new int[verticesCount];
 
-            for (int i = 0; i < verticesCount; ++i)
-            {
-                RSVertexNormal vertexNormal;
+            for (int i = 0; i < verticesCount; ++i) {
+                VertexNormal vertexNormal;
 
-                if (vertexVertices != null && (vertexNormal = vertexVertices[i]) != null)
-                {
+                if (vertexVertices != null && (vertexNormal = vertexVertices[i]) != null) {
                     vertexNormalsX[i] = vertexNormal.getX();
                     vertexNormalsY[i] = vertexNormal.getY();
                     vertexNormalsZ[i] = vertexNormal.getZ();
-                }
-                else if ((vertexNormal = vertexNormals[i]) != null)
-                {
+                } else if ((vertexNormal = vertexNormals2[i]) != null) {
                     vertexNormalsX[i] = vertexNormal.getX();
                     vertexNormalsY[i] = vertexNormal.getY();
                     vertexNormalsZ[i] = vertexNormal.getZ();
@@ -1401,11 +1498,8 @@ public class Model extends Renderable implements RSModel {
             }
         }
 
-        if (flat) {
-            calculateBoundsCylinder();
-        } else {
-            calculateBounds();
-        }
+        this.normals = model.normals;
+        this.vertexNormalsOffsets = model.vertexNormalsOffsets;
 
     }
 
