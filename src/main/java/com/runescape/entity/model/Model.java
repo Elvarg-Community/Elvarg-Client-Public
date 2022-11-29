@@ -1,5 +1,10 @@
 package com.runescape.entity.model;
 
+import java.awt.Shape;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+
 import com.runescape.Client;
 import com.runescape.cache.anim.Frame;
 import com.runescape.cache.anim.FrameBase;
@@ -7,6 +12,10 @@ import com.runescape.draw.Rasterizer2D;
 import com.runescape.draw.Rasterizer3D;
 import com.runescape.engine.impl.MouseHandler;
 import com.runescape.entity.Renderable;
+import com.runescape.entity.model.FaceNormal;
+import com.runescape.entity.model.ModelHeader;
+import com.runescape.entity.model.ModelLoader;
+import com.runescape.entity.model.VertexNormal;
 import com.runescape.io.Buffer;
 import com.runescape.scene.SceneGraph;
 import net.runelite.api.Perspective;
@@ -16,12 +25,6 @@ import net.runelite.api.model.Triangle;
 import net.runelite.api.model.Vertex;
 import net.runelite.rs.api.RSFrames;
 import net.runelite.rs.api.RSModel;
-import net.runelite.rs.api.RSVertexNormal;
-
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
-
 
 public class Model extends Renderable implements RSModel {
 
@@ -64,7 +67,6 @@ public class Model extends Renderable implements RSModel {
         } else {
             ModelLoader.decodeOldFormat(this, data);
         }
-
     }
 
     public static void loadModel(final byte[] modelData, final int modelId) {
@@ -152,8 +154,9 @@ public class Model extends Renderable implements RSModel {
         if (modelHeaders == null) {
             return null;
         }
-        ModelHeader class21 = modelHeaders[file];
-        if (class21 == null) {
+
+        ModelHeader header = modelHeaders[file];
+        if (header == null) {
             Client.instance.resourceProvider.provide(0, file);
             return null;
         } else {
@@ -162,13 +165,12 @@ public class Model extends Renderable implements RSModel {
     }
 
     public static boolean isCached(int file) {
-        if (modelHeaders == null) {
+        if (modelHeaders == null)
             return false;
-        }
 
-        ModelHeader class21 = modelHeaders[file];
-        if (class21 == null) {
-            Client.instance.resourceProvider.provide(0, file);
+        ModelHeader mdl = modelHeaders[file];
+        if (mdl == null) {
+            Client.instance.resourceProvider.provide(0,file);
             return false;
         } else {
             return true;
@@ -324,7 +326,7 @@ public class Model extends Renderable implements RSModel {
 
                 for (int i = 0; i < length; ++i)
                 {
-                    RSModel model = models[i];
+                    Model model = models[i];
                     if (model != null)
                     {
                         float[] modelUV = model.getFaceTextureUVCoordinates();
@@ -348,6 +350,7 @@ public class Model extends Renderable implements RSModel {
         }
     }
 
+    //Players - graphics in particular
     public Model(Model models[]) {
         int modelCount = 2;
         singleTile = false;
@@ -360,9 +363,8 @@ public class Model extends Renderable implements RSModel {
         boolean coordinateFlag = false;
         verticesCount = 0;
         trianglesCount = 0;
-        trianglesCount = 0;
+        texturesCount = 0;
         facePriority = -1;
-
         Model build;
         for (int currentModel = 0; currentModel < modelCount; currentModel++) {
             build = models[currentModel];
@@ -396,9 +398,6 @@ public class Model extends Renderable implements RSModel {
         colorsX = new int[trianglesCount];
         colorsY = new int[trianglesCount];
         colorsZ = new int[trianglesCount];
-        texturesX = new short[texturesCount];
-        texturesY = new short[texturesCount];
-        texturesZ = new short[texturesCount];
 
         if (renderTypeFlag)
             drawType = new int[trianglesCount];
@@ -428,7 +427,6 @@ public class Model extends Renderable implements RSModel {
         verticesCount = 0;
         trianglesCount = 0;
         texturesCount = 0;
-
         for (int currentModel = 0; currentModel < modelCount; currentModel++) {
             build = models[currentModel];
             if (build != null) {
@@ -512,10 +510,10 @@ public class Model extends Renderable implements RSModel {
             verticesX = new int[verticesCount];
             verticesY = new int[verticesCount];
             verticesZ = new int[verticesCount];
-            for (int j = 0; j < verticesCount; j++) {
-                verticesX[j] = model.verticesX[j];
-                verticesY[j] = model.verticesY[j];
-                verticesZ[j] = model.verticesZ[j];
+            for (int point = 0; point < verticesCount; point++) {
+                verticesX[point] = model.verticesX[point];
+                verticesY[point] = model.verticesY[point];
+                verticesZ[point] = model.verticesZ[point];
             }
 
         }
@@ -544,7 +542,6 @@ public class Model extends Renderable implements RSModel {
 
             } else {
                 System.arraycopy(model.triangleAlpha, 0, triangleAlpha, 0, trianglesCount);
-
             }
         }
         vertexData = model.vertexData;
@@ -561,12 +558,12 @@ public class Model extends Renderable implements RSModel {
         textures = model.textures;
         textureTypes = model.textureTypes;
         normals = model.normals;
+        faceNormals = model.faceNormals;
+        this.animayaGroups = model.animayaGroups;
+        this.animayaScales = model.animayaScales;
+
         vertexNormalsOffsets = model.vertexNormalsOffsets;
-
-        model.resetBounds();
-
     }
-
 
     public Model(boolean resetVertices, boolean resetColors, Model model) {
         singleTile = false;
@@ -585,21 +582,21 @@ public class Model extends Renderable implements RSModel {
             colorsX = new int[trianglesCount];
             colorsY = new int[trianglesCount];
             colorsZ = new int[trianglesCount];
-
-            for (int k = 0; k < trianglesCount; k++) {
-                colorsX[k] = model.colorsX[k];
-                colorsY[k] = model.colorsY[k];
-                colorsZ[k] = model.colorsZ[k];
+            for (int face = 0; face < trianglesCount; face++) {
+                colorsX[face] = model.colorsX[face];
+                colorsY[face] = model.colorsY[face];
+                colorsZ[face] = model.colorsZ[face];
             }
 
             drawType = new int[trianglesCount];
             if (model.drawType == null) {
-                for (int l = 0; l < trianglesCount; l++) {
-                    drawType[l] = 0;
+                for (int face = 0; face < trianglesCount; face++) {
+                    drawType[face] = 0;
                 }
             } else {
                 System.arraycopy(model.drawType, 0, drawType, 0, trianglesCount);
             }
+
 
         } else {
             colorsX = model.colorsX;
@@ -631,11 +628,11 @@ public class Model extends Renderable implements RSModel {
         minZ = model.minZ;
         maxX = model.maxX;
 
+        //New
         vertexNormalsX = model.vertexNormalsX;
         vertexNormalsY = model.vertexNormalsY;
         vertexNormalsZ = model.vertexNormalsZ;
         faceTextureUVCoordinates = model.faceTextureUVCoordinates;
-
     }
 
     public void replaceModel(Model model, boolean replaceAlpha) {
@@ -652,10 +649,10 @@ public class Model extends Renderable implements RSModel {
         verticesX = sharedVerticesX;
         verticesY = sharedVerticesY;
         verticesZ = sharedVerticesZ;
-        for (int k = 0; k < verticesCount; k++) {
-            verticesX[k] = model.verticesX[k];
-            verticesY[k] = model.verticesY[k];
-            verticesZ[k] = model.verticesZ[k];
+        for (int point = 0; point < verticesCount; point++) {
+            verticesX[point] = model.verticesX[point];
+            verticesY[point] = model.verticesY[point];
+            verticesZ[point] = model.verticesZ[point];
         }
 
         if (replaceAlpha) {
@@ -666,8 +663,8 @@ public class Model extends Renderable implements RSModel {
             }
             triangleAlpha = sharedTriangleAlpha;
             if (model.triangleAlpha == null) {
-                for (int l = 0; l < trianglesCount; l++) {
-                    triangleAlpha[l] = 0;
+                for (int face = 0; face < trianglesCount; face++) {
+                    triangleAlpha[face] = 0;
                 }
             } else {
                 System.arraycopy(model.triangleAlpha, 0, triangleAlpha, 0, trianglesCount);
@@ -692,9 +689,10 @@ public class Model extends Renderable implements RSModel {
         textures = model.textures;
         textureTypes = model.textureTypes;
         materials = model.materials;
-        vertexNormalsOffsets = model.vertexNormalsOffsets;
 
-        vertexNormalsX = model.vertexNormalsX;
+        //New
+        vertexNormalsOffsets = model.vertexNormalsOffsets;
+        vertexNormalsX = model.vertexNormalsX; //TODO uncomment
         vertexNormalsY = model.vertexNormalsY;
         vertexNormalsZ = model.vertexNormalsZ;
         faceTextureUVCoordinates = model.faceTextureUVCoordinates;
@@ -728,8 +726,6 @@ public class Model extends Renderable implements RSModel {
         return vertexId;
     }
 
-    private int boundsType;
-
     public void calculateBoundsCylinder() {
         if (this.boundsType != 1) {
             this.boundsType = 1;
@@ -751,7 +747,6 @@ public class Model extends Renderable implements RSModel {
                     diagonal2DAboveOrigin = bounds;
                 }
             }
-
 
             diagonal2DAboveOrigin = (int)(Math.sqrt(diagonal2DAboveOrigin) + 0.98999999999999999);
             diagonal3DAboveOrigin = (int)(Math.sqrt(diagonal2DAboveOrigin * diagonal2DAboveOrigin + super.modelBaseY * super.modelBaseY) + 0.98999999999999999);
@@ -880,34 +875,33 @@ public class Model extends Renderable implements RSModel {
         }
     }
 
+    private void transform(int animationType, int skinArray[], int x, int y, int z) {
 
-    private void transform(int animationType, int skin[], int x, int y, int z) {
-
-        int i1 = skin.length;
+        int length = skinArray.length;
         if (animationType == 0) {
-            int j1 = 0;
+            int i = 0;
             transformTempX = 0;
             transformTempY = 0;
             transformTempZ = 0;
-            for (int k2 = 0; k2 < i1; k2++) {
-                int l3 = skin[k2];
-                if (l3 < vertexGroups.length) {
-                    int ai5[] = vertexGroups[l3];
-                    for (int i5 = 0; i5 < ai5.length; i5++) {
-                        int j6 = ai5[i5];
-                        transformTempX += verticesX[j6];
-                        transformTempY += verticesY[j6];
-                        transformTempZ += verticesZ[j6];
-                        j1++;
+            for (int k2 = 0; k2 < length; k2++) {
+                int skin = skinArray[k2];
+                if (skin < vertexGroups.length) {
+                    int[] group = vertexGroups[skin];
+                    for (int i5 = 0; i5 < group.length; i5++) {
+                        int offset = group[i5];
+                        transformTempX += verticesX[offset];
+                        transformTempY += verticesY[offset];
+                        transformTempZ += verticesZ[offset];
+                        i++;
                     }
 
                 }
             }
 
-            if (j1 > 0) {
-                transformTempX = (int) (transformTempX / j1 + x);
-                transformTempY = (int) (transformTempY / j1 + y);
-                transformTempZ = (int) (transformTempZ / j1 + z);
+            if (i > 0) {
+                transformTempX = (int) (transformTempX / i + x);
+                transformTempY = (int) (transformTempY / i + y);
+                transformTempZ = (int) (transformTempZ / i + z);
                 return;
             } else {
                 transformTempX = (int) x;
@@ -917,15 +911,15 @@ public class Model extends Renderable implements RSModel {
             }
         }
         if (animationType == 1) {
-            for (int k1 = 0; k1 < i1; k1++) {
-                int l2 = skin[k1];
-                if (l2 < vertexGroups.length) {
-                    int ai1[] = vertexGroups[l2];
-                    for (int i4 = 0; i4 < ai1.length; i4++) {
-                        int j5 = ai1[i4];
-                        verticesX[j5] += x;
-                        verticesY[j5] += y;
-                        verticesZ[j5] += z;
+            for (int k1 = 0; k1 < length; k1++) {
+                int skin = skinArray[k1];
+                if (skin < vertexGroups.length) {
+                    int[] group = vertexGroups[skin];
+                    for (int i4 = 0; i4 < group.length; i4++) {
+                        int offset = group[i4];
+                        verticesX[offset] += x;
+                        verticesY[offset] += y;
+                        verticesZ[offset] += z;
                     }
 
                 }
@@ -934,42 +928,42 @@ public class Model extends Renderable implements RSModel {
             return;
         }
         if (animationType == 2) {
-            for (int l1 = 0; l1 < i1; l1++) {
-                int i3 = skin[l1];
-                if (i3 < vertexGroups.length) {
-                    int auid[] = vertexGroups[i3];
-                    for (int j4 = 0; j4 < auid.length; j4++) {
-                        int k5 = auid[j4];
-                        verticesX[k5] -= transformTempX;
-                        verticesY[k5] -= transformTempY;
-                        verticesZ[k5] -= transformTempZ;
-                        int k6 = (x & 0xff) * 8;
-                        int l6 = (y & 0xff) * 8;
-                        int i7 = (z & 0xff) * 8;
-                        if (i7 != 0) {
-                            int j7 = SINE[i7];
-                            int i8 = COSINE[i7];
-                            int l8 = verticesY[k5] * j7 + verticesX[k5] * i8 >> 16;
-                            verticesY[k5] = verticesY[k5] * i8 - verticesX[k5] * j7 >> 16;
-                            verticesX[k5] = l8;
+            for (int l1 = 0; l1 < length; l1++) {
+                int skin = skinArray[l1];
+                if (skin < vertexGroups.length) {
+                    int[] group = vertexGroups[skin];
+                    for (int j4 = 0; j4 < group.length; j4++) {
+                        int offset = group[j4];
+                        verticesX[offset] -= transformTempX;
+                        verticesY[offset] -= transformTempY;
+                        verticesZ[offset] -= transformTempZ;
+                        int xOff = (x & 0xff) * 8;
+                        int yOff = (y & 0xff) * 8;
+                        int zOff = (z & 0xff) * 8;
+                        if (zOff != 0) {
+                            int sin = SINE[zOff];
+                            int cos = COSINE[zOff];
+                            int loc = verticesY[offset] * sin + verticesX[offset] * cos >> 16;
+                            verticesY[offset] = verticesY[offset] * cos - verticesX[offset] * sin >> 16;
+                            verticesX[offset] = loc;
                         }
-                        if (k6 != 0) {
-                            int k7 = SINE[k6];
-                            int j8 = COSINE[k6];
-                            int i9 = verticesY[k5] * j8 - verticesZ[k5] * k7 >> 16;
-                            verticesZ[k5] = verticesY[k5] * k7 + verticesZ[k5] * j8 >> 16;
-                            verticesY[k5] = i9;
+                        if (xOff != 0) {
+                            int sin = SINE[xOff];
+                            int cos = COSINE[xOff];
+                            int loc = verticesY[offset] * cos - verticesZ[offset] * sin >> 16;
+                            verticesZ[offset] = verticesY[offset] * sin + verticesZ[offset] * cos >> 16;
+                            verticesY[offset] = loc;
                         }
-                        if (l6 != 0) {
-                            int l7 = SINE[l6];
-                            int k8 = COSINE[l6];
-                            int j9 = verticesZ[k5] * l7 + verticesX[k5] * k8 >> 16;
-                            verticesZ[k5] = verticesZ[k5] * k8 - verticesX[k5] * l7 >> 16;
-                            verticesX[k5] = j9;
+                        if (yOff != 0) {
+                            int sin = SINE[yOff];
+                            int cos = COSINE[yOff];
+                            int loc = verticesZ[offset] * sin + verticesX[offset] * cos >> 16;
+                            verticesZ[offset] = verticesZ[offset] * cos - verticesX[offset] * sin >> 16;
+                            verticesX[offset] = loc;
                         }
-                        verticesX[k5] += transformTempX;
-                        verticesY[k5] += transformTempY;
-                        verticesZ[k5] += transformTempZ;
+                        verticesX[offset] += transformTempX;
+                        verticesY[offset] += transformTempY;
+                        verticesZ[offset] += transformTempZ;
                     }
 
                 }
@@ -978,21 +972,21 @@ public class Model extends Renderable implements RSModel {
             return;
         }
         if (animationType == 3) {
-            for (int uid = 0; uid < i1; uid++) {
-                int j3 = skin[uid];
-                if (j3 < vertexGroups.length) {
-                    int ai3[] = vertexGroups[j3];
-                    for (int k4 = 0; k4 < ai3.length; k4++) {
-                        int l5 = ai3[k4];
-                        verticesX[l5] -= transformTempX;
-                        verticesY[l5] -= transformTempY;
-                        verticesZ[l5] -= transformTempZ;
-                        verticesX[l5] = (int) ((verticesX[l5] * x) / 128);
-                        verticesY[l5] = (int) ((verticesY[l5] * y) / 128);
-                        verticesZ[l5] = (int) ((verticesZ[l5] * z) / 128);
-                        verticesX[l5] += transformTempX;
-                        verticesY[l5] += transformTempY;
-                        verticesZ[l5] += transformTempZ;
+            for (int uid = 0; uid < length; uid++) {
+                int skin = skinArray[uid];
+                if (skin < vertexGroups.length) {
+                    int[] group = vertexGroups[skin];
+                    for (int k4 = 0; k4 < group.length; k4++) {
+                        int offset = group[k4];
+                        verticesX[offset] -= transformTempX;
+                        verticesY[offset] -= transformTempY;
+                        verticesZ[offset] -= transformTempZ;
+                        verticesX[offset] = (int) ((verticesX[offset] * x) / 128);
+                        verticesY[offset] = (int) ((verticesY[offset] * y) / 128);
+                        verticesZ[offset] = (int) ((verticesZ[offset] * z) / 128);
+                        verticesX[offset] += transformTempX;
+                        verticesY[offset] += transformTempY;
+                        verticesZ[offset] += transformTempZ;
                     }
 
                 }
@@ -1001,12 +995,12 @@ public class Model extends Renderable implements RSModel {
             return;
         }
         if (animationType == 5 && faceGroups != null && triangleAlpha != null) {
-            for (int j2 = 0; j2 < i1; j2++) {
-                int k3 = skin[j2];
-                if (k3 < faceGroups.length) {
-                    int ai4[] = faceGroups[k3];
-                    for (int l4 = 0; l4 < ai4.length; l4++) {
-                        int var13 = ai4[l4];
+            for (int j2 = 0; j2 < length; j2++) {
+                int skin = skinArray[j2];
+                if (skin < faceGroups.length) {
+                    int[] group = faceGroups[skin];
+                    for (int l4 = 0; l4 < group.length; l4++) {
+                        int var13 = group[l4];
                         int var14 = (this.triangleAlpha[var13] & 255) + x * 8;
                         if (var14 < 0) {
                             var14 = 0;
@@ -1019,7 +1013,6 @@ public class Model extends Renderable implements RSModel {
 
                 }
             }
-
         }
     }
 
@@ -1034,14 +1027,17 @@ public class Model extends Renderable implements RSModel {
         if (frame == null)
             return;
 
-        FrameBase base = frame.base;
-        transformTempX = 0;
-        transformTempY = 0;
-        transformTempZ = 0;
-
-        for (int index = 0; index < frame.transformationCount; index++) {
-            int pos = frame.transformationIndices[index];
-            transform(base.transformationType[pos], base.skinList[pos], frame.transformX[index], frame.transformY[index], frame.transformZ[index]);
+        FrameBase base = frame.base; //Skeleton var4 = var3.skeleton;
+        transformTempX = 0; //Model_transformTempX
+        transformTempY = 0; //Model_transformTempY
+        transformTempZ = 0; //Model_transformTempZ
+        for (int k = 0; k < frame.transformationCount; k++) { //transformCount
+            int l = frame.transformationIndices[k]; //int var6 = var3.transformSkeletonLabels[var5];
+            transform(base.transformationType[l], //var4.transformTypes[var6]
+                    base.skinList[l], //var4.labels[var6]
+                    frame.transformX[k], //var3.transformXs[var5]
+                    frame.transformY[k],
+                    frame.transformZ[k]);
         }
 
         this.resetBounds();
@@ -1078,7 +1074,7 @@ public class Model extends Renderable implements RSModel {
             }
 
             if (condition != table || list.transformationType[condition] == 0) {
-                transform(list.transformationType[condition], list.skinList[condition], skin.transformX[index], skin.transformY[index], skin.transformZ[index]);
+                this.transform(list.transformationType[condition], list.skinList[condition], anim.transformX[index], anim.transformY[index], anim.transformZ[index]);
             }
         }
 
@@ -1093,7 +1089,7 @@ public class Model extends Renderable implements RSModel {
             }
 
             if (condition == table || list.transformationType[condition] == 0) {
-                transform(list.transformationType[condition], list.skinList[condition], skin.transformX[index], skin.transformY[index], skin.transformZ[index]);
+                this.transform(list.transformationType[condition], list.skinList[condition], skin.transformX[index], skin.transformY[index], skin.transformZ[index]);
             }
         }
 
@@ -1101,47 +1097,35 @@ public class Model extends Renderable implements RSModel {
         invalidate();
     }
 
-
     public void rotate90Degrees() {
         for (int vertex = 0; vertex < verticesCount; vertex++) {
-            final int vertexX = verticesX[vertex];
+            int x = verticesX[vertex];
             verticesX[vertex] = verticesZ[vertex];
-            verticesZ[vertex] = -vertexX;
+            verticesZ[vertex] = -x;
         }
 
         this.resetBounds();
         invalidate();
     }
 
-    public void rotateZ(final int degrees) {
-        final int sine = SINE[degrees];
-        final int cosine = COSINE[degrees];
-        for (int vertex = 0; vertex < verticesCount; vertex++) {
-            final int newVertexY = verticesY[vertex] * cosine - verticesZ[vertex] * sine >> 16;
-            verticesZ[vertex] = verticesY[vertex] * sine + verticesZ[vertex] * cosine >> 16;
-            verticesY[vertex] = newVertexY;
+    public void rotateZ(int factor) {
+        int sin = SINE[factor];
+        int cos = COSINE[factor];
+        for (int point = 0; point < verticesCount; point++) {
+            int y = verticesY[point] * cos - verticesZ[point] * sin >> 16;
+            verticesZ[point] = verticesY[point] * sin + verticesZ[point] * cos >> 16;
+            verticesY[point] = y;
         }
 
         this.resetBounds();
         invalidate();
     }
 
-    public void offsetBy(final int x, final int y, final int z) {
-        for (int vertex = 0; vertex < this.verticesCount; vertex++) {
-            verticesX[vertex] += x;
-            verticesY[vertex] += y;
-            verticesZ[vertex] += z;
-        }
-
-        this.resetBounds();
-        invalidate();
-    }
-
-    public void scale(final int x, final int z, final int y) {
-        for (int vertex = 0; vertex < this.verticesCount; vertex++) {
-            verticesX[vertex] = (verticesX[vertex] * x) / 128;
-            verticesY[vertex] = (verticesY[vertex] * y) / 128;
-            verticesZ[vertex] = (verticesZ[vertex] * z) / 128;
+    public void offsetBy(int x, int y, int z) {
+        for (int point = 0; point < verticesCount; point++) {
+            verticesX[point] += x;
+            verticesY[point] += y;
+            verticesZ[point] += z;
         }
 
         this.resetBounds();
@@ -1149,7 +1133,7 @@ public class Model extends Renderable implements RSModel {
     }
 
     public void recolor(int found, int replace) {
-        if (colors != null) {
+        if(colors != null) {
             for (int face = 0; face < trianglesCount; face++) {
                 if (colors[face] == (short) found) {
                     colors[face] = (short) replace;
@@ -1159,7 +1143,7 @@ public class Model extends Renderable implements RSModel {
     }
 
     public void retexture(short found, short replace) {
-        if (materials != null) {
+        if(materials != null) {
             for (int face = 0; face < trianglesCount; face++) {
                 if (materials[face] == found) {
                     materials[face] = replace;
@@ -1169,36 +1153,46 @@ public class Model extends Renderable implements RSModel {
     }
 
     public void mirror() {
-        for (int vertex = 0; vertex < verticesCount; vertex++) {
+        for (int vertex = 0; vertex < verticesCount; vertex++)
             verticesZ[vertex] = -verticesZ[vertex];
-        }
 
-        for (int triangle = 0; triangle < trianglesCount; triangle++) {
-            final int newTriangleC = trianglesX[triangle];
-            trianglesX[triangle] = trianglesZ[triangle];
-            trianglesZ[triangle] = newTriangleC;
+        for (int face = 0; face < trianglesCount; face++) {
+            int newTriangleZ = trianglesX[face];
+            trianglesX[face] = trianglesZ[face];
+            trianglesZ[face] = newTriangleZ;
         }
     }
 
-    private void calculateVertexNormals() {
-        if (normals == null) {
-            normals = new VertexNormal[verticesCount];
+    public void scale(int x, int z, int y) {
+        for (int index = 0; index < verticesCount; index++) {
+            verticesX[index] = (verticesX[index] * x) / 128;
+            verticesY[index] = (verticesY[index] * y) / 128;
+            verticesZ[index] = (verticesZ[index] * z) / 128;
+        }
+
+        this.resetBounds();
+        invalidate();
+    }
+
+    public void calculateVertexNormals() {
+        if (this.normals == null) {
+            this.normals = new VertexNormal[this.verticesCount];
 
             int var1;
-            for (var1 = 0; var1 < verticesCount; ++var1) {
-                normals[var1] = new VertexNormal();
+            for (var1 = 0; var1 < this.verticesCount; ++var1) {
+                this.normals[var1] = new VertexNormal();
             }
 
-            for (var1 = 0; var1 < trianglesCount; ++var1) {
-                int var2 = trianglesX[var1];
-                int var3 = trianglesY[var1];
-                int var4 = trianglesZ[var1];
-                int var5 = verticesX[var3] - verticesX[var2];
-                int var6 = verticesY[var3] - verticesY[var2];
-                int var7 = verticesZ[var3] - verticesZ[var2];
-                int var8 = verticesX[var4] - verticesX[var2];
-                int var9 = verticesY[var4] - verticesY[var2];
-                int var10 = verticesZ[var4] - verticesZ[var2];
+            for (var1 = 0; var1 < this.trianglesCount; ++var1) {
+                int var2 = this.trianglesX[var1];
+                int var3 = this.trianglesY[var1];
+                int var4 = this.trianglesZ[var1];
+                int var5 = this.verticesX[var3] - this.verticesX[var2];
+                int var6 = this.verticesY[var3] - this.verticesY[var2];
+                int var7 = this.verticesZ[var3] - this.verticesZ[var2];
+                int var8 = this.verticesX[var4] - this.verticesX[var2];
+                int var9 = this.verticesY[var4] - this.verticesY[var2];
+                int var10 = this.verticesZ[var4] - this.verticesZ[var2];
                 int var11 = var6 * var10 - var9 * var7;
                 int var12 = var7 * var8 - var10 * var5;
 
@@ -1208,7 +1202,7 @@ public class Model extends Renderable implements RSModel {
                     var12 >>= 1;
                 }
 
-                int var14 = (int) Math.sqrt(var11 * var11 + var12 * var12 + var13 * var13);
+                int var14 = (int)Math.sqrt((double)(var11 * var11 + var12 * var12 + var13 * var13));
                 if (var14 <= 0) {
                     var14 = 1;
                 }
@@ -1216,40 +1210,41 @@ public class Model extends Renderable implements RSModel {
                 var11 = var11 * 256 / var14;
                 var12 = var12 * 256 / var14;
                 var13 = var13 * 256 / var14;
-                int var15;
-                if (drawType == null) {
+                int var15; //should be byte
+                if (this.drawType == null) {
                     var15 = 0;
                 } else {
-                    var15 = drawType[var1];
+                    var15 = this.drawType[var1];
                 }
 
                 if (var15 == 0) {
-                    VertexNormal var16 = normals[var2];
+                    VertexNormal var16 = this.normals[var2];
                     var16.x += var11;
                     var16.y += var12;
                     var16.z += var13;
                     ++var16.magnitude;
-                    var16 = normals[var3];
+                    var16 = this.normals[var3];
                     var16.x += var11;
                     var16.y += var12;
                     var16.z += var13;
                     ++var16.magnitude;
-                    var16 = normals[var4];
+                    var16 = this.normals[var4];
                     var16.x += var11;
                     var16.y += var12;
                     var16.z += var13;
                     ++var16.magnitude;
                 } else if (var15 == 1) {
-                    if (faceNormals == null) {
-                        faceNormals = new FaceNormal[trianglesCount];
+                    if (this.faceNormals == null) {
+                        this.faceNormals = new FaceNormal[this.trianglesCount];
                     }
 
-                    FaceNormal var17 = faceNormals[var1] = new FaceNormal();
+                    FaceNormal var17 = this.faceNormals[var1] = new FaceNormal();
                     var17.x = var11;
                     var17.y = var12;
                     var17.z = var13;
                 }
             }
+
         }
     }
 
@@ -1442,6 +1437,7 @@ public class Model extends Renderable implements RSModel {
         this.texturesX = model.texturesX;
         this.texturesY = model.texturesY;
         this.texturesZ = model.texturesZ;
+        this.texturesZ = model.texturesZ;
 
         if (flatShading) {
             calculateBoundsCylinder();
@@ -1462,7 +1458,7 @@ public class Model extends Renderable implements RSModel {
         resetBounds();
 
         if (textures == null) {
-            calculateVertexNormals();
+            vertexNormals();
         }
 
         //Mixins
@@ -1470,7 +1466,6 @@ public class Model extends Renderable implements RSModel {
         {
             computeTextureUvCoordinates();
         }
-
 
         VertexNormal[] vertexNormals2 = normals;
         VertexNormal[] vertexVertices = vertexNormalsOffsets;
@@ -1503,74 +1498,77 @@ public class Model extends Renderable implements RSModel {
 
     }
 
-    private int applyLight(int var0) {
-        if (var0 < 2) {
-            var0 = 2;
-        } else if (var0 > 126) {
-            var0 = 126;
-        }
-
-        return var0;
+    public final void setLighting(int intensity, int specular, int x, int y, int z) {
+        setLighting(intensity, specular, x, y, z, false);
     }
 
-    private int applyLight(int var0, int var1) {
-        var1 = (var0 & 127) * var1 >> 7;
-        if (var1 < 2) {
-            var1 = 2;
-        } else if (var1 > 126) {
-            var1 = 126;
-        }
-
-        return (var0 & '\uff80') + var1;
-    }
-
-    public void setLighting(int intensity, int diffusion, int lightX, int lightY, int lightZ) {
-        for (int j1 = 0; j1 < trianglesCount; j1++) {
-            int k1 = trianglesX[j1];
-            int i2 = trianglesY[j1];
-            int j2 = trianglesZ[j1];
+    public final void setLighting(int intensity, int specular, int x, int y, int z, boolean player) {
+        for (int face = 0; face < trianglesCount; face++) {
+            int a = trianglesX[face];
+            int b = trianglesY[face];
+            int c = trianglesZ[face];
+            if(materials != null) {
+                if(player) {
+                    //These checks are all important! - black triangle check
+                    if(triangleAlpha != null && colors != null) {
+                        if(colors[face] == 0 && renderPriorities[face] == 0) {
+                            if(drawType[face] == 2 && materials[face] == -1) {
+                                triangleAlpha[face] = (byte) 255;
+                            }
+                        }
+                    } else if(triangleAlpha == null) {
+                        if(colors[face] == 0 && renderPriorities[face] == 0) {
+                            if(materials[face] == -1) {
+                                triangleAlpha = new byte[trianglesCount];
+                            }
+                        }
+                    }
+                }
+            }
             if (drawType == null) {
-                int i3 = colors[j1];
-                VertexNormal vertexNormal = super.normals[k1];
-                int k2 = intensity + (lightX * vertexNormal.x + lightY * vertexNormal.y + lightZ * vertexNormal.z) / (diffusion * vertexNormal.magnitude);
-                colorsX[j1] = mixLightness(i3, k2, 0);
-                vertexNormal = super.normals[i2];
-                k2 = intensity + (lightX * vertexNormal.x + lightY * vertexNormal.y + lightZ * vertexNormal.z) / (diffusion * vertexNormal.magnitude);
-                colorsY[j1] = mixLightness(i3, k2, 0);
-                vertexNormal = super.normals[j2];
-                k2 = intensity + (lightX * vertexNormal.x + lightY * vertexNormal.y + lightZ * vertexNormal.z) / (diffusion * vertexNormal.magnitude);
-                colorsZ[j1] = mixLightness(i3, k2, 0);
-            } else if ((drawType[j1] & 1) == 0) {
-                int j3 = colors[j1];
-                int k3 = drawType[j1];
-                VertexNormal vertexNormal = super.normals[k1];
-                int l2 = intensity + (lightX * vertexNormal.x + lightY * vertexNormal.y + lightZ * vertexNormal.z) / (diffusion * vertexNormal.magnitude);
-                colorsX[j1] = mixLightness(j3, l2, k3);
-                vertexNormal = super.normals[i2];
-                l2 = intensity + (lightX * vertexNormal.x + lightY * vertexNormal.y + lightZ * vertexNormal.z) / (diffusion * vertexNormal.magnitude);
-                colorsY[j1] = mixLightness(j3, l2, k3);
-                vertexNormal = super.normals[j2];
-                l2 = intensity + (lightX * vertexNormal.x + lightY * vertexNormal.y + lightZ * vertexNormal.z) / (diffusion * vertexNormal.magnitude);
-                colorsZ[j1] = mixLightness(j3, l2, k3);
+                int hsl = colors[face] & '\uffff';
+                VertexNormal vertex = super.normals[a];
+                int dir_light_intensity = intensity + (x * vertex.x + y * vertex.y + z * vertex.z) / (specular * vertex.magnitude);
+                colorsX[face] = light(hsl, dir_light_intensity, 0);
+
+                vertex = super.normals[b];
+                dir_light_intensity = intensity + (x * vertex.x + y * vertex.y + z * vertex.z) / (specular * vertex.magnitude);
+                colorsY[face] = light(hsl, dir_light_intensity, 0);
+
+                vertex = super.normals[c];
+                dir_light_intensity = intensity + (x * vertex.x + y * vertex.y + z * vertex.z) / (specular * vertex.magnitude);
+                colorsZ[face] = light(hsl, dir_light_intensity, 0);
+            } else if ((drawType[face] & 1) == 0) {
+                int type = drawType[face];
+                int hsl = colors[face] & '\uffff';
+                VertexNormal vertex = super.normals[a];
+                int dir_light_intensity = intensity + (x * vertex.x + y * vertex.y + z * vertex.z) / (specular * vertex.magnitude);
+                colorsX[face] = light(hsl, dir_light_intensity, type);
+
+                vertex = super.normals[b];
+                dir_light_intensity = intensity + (x * vertex.x + y * vertex.y + z * vertex.z) / (specular * vertex.magnitude);
+                colorsY[face] = light(hsl, dir_light_intensity, type);
+
+                vertex = super.normals[c];
+                dir_light_intensity = intensity + (x * vertex.x + y * vertex.y + z * vertex.z) / (specular * vertex.magnitude);
+                colorsZ[face] = light(hsl, dir_light_intensity, type);
             }
         }
-
         super.normals = null;
         vertexNormalsOffsets = null;
         vertexData = null;
         triangleData = null;
         if (drawType != null) {
-            for (int l1 = 0; l1 < trianglesCount; l1++)
-                if ((drawType[l1] & 2) == 2)
+            for (int face = 0; face < trianglesCount; face++)
+                if ((drawType[face] & 2) == 2)
                     return;
-
         }
         colors = null;
     }
 
-    private static int light(int light) {
-        if (light >= 2) {
-            if (light > 126) {
+    public static final int light(int light) {
+        if(light >= 2) {
+            if(light > 126) {
                 light = 126;
             }
         } else {
@@ -1579,46 +1577,22 @@ public class Model extends Renderable implements RSModel {
         return light;
     }
 
-    private static int light(int hsl, int light) {
+    public static final int light(int hsl, int light) {
         light = light * (hsl & 127) >> 7;
-        if (light < 2) {
+        if(light < 2) {
             light = 2;
-        } else if (light > 126) {
+        } else if(light > 126) {
             light = 126;
         }
         return (hsl & '\uff80') + light;
     }
 
-    public static int light(int hsl, int light, int type) {
+    public static final int light(int hsl, int light, int type) {
         if ((type & 2) == 2)
             return light(light);
 
         return light(hsl, light);
     }
-
-    private static int mixLightness(int i, int j, int k) {
-        if (i == 65535) {
-            return 0;
-        }
-        if ((k & 2) == 2) {
-            if (j < 0) {
-                j = 0;
-            } else if (j > 127) {
-                j = 127;
-            }
-            j = 127 - j;
-            return j;
-        }
-
-        j = j * (i & 0x7f) >> 7;
-        if (j < 2) {
-            j = 2;
-        } else if (j > 126) {
-            j = 126;
-        }
-        return (i & 0xff80) + j;
-    }
-
 
     public void renderModel(final int rotationY, final int rotationZ, final int rotationXW, final int translationX, final int translationY, final int translationZ) {
 
@@ -1763,12 +1737,21 @@ public class Model extends Renderable implements RSModel {
         }
     }
 
-   
+    //Scene models
     @Override
     public final void renderAtPoint(int orientation, int pitchSine, int pitchCos, int yawSin, int yawCos, int offsetX, int offsetY, int offsetZ, long uid) {
         if (this.boundsType != 1) {
             this.calculateBoundsCylinder();
         }
+
+//    	int x = ObjectKeyUtil.getObjectX(uid);
+//        int y = ObjectKeyUtil.getObjectY(uid);
+//        int opcode = ObjectKeyUtil.getObjectOpcode(uid);
+//        int id = ObjectKeyUtil.getObjectId(uid);
+
+//        boolean debugFlag = (opcode == 1 && (id == 3082));//id == 29777 || id == 29928))
+//        if (debugFlag)
+//        	System.out.println("RENDER 1, ID: "+id+" at "+x+", "+y+" = "+uid);
 
         calculateBoundingBox(orientation);
         int sceneX = offsetZ * yawCos - offsetX * yawSin >> 16;
@@ -1789,7 +1772,7 @@ public class Model extends Renderable implements RSModel {
 
         int yRot = offsetY * pitchCos - sceneX * pitchSine >> 16;
         int dimensionCosY = diagonal2DAboveOrigin * pitchSine >> 16;
-       
+
         int var20 = (pitchCos * this.maxY >> 16) + dimensionCosY;
         int objHeight = (yRot + var20) * Rasterizer3D.fieldOfView;
         if (objHeight / pos <= -Rasterizer2D.viewportCenterY)
@@ -1809,11 +1792,10 @@ public class Model extends Renderable implements RSModel {
 
         boolean inView = nearSight || this.texturesCount > 0;
 
-        boolean var32 = method322(uid);
+        //boolean var32 = method322(uid);
         boolean highlighted = false;
 
-        int var52;
-        if (uid > 0 && var32 && mouseInViewport) {
+        if (uid > 0 && mouseInViewport) { // var32 should replace (uid > 0) in osrs, but does not work for older maps (cox pillars "null" have menus, agility obstacles/levers don't)
             boolean withinBounds = false;
 
             byte distanceMin = 50;
@@ -1867,7 +1849,7 @@ public class Model extends Renderable implements RSModel {
 
             if (withinBounds) {
                 if (this.singleTile) {
-                   
+
                     hoveringObjects[objectsHovering++] = uid;
                     if (gpu) {
                         Client.instance.getDrawCallbacks().draw(this, orientation, pitchSine, pitchCos, yawSin, yawCos, offsetX, offsetY, offsetZ, uid);
@@ -1988,6 +1970,9 @@ public class Model extends Renderable implements RSModel {
                             }
 
                             index = (vertexScreenZ[triX] + vertexScreenZ[triY] + vertexScreenZ[triZ]) / 3 + this.diagonal3DAboveOrigin;
+                            if (index < 0)
+                                index = 0;
+
                             faceLists[index][depth[index]++] = currentTriangle;
                         }
                     } else {
@@ -2164,8 +2149,7 @@ public class Model extends Renderable implements RSModel {
         }
     }
 
-    @Override
-    public void drawFace(int face) {
+    public void drawFace(int face) { //method484
         DrawCallbacks callbacks = Client.instance.getDrawCallbacks();
         if (callbacks == null || !callbacks.drawFace(this, face))
         {
@@ -2177,17 +2161,16 @@ public class Model extends Renderable implements RSModel {
             int triY = trianglesY[face];
             int triZ = trianglesZ[face];
             Rasterizer3D.textureOutOfDrawingBounds = hasAnEdgeToRestrict[face];
-            if (triangleAlpha == null) {
+            if (triangleAlpha == null)
                 Rasterizer3D.alpha = 0;
-            } else {
-                Rasterizer3D.alpha = triangleAlpha[face] & 255;
-            }
+            else
+                Rasterizer3D.alpha = triangleAlpha[face] & 0xff;
+
             int type;
-            if (drawType == null) {
+            if (drawType == null)
                 type = 0;
-            } else {
+            else
                 type = drawType[face] & 3;
-            }
 
             if (materials != null && materials[face] != -1) {
                 int textureA = triX;
@@ -2199,6 +2182,7 @@ public class Model extends Renderable implements RSModel {
                     textureB = texturesY[coordinate];
                     textureC = texturesZ[coordinate];
                 }
+
                 if (colorsZ[face] == -1 || type == 3) {
                     Rasterizer3D.drawTexturedTriangle(
                             vertexScreenY[triX], vertexScreenY[triY], vertexScreenY[triZ],
@@ -2218,10 +2202,13 @@ public class Model extends Renderable implements RSModel {
                             vertexMovedZ[textureA], vertexMovedZ[textureB], vertexMovedZ[textureC],
                             materials[face]);
                 }
-            } else if(colorsZ[face] == -1) {
-                Rasterizer3D.drawFlatTriangle(vertexScreenY[triX],vertexScreenY[triY],vertexScreenY[triZ],
-                        vertexScreenX[triX],vertexScreenX[triY],vertexScreenX[triZ],
+
+            } else if(colorsZ[face] == -1) {//From old to new clause
+                Rasterizer3D.drawFlatTriangle(
+                        vertexScreenY[triX], vertexScreenY[triY], vertexScreenY[triZ],
+                        vertexScreenX[triX], vertexScreenX[triY], vertexScreenX[triZ],
                         modelColors[colorsX[face]]);
+
             } else {
                 if (type == 0) {
                     Rasterizer3D.drawShadedTriangle(vertexScreenY[triX], vertexScreenY[triY],
@@ -2439,10 +2426,10 @@ public class Model extends Renderable implements RSModel {
         }
     }
 
+    private int boundsType;
     boolean isBoundsCalculated;
 
     public int animayaGroups[][];
-
     public int animayaScales[][];
 
     private int xMid;
@@ -2544,6 +2531,7 @@ public class Model extends Renderable implements RSModel {
     public int bufferOffset;
     public int uvBufferOffset;
 
+    @Override
     public java.util.List<net.runelite.api.model.Vertex> getVertices() {
         int[] verticesX = getVerticesX();
         int[] verticesY = getVerticesY();
@@ -2555,7 +2543,6 @@ public class Model extends Renderable implements RSModel {
         }
         return vertices;
     }
-
 
     @Override
     public List<Triangle> getTriangles() {
@@ -2578,7 +2565,6 @@ public class Model extends Renderable implements RSModel {
 
         return triangles;
     }
-
 
     @Override
     public int getVerticesCount() {
@@ -2641,6 +2627,7 @@ public class Model extends Renderable implements RSModel {
     }
 
     private int sceneId;
+
     @Override
     public int getSceneId() {
         return sceneId;
@@ -2651,18 +2638,22 @@ public class Model extends Renderable implements RSModel {
         this.sceneId = sceneId;
     }
 
+    @Override
     public int getBufferOffset() {
         return bufferOffset;
     }
 
+    @Override
     public void setBufferOffset(int bufferOffset) {
         this.bufferOffset = bufferOffset;
     }
 
+    @Override
     public int getUvBufferOffset() {
         return uvBufferOffset;
     }
 
+    @Override
     public void setUvBufferOffset(int uvBufferOffset) {
         this.uvBufferOffset = uvBufferOffset;
     }
@@ -2707,17 +2698,9 @@ public class Model extends Renderable implements RSModel {
         calculateBoundingBox(orientation);
     }
 
-    @Override
     public void resetBounds() {
         this.boundsType = 0;
         this.xMidOffset = -1;
-    }
-
-    void invalidate() {
-        this.vertexNormalsOffsets = null;
-        this.normals = null;
-        this.faceNormals = null;
-        this.isBoundsCalculated = false;
     }
 
     @Override
@@ -2730,6 +2713,13 @@ public class Model extends Renderable implements RSModel {
         return null;
     }
 
+    void invalidate() {
+        this.vertexNormalsOffsets = null;
+        this.normals = null;
+        this.faceNormals = null;
+        this.isBoundsCalculated = false;
+    }
+
     @Override
     public void rotateY90Ccw() {
         rotate90Degrees();
@@ -2737,10 +2727,10 @@ public class Model extends Renderable implements RSModel {
 
     @Override
     public void rotateY180Ccw() {
-        for (int var1 = 0; var1 < this.verticesCount; ++var1)
+        for (int vert = 0; vert < this.verticesCount; ++vert)
         {
-            this.verticesX[var1] = -this.verticesX[var1];
-            this.verticesZ[var1] = -this.verticesZ[var1];
+            this.verticesX[vert] = -this.verticesX[vert];
+            this.verticesZ[vert] = -this.verticesZ[vert];
         }
 
         this.resetBounds();
@@ -2749,11 +2739,11 @@ public class Model extends Renderable implements RSModel {
 
     @Override
     public void rotateY270Ccw() {
-        for (int var1 = 0; var1 < this.verticesCount; ++var1)
+        for (int vert = 0; vert < this.verticesCount; ++vert)
         {
-            int var2 = this.verticesZ[var1];
-            this.verticesZ[var1] = this.verticesX[var1];
-            this.verticesX[var1] = -var2;
+            int var2 = this.verticesZ[vert];
+            this.verticesZ[vert] = this.verticesX[vert];
+            this.verticesX[vert] = -var2;
         }
 
         this.resetBounds();
@@ -2870,7 +2860,6 @@ public class Model extends Renderable implements RSModel {
 
         return Jarvis.convexHull(x2d, y2d);
     }
-
 
     @Override
     public float[] getFaceTextureUVCoordinates() {
@@ -3062,6 +3051,5 @@ public class Model extends Renderable implements RSModel {
 
         faceTextureUVCoordinates = faceTextureUCoordinates;
     }
-
 
 }
