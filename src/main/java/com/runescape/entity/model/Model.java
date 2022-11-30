@@ -2,7 +2,6 @@ package com.runescape.entity.model;
 
 import java.awt.Shape;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 import com.runescape.Client;
@@ -12,12 +11,9 @@ import com.runescape.draw.Rasterizer2D;
 import com.runescape.draw.Rasterizer3D;
 import com.runescape.engine.impl.MouseHandler;
 import com.runescape.entity.Renderable;
-import com.runescape.entity.model.FaceNormal;
-import com.runescape.entity.model.ModelHeader;
-import com.runescape.entity.model.ModelLoader;
-import com.runescape.entity.model.VertexNormal;
 import com.runescape.io.Buffer;
 import com.runescape.scene.SceneGraph;
+import com.runescape.util.ObjectKeyUtil;
 import net.runelite.api.Perspective;
 import net.runelite.api.hooks.DrawCallbacks;
 import net.runelite.api.model.Jarvis;
@@ -27,6 +23,8 @@ import net.runelite.rs.api.RSFrames;
 import net.runelite.rs.api.RSModel;
 
 public class Model extends Renderable implements RSModel {
+
+    public boolean DEBUG_MODELS = true;
 
     public static void clear() {
         modelHeaders = null;
@@ -1027,15 +1025,15 @@ public class Model extends Renderable implements RSModel {
         if (frame == null)
             return;
 
-        FrameBase base = frame.base; //Skeleton var4 = var3.skeleton;
-        transformTempX = 0; //Model_transformTempX
-        transformTempY = 0; //Model_transformTempY
-        transformTempZ = 0; //Model_transformTempZ
-        for (int k = 0; k < frame.transformationCount; k++) { //transformCount
-            int l = frame.transformationIndices[k]; //int var6 = var3.transformSkeletonLabels[var5];
-            transform(base.transformationType[l], //var4.transformTypes[var6]
-                    base.skinList[l], //var4.labels[var6]
-                    frame.transformX[k], //var3.transformXs[var5]
+        FrameBase base = frame.base;
+        transformTempX = 0;
+        transformTempY = 0;
+        transformTempZ = 0;
+        for (int k = 0; k < frame.transformationCount; k++) {
+            int l = frame.transformationIndices[k];
+            transform(base.transformationType[l],
+                    base.skinList[l],
+                    frame.transformX[k],
                     frame.transformY[k],
                     frame.transformZ[k]);
         }
@@ -1666,7 +1664,8 @@ public class Model extends Renderable implements RSModel {
         objectsHovering = 0;
     }
 
-    public static boolean method322(long var0) {
+    public static boolean validUID(long var0) {
+
         boolean var2 = var0 != 0L;
         if (var2) {
             boolean var3 = (int)(var0 >>> 16 & 1L) == 1;
@@ -1744,15 +1743,6 @@ public class Model extends Renderable implements RSModel {
             this.calculateBoundsCylinder();
         }
 
-//    	int x = ObjectKeyUtil.getObjectX(uid);
-//        int y = ObjectKeyUtil.getObjectY(uid);
-//        int opcode = ObjectKeyUtil.getObjectOpcode(uid);
-//        int id = ObjectKeyUtil.getObjectId(uid);
-
-//        boolean debugFlag = (opcode == 1 && (id == 3082));//id == 29777 || id == 29928))
-//        if (debugFlag)
-//        	System.out.println("RENDER 1, ID: "+id+" at "+x+", "+y+" = "+uid);
-
         calculateBoundingBox(orientation);
         int sceneX = offsetZ * yawCos - offsetX * yawSin >> 16;
         int sceneY = offsetY * pitchSine + sceneX * pitchCos >> 16;
@@ -1792,10 +1782,29 @@ public class Model extends Renderable implements RSModel {
 
         boolean inView = nearSight || this.texturesCount > 0;
 
-        //boolean var32 = method322(uid);
+        boolean var32 = validUID(uid);
         boolean highlighted = false;
 
-        if (uid > 0 && mouseInViewport) { // var32 should replace (uid > 0) in osrs, but does not work for older maps (cox pillars "null" have menus, agility obstacles/levers don't)
+
+        if (DEBUG_MODELS) {
+            int x = ObjectKeyUtil.getObjectX(uid);
+            int y = ObjectKeyUtil.getObjectY(uid);
+            int opcode = ObjectKeyUtil.getObjectOpcode(uid);
+            int id = ObjectKeyUtil.getObjectId(uid);
+
+            System.out.println("Render at Point , ID: "+id+" at "+x+", "+y+" = "+uid);
+        }
+
+        if (uid > 0 && var32 && mouseInViewport) { // var32 should replace (uid > 0) in osrs, but does not work for older maps (cox pillars "null" have menus, agility obstacles/levers don't)
+            if (DEBUG_MODELS) {
+                int x = ObjectKeyUtil.getObjectX(uid);
+                int y = ObjectKeyUtil.getObjectY(uid);
+                int opcode = ObjectKeyUtil.getObjectOpcode(uid);
+                int id = ObjectKeyUtil.getObjectId(uid);
+
+                System.out.println("Render at Point Hover, ID: "+id+" at "+x+", "+y+" = "+uid);
+            }
+
             boolean withinBounds = false;
 
             byte distanceMin = 50;
