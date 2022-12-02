@@ -24,7 +24,7 @@ import net.runelite.rs.api.RSModel;
 
 public class Model extends Renderable implements RSModel {
 
-    public boolean DEBUG_MODELS = true;
+    public boolean DEBUG_MODELS = false;
 
     public static void clear() {
         modelHeaders = null;
@@ -1782,7 +1782,6 @@ public class Model extends Renderable implements RSModel {
 
         boolean inView = nearSight || this.texturesCount > 0;
 
-        boolean var32 = validUID(uid);
         boolean highlighted = false;
 
 
@@ -1795,7 +1794,7 @@ public class Model extends Renderable implements RSModel {
             System.out.println("Render at Point , ID: "+id+" at "+x+", "+y+" = "+uid);
         }
 
-        if (uid > 0 && var32 && mouseInViewport) { // var32 should replace (uid > 0) in osrs, but does not work for older maps (cox pillars "null" have menus, agility obstacles/levers don't)
+        if (uid > 0 && mouseInViewport) { // var32 should replace (uid > 0) in osrs, but does not work for older maps (cox pillars "null" have menus, agility obstacles/levers don't)
             if (DEBUG_MODELS) {
                 int x = ObjectKeyUtil.getObjectX(uid);
                 int y = ObjectKeyUtil.getObjectY(uid);

@@ -1,10 +1,9 @@
-import org.apache.tools.ant.filters.ReplaceTokens
 import java.text.SimpleDateFormat
 import java.util.Date
 import org.ajoberstar.grgit.Grgit
 
 group = "com.runescape"
-version = Project.clientVersion
+version = 1.0
 
 
 repositories {
@@ -33,15 +32,13 @@ javafx {
     modules("javafx.base")
 }
 
-apply<BootstrapPlugin>()
-
 dependencies {
 
-    annotationProcessor(group = "org.projectlombok", name = "lombok", version = Project.lombokVersion)
+    annotationProcessor(group = "org.projectlombok", name = "lombok", version = "1.18.24")
     annotationProcessor(group = "org.pf4j", name = "pf4j", version = "3.6.0")
 
     compileOnly(group = "javax.annotation", name = "javax.annotation-api", version = "1.3.2")
-    compileOnly(group = "org.projectlombok", name = "lombok", version = Project.lombokVersion)
+    compileOnly(group = "org.projectlombok", name = "lombok", version = "1.18.24")
     compileOnly(group = "net.runelite", name = "orange-extensions", version = "1.0")
 
     implementation(group = "ch.qos.logback", name = "logback-classic", version = "1.2.9")
@@ -53,6 +50,7 @@ dependencies {
         exclude(group = "org.codehaus.mojo", module = "animal-sniffer-annotations")
     }
     implementation(group = "com.google.inject", name = "guice", version = "5.0.1")
+    implementation(group = "com.google.protobuf", name = "protobuf-javalite", version = "3.21.1")
     implementation(group = "com.jakewharton.rxrelay3", name = "rxrelay", version = "3.0.1")
     implementation(group = "com.squareup.okhttp3", name = "okhttp", version = "4.9.1")
     implementation(group = "io.reactivex.rxjava3", name = "rxjava", version = "3.1.2")
@@ -65,44 +63,62 @@ dependencies {
     implementation(group = "org.madlonkay", name = "desktopsupport", version = "0.6.0")
     implementation(group = "org.apache.commons", name = "commons-text", version = "1.9")
     implementation(group = "org.apache.commons", name = "commons-csv", version = "1.9.0")
-    implementation("com.beust:klaxon:5.5")
     implementation(group = "commons-io", name = "commons-io", version = "2.8.0")
     implementation(group = "org.jetbrains", name = "annotations", version = "22.0.0")
     implementation(group = "com.github.zafarkhaja", name = "java-semver", version = "0.9.0")
     implementation(group = "org.slf4j", name = "slf4j-api", version = "1.7.32")
+    implementation("com.beust:klaxon:5.5")
     implementation(group = "org.pf4j", name = "pf4j", version = "3.6.0") {
         exclude(group = "org.slf4j")
     }
-
+    implementation(group = "org.pf4j", name = "pf4j-update", version = "2.3.0")
+    // implementation(group = "com.google.archivepatcher", name = "archive-patch-applier", version= "1.0.4")
+    implementation(group = "net.runelite.gluegen", name = "gluegen-rt", version = "2.4.0-rc-20220318")
     implementation(group = "net.runelite.jogl", name = "jogl-rl", version = "2.4.0-rc-20220318")
     implementation(group = "net.runelite.jogl", name = "jogl-gldesktop-dbg", version = "2.4.0-rc-20220318")
     implementation(group = "net.runelite.jocl", name = "jocl", version = "1.0")
 
+    implementation(group = "net.runelite", name = "rlawt", version = "1.3")
+
+    implementation(group = "org.lwjgl", name = "lwjgl", version = "3.3.1")
+    implementation(group = "org.lwjgl", name = "lwjgl", version = "3.3.1", classifier = "natives-linux")
+    implementation(group = "org.lwjgl", name = "lwjgl", version = "3.3.1", classifier = "natives-macos")
+    implementation(group = "org.lwjgl", name = "lwjgl", version = "3.3.1", classifier = "natives-macos-arm64")
+    implementation(group = "org.lwjgl", name = "lwjgl", version = "3.3.1", classifier = "natives-windows-x86")
+    implementation(group = "org.lwjgl", name = "lwjgl", version = "3.3.1", classifier = "natives-windows")
+
+    implementation(group = "org.lwjgl", name = "lwjgl-opengl", version = "3.3.1")
+    implementation(group = "org.lwjgl", name = "lwjgl-opengl", version = "3.3.1", classifier = "natives-linux")
+    implementation(group = "org.lwjgl", name = "lwjgl-opengl", version = "3.3.1", classifier = "natives-macos")
+    implementation(group = "org.lwjgl", name = "lwjgl-opengl", version = "3.3.1", classifier = "natives-macos-arm64")
+    implementation(group = "org.lwjgl", name = "lwjgl-opengl", version = "3.3.1", classifier = "natives-windows-x86")
+    implementation(group = "org.lwjgl", name = "lwjgl-opengl", version = "3.3.1", classifier = "natives-windows")
+
     runtimeOnly(group = "net.runelite.pushingpixels", name = "trident", version = "1.5.00")
+    runtimeOnly(group = "net.runelite.gluegen", name = "gluegen-rt", version = "2.4.0-rc-20220318", classifier = "natives-linux-amd64")
+    runtimeOnly(group = "net.runelite.gluegen", name = "gluegen-rt", version = "2.4.0-rc-20220318", classifier = "natives-windows-amd64")
+    runtimeOnly(group = "net.runelite.gluegen", name = "gluegen-rt", version = "2.4.0-rc-20220318", classifier = "natives-windows-i586")
+    runtimeOnly(group = "net.runelite.gluegen", name = "gluegen-rt", version = "2.4.0-rc-20220318", classifier = "natives-macosx-universal")
+    runtimeOnly(group = "net.runelite.jogl", name = "jogl-rl", version = "2.4.0-rc-20220318", classifier = "natives-linux-amd64")
+    runtimeOnly(group = "net.runelite.jogl", name = "jogl-rl", version = "2.4.0-rc-20220318", classifier = "natives-windows-amd64")
+    runtimeOnly(group = "net.runelite.jogl", name = "jogl-rl", version = "2.4.0-rc-20220318", classifier = "natives-windows-i586")
+    runtimeOnly(group = "net.runelite.jogl", name = "jogl-rl", version = "2.4.0-rc-20220318", classifier = "natives-macosx-universal")
+    runtimeOnly(group = "net.runelite.jocl", name = "jocl", version = "1.0", classifier = "macos-x64")
+    runtimeOnly(group = "net.runelite.jocl", name = "jocl", version = "1.0", classifier = "macos-arm64")
 
-    testAnnotationProcessor(group = "org.projectlombok", name = "lombok", version = Project.lombokVersion)
+    testAnnotationProcessor(group = "org.projectlombok", name = "lombok", version = "1.18.24")
 
-    testCompileOnly(group = "org.projectlombok", name = "lombok", version = Project.lombokVersion)
+    testCompileOnly(group = "org.projectlombok", name = "lombok", version = "1.18.24")
 
     testImplementation(group = "com.google.inject.extensions", name = "guice-grapher", version = "4.1.0")
     testImplementation(group = "com.google.inject.extensions", name = "guice-testlib", version = "4.1.0")
     testImplementation(group = "org.hamcrest", name = "hamcrest-library", version = "1.3")
-    testImplementation(group = "junit", name = "junit", version = "4.13.1")
+    testImplementation(group = "junit", name = "junit", version = "4.12")
     testImplementation(group = "org.mockito", name = "mockito-core", version = "3.1.0")
     testImplementation(group = "org.mockito", name = "mockito-inline", version = "3.1.0")
     testImplementation(group = "com.squareup.okhttp3", name = "mockwebserver", version = "4.9.1")
     testImplementation(group = "org.slf4j", name = "slf4j-api", version = "1.7.32")
-    implementation("io.sentry:sentry-logback:6.0.0")
 
-    implementation(platform("org.lwjgl:lwjgl-bom:3.3.1"))
-    implementation("org.lwjgl:lwjgl")
-    implementation("org.lwjgl:lwjgl-opengl")
-    implementation("net.runelite:rlawt:1.3")
-
-    listOf("linux", "macos", "macos-arm64", "windows-x86", "windows").forEach {
-        runtimeOnly("org.lwjgl:lwjgl::natives-$it")
-        runtimeOnly("org.lwjgl:lwjgl-opengl::natives-$it")
-    }
 
 }
 
@@ -115,51 +131,6 @@ fun pluginPath(): String {
 
 fun formatDate(date: Date?) = with(date ?: Date()) {
     SimpleDateFormat("MM-dd-yyyy").format(this)
-}
-
-tasks {
-
-    java {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-
-    withType<AbstractArchiveTask> {
-        isPreserveFileTimestamps = false
-        isReproducibleFileOrder = true
-        dirMode = 493
-        fileMode = 420
-    }
-
-    withType<JavaCompile> {
-        options.encoding = "UTF-8"
-    }
-
-    processResources {
-        val tokens = mapOf(
-            "client.osrs.version" to Project.clientVersion,
-            "client.osrs.builddate" to formatDate(Date()),
-            "plugin.path" to pluginPath()
-        )
-
-        inputs.properties(tokens)
-
-        filesMatching("**/*.properties") {
-            filter(ReplaceTokens::class, "tokens" to tokens)
-            filteringCharset = "UTF-8"
-        }
-    }
-
-    jar {
-        manifest {
-            attributes(mutableMapOf("Main-Class" to "net.runelite.client.RuneLite"))
-        }
-    }
-
-    project.extra["gitCommit"] = localGitCommit
-    project.extra["rootPath"] = rootDir.toString().replace("\\", "/")
-
-
 }
 
 application {
