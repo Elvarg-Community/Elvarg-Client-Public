@@ -26,10 +26,25 @@ javafx {
 }
 
 dependencies {
-    annotationProcessor(group = "org.projectlombok", name = "lombok", version = "1.18.24")
+    val lombokVersion = "1.18.24"
+    val slf4jVersion = "1.7.36"
+    val lwjglVersion = "3.3.1"
+    val lwjglClassifiers = arrayOf(
+        "natives-linux",
+        "natives-windows-x86", "natives-windows",
+        "natives-macos", "natives-macos-arm64"
+    )
+    val joglVersion = "2.4.0-rc-20220318"
+    val joglClassifiers = arrayOf(
+        "natives-linux-amd64",
+        "natives-windows-amd64", "natives-windows-i586",
+        "natives-macosx-universal"
+    )
+
+    annotationProcessor(group = "org.projectlombok", name = "lombok", version = lombokVersion)
 
     compileOnly(group = "javax.annotation", name = "javax.annotation-api", version = "1.3.2")
-    compileOnly(group = "org.projectlombok", name = "lombok", version = "1.18.24")
+    compileOnly(group = "org.projectlombok", name = "lombok", version = lombokVersion)
     compileOnly(group = "net.runelite", name = "orange-extensions", version = "1.0")
 
     implementation(group = "ch.qos.logback", name = "logback-classic", version = "1.2.9")
@@ -57,19 +72,16 @@ dependencies {
     implementation(group = "commons-io", name = "commons-io", version = "2.8.0")
     implementation(group = "org.jetbrains", name = "annotations", version = "22.0.0")
     implementation(group = "com.github.zafarkhaja", name = "java-semver", version = "0.9.0")
-    implementation(group = "org.slf4j", name = "slf4j-api", version = "1.7.32")
+    implementation(group = "org.slf4j", name = "slf4j-api", version = slf4jVersion)
     implementation("com.beust:klaxon:5.5")
     // implementation(group = "com.google.archivepatcher", name = "archive-patch-applier", version= "1.0.4")
-    implementation(group = "net.runelite.gluegen", name = "gluegen-rt", version = "2.4.0-rc-20220318")
-    implementation(group = "net.runelite.jogl", name = "jogl-rl", version = "2.4.0-rc-20220318")
-    implementation(group = "net.runelite.jogl", name = "jogl-gldesktop-dbg", version = "2.4.0-rc-20220318")
+    implementation(group = "net.runelite.gluegen", name = "gluegen-rt", version = joglVersion)
+    implementation(group = "net.runelite.jogl", name = "jogl-rl", version = joglVersion)
+    implementation(group = "net.runelite.jogl", name = "jogl-gldesktop-dbg", version = joglVersion)
     implementation(group = "net.runelite.jocl", name = "jocl", version = "1.0")
 
     implementation(group = "net.runelite", name = "rlawt", version = "1.3")
 
-    val lwjglVersion = "3.3.1"
-    val lwjglClassifiers =
-        arrayOf("natives-linux", "natives-macos", "natives-macos-arm64", "natives-windows-x86", "natives-windows")
     implementation(group = "org.lwjgl", name = "lwjgl", version = lwjglVersion)
     implementation(group = "org.lwjgl", name = "lwjgl-opengl", version = lwjglVersion)
     for (classifier in lwjglClassifiers) {
@@ -78,60 +90,26 @@ dependencies {
     }
 
     runtimeOnly(group = "net.runelite.pushingpixels", name = "trident", version = "1.5.00")
-    runtimeOnly(
-        group = "net.runelite.gluegen",
-        name = "gluegen-rt",
-        version = "2.4.0-rc-20220318",
-        classifier = "natives-linux-amd64"
-    )
-    runtimeOnly(
-        group = "net.runelite.gluegen",
-        name = "gluegen-rt",
-        version = "2.4.0-rc-20220318",
-        classifier = "natives-windows-amd64"
-    )
-    runtimeOnly(
-        group = "net.runelite.gluegen",
-        name = "gluegen-rt",
-        version = "2.4.0-rc-20220318",
-        classifier = "natives-windows-i586"
-    )
-    runtimeOnly(
-        group = "net.runelite.gluegen",
-        name = "gluegen-rt",
-        version = "2.4.0-rc-20220318",
-        classifier = "natives-macosx-universal"
-    )
-    runtimeOnly(
-        group = "net.runelite.jogl",
-        name = "jogl-rl",
-        version = "2.4.0-rc-20220318",
-        classifier = "natives-linux-amd64"
-    )
-    runtimeOnly(
-        group = "net.runelite.jogl",
-        name = "jogl-rl",
-        version = "2.4.0-rc-20220318",
-        classifier = "natives-windows-amd64"
-    )
-    runtimeOnly(
-        group = "net.runelite.jogl",
-        name = "jogl-rl",
-        version = "2.4.0-rc-20220318",
-        classifier = "natives-windows-i586"
-    )
-    runtimeOnly(
-        group = "net.runelite.jogl",
-        name = "jogl-rl",
-        version = "2.4.0-rc-20220318",
-        classifier = "natives-macosx-universal"
-    )
+
+    for (classifier in joglClassifiers) {
+        runtimeOnly(
+            group = "net.runelite.jogl",
+            name = "jogl-rl",
+            version = joglVersion,
+            classifier = classifier
+        )
+        runtimeOnly(
+            group = "net.runelite.gluegen",
+            name = "gluegen-rt",
+            version = joglVersion,
+            classifier = classifier
+        )
+    }
     runtimeOnly(group = "net.runelite.jocl", name = "jocl", version = "1.0", classifier = "macos-x64")
     runtimeOnly(group = "net.runelite.jocl", name = "jocl", version = "1.0", classifier = "macos-arm64")
 
-    testAnnotationProcessor(group = "org.projectlombok", name = "lombok", version = "1.18.24")
-
-    testCompileOnly(group = "org.projectlombok", name = "lombok", version = "1.18.24")
+    testAnnotationProcessor(group = "org.projectlombok", name = "lombok", version = lombokVersion)
+    testCompileOnly(group = "org.projectlombok", name = "lombok", version = lombokVersion)
 
     testImplementation(group = "com.google.inject.extensions", name = "guice-grapher", version = "4.1.0")
     testImplementation(group = "com.google.inject.extensions", name = "guice-testlib", version = "4.1.0")
@@ -140,7 +118,7 @@ dependencies {
     testImplementation(group = "org.mockito", name = "mockito-core", version = "3.1.0")
     testImplementation(group = "org.mockito", name = "mockito-inline", version = "3.1.0")
     testImplementation(group = "com.squareup.okhttp3", name = "mockwebserver", version = "4.9.1")
-    testImplementation(group = "org.slf4j", name = "slf4j-api", version = "1.7.32")
+    testImplementation(group = "org.slf4j", name = "slf4j-api", version = slf4jVersion)
 }
 
 application {
