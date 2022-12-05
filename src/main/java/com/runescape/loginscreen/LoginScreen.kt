@@ -230,7 +230,7 @@ class LoginScreen(val client : Client) {
                     if (typed == -1) break
                     var valid = false
                     for (key in validUserPassChars) {
-                        if (typed != key.toInt()) {
+                        if (typed != key.code) {
                             continue
                         }
                         valid = true
