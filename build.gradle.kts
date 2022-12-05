@@ -75,6 +75,7 @@ dependencies {
     implementation(group = "org.slf4j", name = "slf4j-api", version = slf4jVersion)
     implementation("com.beust:klaxon:5.5")
     // implementation(group = "com.google.archivepatcher", name = "archive-patch-applier", version= "1.0.4")
+
     implementation(group = "net.runelite.gluegen", name = "gluegen-rt", version = joglVersion)
     implementation(group = "net.runelite.jogl", name = "jogl-rl", version = joglVersion)
     implementation(group = "net.runelite.jogl", name = "jogl-gldesktop-dbg", version = joglVersion)
@@ -92,19 +93,10 @@ dependencies {
     runtimeOnly(group = "net.runelite.pushingpixels", name = "trident", version = "1.5.00")
 
     for (classifier in joglClassifiers) {
-        runtimeOnly(
-            group = "net.runelite.jogl",
-            name = "jogl-rl",
-            version = joglVersion,
-            classifier = classifier
-        )
-        runtimeOnly(
-            group = "net.runelite.gluegen",
-            name = "gluegen-rt",
-            version = joglVersion,
-            classifier = classifier
-        )
+        runtimeOnly(group = "net.runelite.jogl", name = "jogl-rl", version = joglVersion, classifier = classifier)
+        runtimeOnly(group = "net.runelite.gluegen", name = "gluegen-rt", version = joglVersion, classifier = classifier)
     }
+
     runtimeOnly(group = "net.runelite.jocl", name = "jocl", version = "1.0", classifier = "macos-x64")
     runtimeOnly(group = "net.runelite.jocl", name = "jocl", version = "1.0", classifier = "macos-arm64")
 
