@@ -220,7 +220,7 @@ public enum Underlay {
             FILTERED_MAP.put(entry.getKey(), entry.getValue().toArray(new Underlay[0]));
     }
 
-    public static Underlay getUnderlay(@Nullable byte underlayId, Tile tile, Client client, HdPlugin plugin) {
+    public static Underlay getUnderlay(@Nullable Short underlayId, Tile tile, Client client, HdPlugin plugin) {
         WorldPoint worldPoint;
         if (client.isInInstancedRegion()) {
             worldPoint = WorldPoint.fromLocalInstance(client, tile.getLocalLocation());

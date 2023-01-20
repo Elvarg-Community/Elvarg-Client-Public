@@ -576,7 +576,7 @@ public enum Overlay {
             FILTERED_MAP.put(entry.getKey(), entry.getValue().toArray(new Overlay[0]));
     }
 
-    public static Overlay getOverlay(@Nullable byte overlayId, Tile tile, Client client, HdPlugin plugin) {
+    public static Overlay getOverlay(@Nullable Short overlayId, Tile tile, Client client, HdPlugin plugin) {
         WorldPoint worldPoint;
         if (client.isInInstancedRegion()) {
             worldPoint = WorldPoint.fromLocalInstance(client, tile.getLocalLocation());

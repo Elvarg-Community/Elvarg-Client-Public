@@ -7,6 +7,7 @@ import com.runescape.cache.config.VariableBits;
 import com.runescape.collection.ReferenceCache;
 import com.runescape.entity.model.Model;
 import com.runescape.io.Buffer;
+import com.runescape.util.BufferExt;
 import net.runelite.api.HeadIcon;
 import net.runelite.api.IterableHashTable;
 import net.runelite.rs.api.RSIterableNodeHashTable;
@@ -57,10 +58,20 @@ public final class NpcDefinition implements RSNPCComposition {
 	public String name;
 	public String actions[];
 	public int walkingAnimation;
+	public int[] headIconArchiveIds;
+	public short[] headIconSpriteIndex;
+	public int runRotate180Animation = -1;
+	public int runRotateLeftAnimation = -1;
+	public int runRotateRightAnimation = -1;
+	public int crawlAnimation = -1;
+	public int crawlRotate180Animation = -1;
+	public int runAnimation = -1;
+	public int crawlRotateLeftAnimation = -1;
+	public int crawlRotateRightAnimation = -1;
 	public int size;
 	public int[] recolorToReplace;
 	public int[] chatheadModels;
-	public int headIcon;
+
 	public int[] recolorToFind;
 	public int standingAnimation;
 	public long interfaceType;
@@ -95,7 +106,6 @@ public final class NpcDefinition implements RSNPCComposition {
 		anInt64 = 1834;
 		walkingAnimation = -1;
 		size = 1;
-		headIcon = -1;
 		standingAnimation = -1;
 		interfaceType = -1L;
 		rotationSpeed = 32;
@@ -267,7 +277,8 @@ public final class NpcDefinition implements RSNPCComposition {
 		combatLevel = copy.combatLevel;
 		name = copy.name;
 		description = copy.description;
-		headIcon = copy.headIcon;
+		headIconSpriteIndex = copy.headIconSpriteIndex;
+		headIconArchiveIds = copy.headIconArchiveIds;
 		clickable = copy.clickable;
 		ambient = copy.ambient;
 		heightScale = copy.heightScale;
@@ -532,9 +543,15 @@ public final class NpcDefinition implements RSNPCComposition {
 				ambient = buffer.readSignedByte();
             else if (opcode == 101)
 				contrast = buffer.readSignedByte();
-            else if (opcode == 102)
-                headIcon = buffer.readUShort();
-            else if (opcode == 103)
+            else if (opcode == 102) {
+				int size = buffer.readUShort();
+				headIconArchiveIds = new int[size];
+				headIconSpriteIndex = new short[size];
+				for (int index = 0; index < size; index++) {
+					headIconArchiveIds[index] = buffer.readUShort();
+					headIconSpriteIndex[index] = (short) buffer.readUShort();
+				}
+			} else if (opcode == 103)
 				rotationSpeed = buffer.readUShort();
             else if (opcode == 106 || opcode == 118) {
 				varbitId = buffer.readUShort();
@@ -570,24 +587,22 @@ public final class NpcDefinition implements RSNPCComposition {
 					isPet = true;
 			} else if (opcode == 107) {
 				clickable = false;
+			} else if (opcode == 114) {
+				runAnimation = buffer.readUShort();
+			} else if (opcode == 115) {
+				runAnimation = buffer.readUShort();
+				runRotate180Animation = buffer.readUShort();
+				runRotateLeftAnimation = buffer.readUShort();
+				runRotateRightAnimation = buffer.readUShort();
+			} else if (opcode == 116) {
+				crawlAnimation = buffer.readUShort();
+			} else if (opcode == 117) {
+				crawlAnimation = buffer.readUShort();
+				crawlRotate180Animation = buffer.readUShort();
+				crawlRotateLeftAnimation = buffer.readUShort();
+				crawlRotateRightAnimation = buffer.readUShort();
 			} else if (opcode == 249)  {
-				int length = buffer.readUnsignedByte();
-
-				params = new HashMap<>(length);
-
-				for (int i = 0; i < length; i++) {
-					boolean isString = buffer.readUnsignedByte() == 1;
-					int key = buffer.read24Int();
-					Object value;
-
-					if (isString) {
-						value = buffer.readString();
-					} else {
-						value = buffer.readInt();
-					}
-
-					params.put(key, value);
-				}
+				params = BufferExt.readStringIntParameters(buffer);
             } else {
                 System.out.println(String.format("npc def invalid opcode: %d", opcode));
             }

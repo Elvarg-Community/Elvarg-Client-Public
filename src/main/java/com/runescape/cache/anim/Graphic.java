@@ -33,7 +33,7 @@ public final class Graphic {
         Buffer stream = new Buffer(archive.readFile("spotanim.dat"));
         int length = stream.readUShort();
         if (cache == null)
-            cache = new Graphic[length + 1];
+            cache = new Graphic[length + 4000];
         for (int index = 0; index < length; index++) {
             if (cache[index] == null)
                 cache[index] = new Graphic();
@@ -58,8 +58,13 @@ public final class Graphic {
             } else if (opcode == 2) {
                 animationId = buffer.readUShort();
 
-                if (Animation.animations != null)
-                    animationSequence = Animation.animations[animationId];
+                try {
+                    if (Animation.animations != null)
+                        animationSequence = Animation.animations[animationId];
+                }catch (Exception e) {
+
+                }
+
             } else if (opcode == 4) {
                 resizeXY = buffer.readUShort();
             } else if (opcode == 5) {

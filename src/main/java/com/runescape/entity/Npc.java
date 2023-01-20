@@ -34,7 +34,7 @@ public final class Npc extends Mob implements RSNPC {
     public int getHeadIcon() {
         if (headIcon == -1) {
             if (desc != null) {
-                return desc.headIcon;
+                return desc.headIconSpriteIndex[0];
             }
         }
         return headIcon;

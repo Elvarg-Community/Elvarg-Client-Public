@@ -156,11 +156,11 @@ public class TileInfoOverlay extends net.runelite.client.ui.overlay.Overlay
 		lines.add(worldPointInfo);
 
 		Scene scene = client.getScene();
-		byte overlayId = scene.getOverlayIds()[plane][x][y];
+		Short overlayId = scene.getOverlayIds()[plane][x][y];
 		Overlay overlay = Overlay.getOverlay(overlayId, tile, client, plugin);
 		lines.add(String.format("Overlay: %s (%d)", overlay.name(), overlayId));
 
-		byte underlayId = scene.getUnderlayIds()[plane][x][y];
+		Short underlayId = scene.getUnderlayIds()[plane][x][y];
 		Underlay underlay = Underlay.getUnderlay(underlayId, tile, client, plugin);
 		lines.add(String.format("Underlay: %s (%d)", underlay.name(), underlayId));
 

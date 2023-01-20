@@ -153,7 +153,7 @@ public class CinematicScene {
         this.regions.forEach(region -> {
             int offsetX = (region.getRegionX() - baseX) * 64;
             int offsetY = (region.getRegionY() - baseY) * 64;
-            client.currentMapRegion.method180(region. getLandscapeData(), offsetY, offsetX, region.getRegionX() * 64, region.getRegionY() * 64, client.collisionMaps);
+            client.currentMapRegion.loadTerrainBlock(region. getLandscapeData(), offsetY, offsetX, region.getRegionX() * 64, region.getRegionY() * 64, client.collisionMaps);
             client.currentMapRegion.method190(offsetX, client.collisionMaps, offsetY, client.getScene(), region.getObjectsData());
         });
 

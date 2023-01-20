@@ -7,6 +7,7 @@ import com.runescape.draw.Rasterizer2D;
 import com.runescape.draw.Rasterizer3D;
 import com.runescape.entity.model.Model;
 import com.runescape.io.Buffer;
+import com.runescape.util.BufferExt;
 import net.runelite.api.IterableHashTable;
 import net.runelite.rs.api.RSItemComposition;
 import net.runelite.rs.api.RSIterableNodeHashTable;
@@ -32,6 +33,10 @@ public final class ItemDefinition implements RSItemComposition {
     public int[] colorFind;
     public boolean members;
     public int noted_item_id;
+    public int weight;
+    public int wearPos1;
+    public int wearPos2;
+    public int wearPos3;
     public int femaleModel1;
     public int maleModel0;
     public String options[];
@@ -729,9 +734,13 @@ public final class ItemDefinition implements RSItemComposition {
                     yOffset2d -= 0x10000;
             } else if (opcode == 11)
                 stackable = true;
-            else if (opcode == 12) {
+            else if (opcode == 12)
                 cost = buffer.readInt();
-            } else if (opcode == 16)
+             else if (opcode == 13)
+                 wearPos1 = buffer.readUnsignedByte();
+             else if (opcode == 14)
+                 wearPos2 = buffer.readUnsignedByte();
+             else if (opcode == 16)
                 members = true;
             else if (opcode == 23) {
                 maleModel0 = buffer.readUShort();
@@ -741,6 +750,8 @@ public final class ItemDefinition implements RSItemComposition {
             else if (opcode == 25) {
                 femaleModel0 = buffer.readUShort();
                 femaleOffset = buffer.readSignedByte();
+            } else if (opcode == 27) {
+                wearPos3 = buffer.readUnsignedByte();
             } else if (opcode == 26)
                 femaleModel1 = buffer.readUShort();
             else if (opcode >= 30 && opcode < 35) {
@@ -773,7 +784,9 @@ public final class ItemDefinition implements RSItemComposition {
                 shiftClickIndex = buffer.readUnsignedByte();
             } else if (opcode == 65) {
                 tradeable = true;
-            } else if (opcode == 78)
+            } else if (opcode == 75)
+                weight = buffer.readUShort();
+            else if (opcode == 78)
                 maleModel2 = buffer.readUShort();
             else if (opcode == 79)
                 femaleModel2 = buffer.readUShort();
@@ -787,7 +800,6 @@ public final class ItemDefinition implements RSItemComposition {
                 femaleHeadModel2 = buffer.readUShort();
             else if (opcode == 94)
                 category = buffer.readUShort();
-
             else if (opcode == 95)
                 zan2d = buffer.readUShort();
             else if (opcode == 97)
@@ -811,17 +823,7 @@ public final class ItemDefinition implements RSItemComposition {
                 }
                 countObj[opcode - 100] = buffer.readUShort();
                 countCo[opcode - 100] = buffer.readUShort();
-            } else if (opcode == 110)
-                resizeX = buffer.readUShort();
-            else if (opcode == 111)
-                resizeY = buffer.readUShort();
-            else if (opcode == 112)
-                resizeZ = buffer.readUShort();
-            else if (opcode == 113)
-                ambient = buffer.readSignedByte();
-            else if (opcode == 114)
-                contrast = buffer.readSignedByte() * 5;
-            else if (opcode == 115)
+            } else if (opcode == 115)
                 team = buffer.readUnsignedByte();
             else if (opcode == 139)
                 bought_id = buffer.readUShort();
@@ -832,23 +834,7 @@ public final class ItemDefinition implements RSItemComposition {
             else if (opcode == 149) {
                 placeholder_template_id = buffer.readUShort();
             } else if (opcode == 249) {
-                int length = buffer.readUnsignedByte();
-
-                params = new HashMap<>(length);
-
-                for (int i = 0; i < length; i++) {
-                    boolean isString = buffer.readUnsignedByte() == 1;
-                    int key = buffer.read24Int();
-                    Object value;
-
-                    if (isString) {
-                        value = buffer.readString();
-                    } else {
-                        value = buffer.readInt();
-                    }
-
-                    params.put(key, value);
-                }
+                params = BufferExt.readStringIntParameters(buffer);
             } else {
                 System.err.printf("Error unrecognised {Items} opcode: %d%n%n", opcode);
             }

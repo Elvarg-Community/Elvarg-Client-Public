@@ -3023,22 +3023,22 @@ public final class SceneGraph implements RSScene {
     }
 
     @Override
-    public byte[][][] getUnderlayIds() {
+    public short[][][] getUnderlayIds() {
         return Client.instance.currentMapRegion.underlays;
     }
 
     @Override
-    public void setUnderlayIds(byte[][][] underlayIds) {
+    public void setUnderlayIds(short[][][] underlayIds) {
         Client.instance.currentMapRegion.underlays = underlayIds;
     }
 
     @Override
-    public byte[][][] getOverlayIds() {
+    public short[][][] getOverlayIds() {
         return Client.instance.currentMapRegion.overlays;
     }
 
     @Override
-    public void setOverlayIds(byte[][][] overlayIds) {
+    public void setOverlayIds(short[][][] overlayIds) {
         Client.instance.currentMapRegion.overlays = overlayIds;
     }
 

@@ -18,7 +18,7 @@ public final class MapRegion {
     private final int[] chromas;
     private final int[] anIntArray128;
     private final int[][][] tileHeights;
-    public byte[][][] overlays;
+    public short[][][] overlays;
     public static int anInt131;
     private final byte[][][] shading;
     private final int[][][] anIntArrayArrayArray135;
@@ -26,7 +26,7 @@ public final class MapRegion {
     private static final int COSINE_VERTICES[] = { 1, 0, -1, 0 };
     private final int[][] tileLighting;
     private static final int anIntArray140[] = { 16, 32, 64, 128 };
-    public byte[][][] underlays;
+    public short[][][] underlays;
     private static final int SINE_VERTICIES[] = { 0, -1, 0, 1 };
     public static int maximumPlane = 99;
     private final int regionSizeX;
@@ -46,8 +46,8 @@ public final class MapRegion {
         regionSizeY = 104;
         this.tileHeights = tileHeights;
         this.tileFlags = fileFlags;
-        underlays = new byte[4][regionSizeX][regionSizeY];
-        overlays = new byte[4][regionSizeX][regionSizeY];
+        underlays = new short[4][regionSizeX][regionSizeY];
+        overlays = new short[4][regionSizeX][regionSizeY];
         overlayTypes = new byte[4][regionSizeX][regionSizeY];
         overlayOrientations = new byte[4][regionSizeX][regionSizeY];
         anIntArrayArrayArray135 = new int[4][regionSizeX + 1][regionSizeY + 1];
@@ -121,7 +121,7 @@ public final class MapRegion {
                     for (int i8 = 0; i8 < regionSizeY; i8++) {
                         int k9 = l6 + 5;
                         if (k9 >= 0 && k9 < regionSizeX) {
-                            int l12 = underlays[z][k9][i8] & 0xff;
+                            int l12 = underlays[z][k9][i8] & 0x7FFF;
                             if (l12 > 0) {
                                 if (l12 > FloorDefinition.underlays.length) {
                                     l12 = FloorDefinition.underlays.length;
@@ -136,7 +136,7 @@ public final class MapRegion {
                         }
                         int i13 = l6 - 5;
                         if (i13 >= 0 && i13 < regionSizeX) {
-                            int i14 = underlays[z][i13][i8] & 0xff;
+                            int i14 = underlays[z][i13][i8] & 0x7FFF;
                             if (i14 > 0) {
                                 FloorDefinition flo_1 = FloorDefinition.underlays[i14 - 1];
                                 hues[i8] -= flo_1.blendHue;
@@ -174,8 +174,8 @@ public final class MapRegion {
                             if (k17 >= 1 && k17 < regionSizeY - 1 && (!lowMem || (tileFlags[0][l6][k17] & 2) != 0 || (tileFlags[z][l6][k17] & 0x10) == 0 && getCollisionPlane(k17, z, l6) == anInt131)) {
                                 if (z < maximumPlane)
                                     maximumPlane = z;
-                                int l18 = underlays[z][l6][k17] & 0xff;
-                                int i19 = overlays[z][l6][k17] & 0xff;
+                                int l18 = underlays[z][l6][k17] & 0x7FFF;
+                                int i19 = overlays[z][l6][k17] & 0x7FFF;
                                 if (l18 > 0 || i19 > 0) {
                                     int j19 = tileHeights[z][l6][k17];
                                     int k19 = tileHeights[z][l6 + 1][k17];
@@ -416,18 +416,6 @@ public final class MapRegion {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    private static int calculateVertexHeight(int i, int j) {
-        int mapHeight = (interpolatedNoise(i + 45365, j + 0x16713, 4) - 128) + (interpolatedNoise(i + 10294, j + 37821, 2) - 128 >> 1) + (interpolatedNoise(i, j, 1) - 128 >> 2);
-        mapHeight = (int) ((double) mapHeight * 0.29999999999999999D) + 35;
-        if (mapHeight < 10) {
-            mapHeight = 10;
-        }
-        else if (mapHeight > 60) {
-            mapHeight = 60;
-        }
-        return mapHeight;
     }
 
     public final void initiateVertexHeights(int yOffset, int yLength, int xLength, int xOffset) {
@@ -878,100 +866,124 @@ public final class MapRegion {
         return class46.method577(j);
     }
 
-    public final void loadMapChunk(int i, int j, CollisionMap clips[], int l, int i1, byte abyte0[], int j1, int k1, int l1) {
-        for (int i2 = 0; i2 < 8; i2++) { //Add clipping
-            for (int j2 = 0; j2 < 8; j2++)
-                if (l + i2 > 0 && l + i2 < 103 && l1 + j2 > 0 && l1 + j2 < 103)
-                    clips[k1].clipData[l + i2][l1 + j2] &= 0xfeffffff;
-
-        }
-
-        Buffer stream = new Buffer(abyte0);
-        for (int l2 = 0; l2 < 4; l2++) {
-            for (int i3 = 0; i3 < 64; i3++) {
-                for (int j3 = 0; j3 < 64; j3++)
-                    if (l2 == i && i3 >= i1 && i3 < i1 + 8 && j3 >= j1 && j3 < j1 + 8)
-                        readTile(l1 + ChunkUtil.getRotatedMapChunkY(j3 & 7, j, i3 & 7), 0, stream, l + ChunkUtil.getRotatedMapChunkX(j, j3 & 7, i3 & 7), k1, j, 0);
-                    else
-                        readTile(-1, 0, stream, -1, 0, 0, 0);
-
-            }
-
-        }
-
-    }
-
-    public final void method180(byte abyte0[], int i, int j, int k, int l, CollisionMap aclass11[]) {
-        for (int i1 = 0; i1 < 4; i1++) {
-            for (int j1 = 0; j1 < 64; j1++) {
-                for (int k1 = 0; k1 < 64; k1++)
-                    if (j + j1 > 0 && j + j1 < 103 && i + k1 > 0 && i + k1 < 103)
-                        aclass11[i1].clipData[j + j1][i + k1] &= 0xfeffffff;
-            }
-
-        }
-
-        Buffer stream = new Buffer(abyte0);
-        for (int l1 = 0; l1 < 4; l1++) {
-            for (int i2 = 0; i2 < 64; i2++) {
-                for (int j2 = 0; j2 < 64; j2++)
-                    readTile(j2 + i, l, stream, i2 + j, l1, 0, k);
-
-            }
-
-        }
-    }
-
-    private void readTile(int i, int j, Buffer stream, int k, int l, int i1, int k1) {
-        try {
-            if (k >= 0 && k < 104 && i >= 0 && i < 104) {
-                tileFlags[l][k][i] = 0;
-                do {
-                    int l1 = stream.readUnsignedByte();
-                    if (l1 == 0)
-                        if (l == 0) {
-                            tileHeights[0][k][i] = -calculateVertexHeight(0xe3b7b + k + k1, 0x87cce + i + j) * 8;
-                            return;
-                        } else {
-                            tileHeights[l][k][i] = tileHeights[l - 1][k][i] - 240;
-                            return;
-                        }
-                    if (l1 == 1) {
-                        int j2 = stream.readUnsignedByte();
-                        if (j2 == 1)
-                            j2 = 0;
-                        if (l == 0) {
-                            tileHeights[0][k][i] = -j2 * 8;
-                            return;
-                        } else {
-                            tileHeights[l][k][i] = tileHeights[l - 1][k][i] - j2 * 8;
-                            return;
-                        }
-                    }
-                    if (l1 <= 49) {
-                        overlays[l][k][i] = stream.readSignedByte();
-                        overlayTypes[l][k][i] = (byte) ((l1 - 2) / 4);
-                        overlayOrientations[l][k][i] = (byte) ((l1 - 2) + i1 & 3);
-                    } else if (l1 <= 81)
-                        tileFlags[l][k][i] = (byte) (l1 - 49);
-                    else
-                        underlays[l][k][i] = (byte) (l1 - 81);
-                } while (true);
-            }
-            do {
-                int i2 = stream.readUnsignedByte();
-                if (i2 == 0)
-                    break;
-                if (i2 == 1) {
-                    stream.readUnsignedByte();
-                    return;
+    public final void loadMapChunk(final int subBlockZ, final int rotation, final CollisionMap[] collisionMap, final int mapRegionX,
+                                   final int subBlockX, final byte[] terrainData, final int subBlockY, final int blockPlane, final int mapRegionY) {
+        for (int regionX = 0; regionX < 8; regionX++) {
+            for (int regionY = 0; regionY < 8; regionY++) {
+                if (mapRegionX + regionX > 0 && mapRegionX + regionX < 103 && mapRegionY + regionY > 0
+                        && mapRegionY + regionY < 103) {
+                    collisionMap[blockPlane].clipData[mapRegionX + regionX][mapRegionY + regionY] &= 0xfeffffff;
                 }
-                if (i2 <= 49)
-                    stream.readUnsignedByte();
-            } while (true);
-        } catch (Exception e) {
+            }
+
+        }
+        final Buffer terrainDataStream = new Buffer(terrainData);
+        for (int plane = 0; plane < 4; plane++) {
+            for (int regionX = 0; regionX < 64; regionX++) {
+                for (int regionY = 0; regionY < 64; regionY++) {
+                    if (plane == subBlockZ && regionX >= subBlockX && regionX < subBlockX + 8 && regionY >= subBlockY
+                            && regionY < subBlockY + 8) {
+                        this.loadTile(mapRegionY + ChunkUtil.getRotatedMapChunkY(regionY & 7, rotation, regionX & 7),
+                                0, terrainDataStream,
+                                mapRegionX + ChunkUtil.getRotatedMapChunkX(rotation, regionY & 7, regionX & 7),
+                                blockPlane, rotation, 0);
+                    } else {
+                        this.loadTile(-1, 0, terrainDataStream, -1, 0, 0, 0);
+                    }
+                }
+
+            }
         }
     }
+
+    public final void loadTerrainBlock(byte[] blockData, int blockY, int blockX, int seed, int xOffset, CollisionMap[] collisionMap) {
+        for (int plane = 0; plane < 4; plane++) {
+            for (int tileX = 0; tileX < 64; tileX++) {
+                for (int tileY = 0; tileY < 64; tileY++) {
+                    if (blockX + tileX > 0 && blockX + tileX < 103 && blockY + tileY > 0 && blockY + tileY < 103) {
+                        collisionMap[plane].clipData[blockX + tileX][blockY + tileY] &= 0xfeffffff;
+                    }
+                }
+
+            }
+
+        }
+
+        final Buffer buffer = new Buffer(blockData);
+        for (int plane = 0; plane < 4; plane++) {
+            for (int tileX = 0; tileX < 64; tileX++) {
+                for (int tileY = 0; tileY < 64; tileY++) {
+                    int x = tileX + blockX;
+                    int y = tileY + blockY;
+                    this.loadTile(tileY + blockY, x + xOffset, buffer, tileX + blockX, plane, 0, y + seed);
+                }
+
+            }
+
+        }
+    }
+
+    private void loadTile(int x, int y, Buffer buffer, int z, int level, int overlayRotation, int seed) {
+        if (level >= 0 && level < 4 && z >= 0 && z < 104 && x >= 0 && x < 104) {
+            tileFlags[level][z][x] = 0;
+            while(true) {
+                int opcode = buffer.readUShort();
+                if (opcode == 0) {
+                    if (level == 0) {
+                        int baseHeight = interpolatedNoise(seed + 932731, y + 556238, 4) - 128 + (interpolatedNoise(10294 + seed + 932731, y + 556238, 2) - 128 >> 1) + (interpolatedNoise(seed + 932731, y + 556238, 1) - 128 >> 2);
+                        baseHeight = (int)((double)baseHeight * 0.3D) + 35;
+                        if (baseHeight < 10) {
+                            baseHeight = 10;
+                        } else if (baseHeight > 60) {
+                            baseHeight = 60;
+                        }
+
+                        tileHeights[0][z][x] = -baseHeight * 8;
+                    } else {
+                        tileHeights[level][z][x] = tileHeights[level - 1][z][x] - 240;
+                    }
+                    break;
+                }
+
+                if (opcode == 1) {
+                    int height = buffer.readUnsignedByte();
+                    if (height == 1) {
+                        height = 0;
+                    }
+
+                    if (level == 0) {
+                        tileHeights[0][z][x] = -height * 8;
+                    } else {
+                        tileHeights[level][z][x] = tileHeights[level - 1][z][x] - height * 8;
+                    }
+                    break;
+                }
+
+                if (opcode <= 49) {
+                    overlays[level][z][x] = (short)buffer.readShort();
+                    overlayTypes[level][z][x] = (byte)((opcode - 2) / 4);
+                    overlayOrientations[level][z][x] = (byte)(opcode - 2 + overlayRotation & 3);
+                } else if (opcode <= 81) {
+                    tileFlags[level][z][x] = (byte)(opcode - 49);
+                } else {
+                    underlays[level][z][x] = (short)(opcode - 81);
+                }
+            }
+        } else {
+            while (true) {
+                int opcode = buffer.readUShort();
+                if (opcode == 0) {
+                    break;
+                } else if (opcode == 1) {
+                    buffer.readUnsignedByte();
+                    break;
+                } else if (opcode <= 49) {
+                    buffer.readShort();
+                }
+            }
+        }
+    }
+
 
     /**
      * Returns the plane that actually contains the collision flag, to adjust for objects such as bridges. TODO better

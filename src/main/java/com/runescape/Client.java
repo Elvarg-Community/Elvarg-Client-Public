@@ -2109,7 +2109,7 @@ public class Client extends GameEngine implements RSClient {
                     int k5 = (mapCoordinates[i3] & 0xff) * 64 - regionBaseY;
                     byte abyte0[] = terrainData[i3];
                     if (abyte0 != null)
-                        currentMapRegion.method180(abyte0, k5, i4, (currentRegionX - 6) * 8, (currentRegionY - 6) * 8,
+                        currentMapRegion.loadTerrainBlock(abyte0, k5, i4, (currentRegionX - 6) * 8, (currentRegionY - 6) * 8,
                                 collisionMaps);
                 }
                 for (int j4 = 0; j4 < k2; j4++) {
@@ -18713,12 +18713,12 @@ public class Client extends GameEngine implements RSClient {
     }
 
     @Override
-    public byte[][][] getTileUnderlays() {
+    public short[][][] getTileUnderlays() {
         return scene.getUnderlayIds();
     }
 
     @Override
-    public byte[][][] getTileOverlays() {
+    public short[][][] getTileOverlays() {
         return scene.getOverlayIds();
     }
 
