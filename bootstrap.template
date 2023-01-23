@@ -29,7 +29,6 @@
         "-XX:+UseConcMarkSweepGC",
         "-XX:+UseParNewGC"
     ],
-
     "launcherArguments": [
         "-XX:+DisableAttachMechanism",
         "-Drunelite.launcher.nojvm=true",

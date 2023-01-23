@@ -1,18 +1,25 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import proguard.gradle.ProGuardTask
 
 group = "com.runescape"
 version = 1.0
 
-repositories {
-    mavenCentral()
-    maven("https://repo.runelite.net")
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.guardsquare:proguard-gradle:7.3.0")
+    }
 }
+
 
 plugins {
     kotlin("jvm")
     application
-    id("org.openjfx.javafxplugin") version "0.0.13"
-    id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("org.openjfx.javafxplugin")
+    id("com.github.johnrengelman.shadow")
+    id("com.mark.bootstrap.bootstrap")
 }
 
 kotlin {
@@ -23,6 +30,14 @@ kotlin {
 
 javafx {
     modules("javafx.base")
+}
+
+configure<com.mark.bootstrap.BootstrapPluginExtension> {
+    uploadType.set(com.mark.bootstrap.UploadType.FTP)
+    releaseType.set("normal")
+    baseLink.set("https://urllink.com/")
+    customRepo.set("https://urllink.com/client/repo/")
+    passiveMode.set(false)
 }
 
 dependencies {
@@ -48,7 +63,7 @@ dependencies {
     compileOnly(group = "net.runelite", name = "orange-extensions", version = "1.0")
 
     implementation(group = "ch.qos.logback", name = "logback-classic", version = "1.2.9")
-    implementation(group = "com.google.code.gson", name = "gson", version = "2.8.5")
+    implementation(group = "com.google.code.gson", name = "gson", version = "2.8.9")
     implementation(group = "com.google.guava", name = "guava", version = "30.1.1-jre") {
         exclude(group = "com.google.code.findbugs", module = "jsr305")
         exclude(group = "com.google.errorprone", module = "error_prone_annotations")
@@ -56,7 +71,7 @@ dependencies {
         exclude(group = "org.codehaus.mojo", module = "animal-sniffer-annotations")
     }
     implementation(group = "com.google.inject", name = "guice", version = "5.0.1")
-    implementation(group = "com.google.protobuf", name = "protobuf-javalite", version = "3.21.1")
+    implementation(group = "com.google.protobuf", name = "protobuf-javalite", version = "3.21.7")
     implementation(group = "com.jakewharton.rxrelay3", name = "rxrelay", version = "3.0.1")
     implementation(group = "com.squareup.okhttp3", name = "okhttp", version = "4.9.1")
     implementation(group = "io.reactivex.rxjava3", name = "rxjava", version = "3.1.2")
@@ -67,7 +82,7 @@ dependencies {
     implementation(group = "net.runelite.pushingpixels", name = "substance", version = "8.0.02")
     implementation(group = "net.sf.jopt-simple", name = "jopt-simple", version = "5.0.4")
     implementation(group = "org.madlonkay", name = "desktopsupport", version = "0.6.0")
-    implementation(group = "org.apache.commons", name = "commons-text", version = "1.9")
+    implementation(group = "org.apache.commons", name = "commons-text", version = "1.10.0")
     implementation(group = "org.apache.commons", name = "commons-csv", version = "1.9.0")
     implementation(group = "commons-io", name = "commons-io", version = "2.8.0")
     implementation(group = "org.jetbrains", name = "annotations", version = "22.0.0")
@@ -106,7 +121,7 @@ dependencies {
     testImplementation(group = "com.google.inject.extensions", name = "guice-grapher", version = "4.1.0")
     testImplementation(group = "com.google.inject.extensions", name = "guice-testlib", version = "4.1.0")
     testImplementation(group = "org.hamcrest", name = "hamcrest-library", version = "1.3")
-    testImplementation(group = "junit", name = "junit", version = "4.12")
+    testImplementation(group = "junit", name = "junit", version = "4.13.1")
     testImplementation(group = "org.mockito", name = "mockito-core", version = "3.1.0")
     testImplementation(group = "org.mockito", name = "mockito-inline", version = "3.1.0")
     testImplementation(group = "com.squareup.okhttp3", name = "mockwebserver", version = "4.9.1")
@@ -115,6 +130,17 @@ dependencies {
 
 application {
     mainClass.set("net.runelite.client.RuneLite")
+}
+
+
+tasks {
+    jar {
+        manifest {
+            attributes["Implementation-Title"] = project.name
+            attributes["Implementation-Version"] = "${project.version}"
+            attributes["Main-Class"] = "net.runelite.client.RuneLite"
+        }
+    }
 }
 
 tasks.withType<JavaCompile>().configureEach {
