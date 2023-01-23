@@ -2,6 +2,7 @@ package com.runescape.entity.model;
 
 import java.awt.Shape;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import com.runescape.Client;
@@ -181,9 +182,6 @@ public class Model extends Renderable implements RSModel {
         texturesCount = 0;
         facePriority = 0;
         singleTile = true;
-        xMidOffset = -1;
-        yMidOffset = -1;
-        zMidOffset = -1;
         this.isBoundsCalculated = false;
     }
 
@@ -201,9 +199,6 @@ public class Model extends Renderable implements RSModel {
             trianglesCount = 0;
             texturesCount = 0;
             facePriority = -1;
-            xMidOffset = -1;
-            yMidOffset = -1;
-            zMidOffset = -1;
             Model build;
             for (int count = 0; count < length; count++) {
                 build = models[count];
@@ -695,7 +690,7 @@ public class Model extends Renderable implements RSModel {
         vertexNormalsZ = model.vertexNormalsZ;
         faceTextureUVCoordinates = model.faceTextureUVCoordinates;
 
-        model.resetBounds();
+        resetBounds();
     }
 
     private int getFirstIdenticalVertexId(final Model model, final int vertex) {
@@ -1664,76 +1659,64 @@ public class Model extends Renderable implements RSModel {
         objectsHovering = 0;
     }
 
-    public static boolean validUID(long var0) {
-
-        boolean var2 = var0 != 0L;
-        if (var2) {
-            boolean var3 = (int)(var0 >>> 16 & 1L) == 1;
-            var2 = !var3;
-        }
-
-        return var2;
-    }
-
-    private void calculateBoundingBox(int size) {
-        if (this.xMidOffset == -1) {
-            int minxX = 0;
+    public void calculateBoundingBox(int orientation) {
+        if (!this.aabb.containsKey(orientation)) {
+            int minX = 0;
             int minZ = 0;
             int minY = 0;
             int maxX = 0;
             int maxZ = 0;
             int maxY = 0;
-            int var8 = COSINE[size];
-            int var9 = SINE[size];
+            int cosine = COSINE[orientation];
+            int sine = SINE[orientation];
 
-            for (int var10 = 0; var10 < this.verticesCount; ++var10) {
-                int x = Rasterizer3D.method4045(this.verticesX[var10], this.verticesZ[var10], var8, var9);
-                int z = this.verticesY[var10];
-                int y = Rasterizer3D.method4046(this.verticesX[var10], this.verticesZ[var10], var8, var9);
-                if (x < minxX) {
-                    minxX = x;
+            for(int vert = 0; vert < this.verticesCount; ++vert) {
+                int x = Rasterizer3D.method4046(this.verticesX[vert], this.verticesZ[vert], cosine, sine);
+                int y = this.verticesY[vert];
+                int z = Rasterizer3D.method4046(this.verticesX[vert], this.verticesZ[vert], cosine, sine);
+                if (x < minX) {
+                    minX = x;
                 }
 
                 if (x > maxX) {
                     maxX = x;
                 }
 
-                if (z < minZ) {
-                    minZ = z;
+                if (y < minZ) {
+                    minZ = y;
                 }
 
-                if (z > maxZ) {
-                    maxZ = z;
+                if (y > maxZ) {
+                    maxZ = y;
                 }
 
-                if (y < minY) {
-                    minY = y;
+                if (z < minY) {
+                    minY = z;
                 }
 
-                if (y > maxY) {
-                    maxY = y;
+                if (z > maxY) {
+                    maxY = z;
                 }
             }
 
-            this.xMid = (maxX + minxX) / 2;
-            this.yMid = (maxZ + minZ) / 2;
-            this.zMid = (maxY + minY) / 2;
-            this.xMidOffset = (maxX - minxX + 1) / 2;
-            this.yMidOffset = (maxZ - minZ + 1) / 2;
-            this.zMidOffset = (maxY - minY + 1) / 2;
-            if (this.xMidOffset < 32) {
-                this.xMidOffset = 32;
+            AABB aabb = new AABB((maxX + minX) / 2, (maxZ + minZ) / 2, (maxY + minY) / 2, (maxX - minX + 1) / 2, (maxZ - minZ + 1) / 2, (maxY - minY + 1) / 2);
+
+            if (aabb.xMidOffset < 32) {
+                aabb.xMidOffset = 32;
             }
 
-            if (this.zMidOffset < 32) {
-                this.zMidOffset = 32;
+            if (aabb.zMidOffset < 32) {
+                aabb.zMidOffset = 32;
             }
 
             if (this.singleTile) {
-                this.xMidOffset += 8;
-                this.zMidOffset += 8;
+                aabb.xMidOffset += 8;
+                aabb.zMidOffset += 8;
             }
+
+            this.aabb.put(orientation, aabb);
         }
+
     }
 
     //Scene models
@@ -1833,23 +1816,24 @@ public class Model extends Renderable implements RSModel {
             int ViewportMouse_field2590 = Math.abs(ItemComposition_field2148);
             int class136_field1612 = Math.abs(User_field4308);
 
-            int var37 = offsetX + this.xMid;
-            int var38 = offsetY + this.yMid;
-            int var39 = offsetZ + this.zMid;
+            AABB var50 = (AABB)this.aabb.get(orientation);
+            int var37 = offsetX + var50.xMid;
+            int var38 = offsetY + var50.yMid;
+            int var39 = offsetZ + var50.zMid;
             var43 = ViewportMouse_field2588 - var37;
             var44 = GZipDecompressor_field4821 - var38;
             var45 = class340_field4138 - var39;
-            if (Math.abs(var43) > xMidOffset + class421_field4607) {
+            if (Math.abs(var43) > var50.xMidOffset + class421_field4607) {
                 withinBounds = false;
-            } else if (Math.abs(var44) > yMidOffset + ViewportMouse_field2590) {
+            } else if (Math.abs(var44) > var50.yMidOffset + ViewportMouse_field2590) {
                 withinBounds = false;
-            } else if (Math.abs(var45) > zMidOffset + class136_field1612) {
+            } else if (Math.abs(var45) > var50.zMidOffset + class136_field1612) {
                 withinBounds = false;
-            } else if (Math.abs(var45 * ItemComposition_field2148 - var44 * User_field4308) > yMidOffset * class136_field1612 + zMidOffset * ViewportMouse_field2590) {
+            } else if (Math.abs(var45 * ItemComposition_field2148 - var44 * User_field4308) > var50.yMidOffset * class136_field1612 + var50.zMidOffset * ViewportMouse_field2590) {
                 withinBounds = false;
-            } else if (Math.abs(var43 * User_field4308 - var45 * ViewportMouse_field2589) > zMidOffset * class421_field4607 + xMidOffset * class136_field1612) {
+            } else if (Math.abs(var43 * User_field4308 - var45 * ViewportMouse_field2589) > var50.zMidOffset * class421_field4607 + var50.xMidOffset * class136_field1612) {
                 withinBounds = false;
-            } else if (Math.abs(var44 * ViewportMouse_field2589 - var43 * ItemComposition_field2148) > xMidOffset * ViewportMouse_field2590 + yMidOffset * class421_field4607) {
+            } else if (Math.abs(var44 * ViewportMouse_field2589 - var43 * ItemComposition_field2148) > var50.xMidOffset * ViewportMouse_field2590 + var50.yMidOffset * class421_field4607) {
                 withinBounds = false;
             } else {
                 withinBounds = true;
@@ -1857,12 +1841,7 @@ public class Model extends Renderable implements RSModel {
 
             if (withinBounds) {
                 if (this.singleTile) {
-
                     hoveringObjects[objectsHovering++] = uid;
-                    if (gpu) {
-                        Client.instance.getDrawCallbacks().draw(this, orientation, pitchSine, pitchCos, yawSin, yawCos, offsetX, offsetY, offsetZ, uid);
-                        return;
-                    }
                 } else {
                     highlighted = true;
                 }
@@ -1944,6 +1923,8 @@ public class Model extends Renderable implements RSModel {
     }
 
     final void withinObject(boolean var25, boolean highlighted, long uid) {
+        final boolean gpu = Client.instance.isGpu() && Rasterizer3D.world;
+
         if (diagonal3D < 1600) {
             for (int diagonalIndex = 0; diagonalIndex < diagonal3D; diagonalIndex++) {
                 depth[diagonalIndex] = 0;
@@ -1963,6 +1944,17 @@ public class Model extends Renderable implements RSModel {
                     int screenXY = vertexScreenX[triY];
                     int screenXZ = vertexScreenX[triZ];
                     int index;
+
+                    if (gpu) {
+                        if (screenXX == -5000 || screenXY == -5000 || screenXZ == -5000) {
+                            continue;
+                        }
+                        if (highlighted && inBounds(vertexScreenY[triX], vertexScreenY[triY], vertexScreenY[triZ], screenXX, screenXY, screenXZ,size)) {
+                            hoveringObjects[objectsHovering++] = uid;
+                        }
+                        continue;
+                    }
+
                     if (!var25 || screenXX != -5000 && screenXY != -5000 && screenXZ != -5000) {
                         if (highlighted && inBounds(vertexScreenY[triX], vertexScreenY[triY], vertexScreenY[triZ], screenXX, screenXY, screenXZ, size)) {
                             hoveringObjects[objectsHovering++] = uid;
@@ -2010,7 +2002,9 @@ public class Model extends Renderable implements RSModel {
                     }
                 }
             }
-
+            if (gpu) {
+                return;
+            }
             if (this.renderPriorities == null) {
                 for (int faceIndex = this.diagonal3D - 1; faceIndex >= 0; --faceIndex) {
                     int depth = Model.depth[faceIndex];
@@ -2440,13 +2434,6 @@ public class Model extends Renderable implements RSModel {
     public int animayaGroups[][];
     public int animayaScales[][];
 
-    private int xMid;
-    private int yMid;
-    private int zMid;
-    private int xMidOffset;
-    private int yMidOffset;
-    private int zMidOffset;
-
     private float[] faceTextureUVCoordinates;
     private int[] vertexNormalsX, vertexNormalsY, vertexNormalsZ;
 
@@ -2527,6 +2514,8 @@ public class Model extends Renderable implements RSModel {
     public static int COSINE[];
     static int modelColors[];
     static int modelLocations[];
+
+    HashMap<Integer, net.runelite.api.AABB> aabb = new HashMap<Integer, net.runelite.api.AABB>();
 
     static {
         SINE = Rasterizer3D.SINE;
@@ -2708,7 +2697,7 @@ public class Model extends Renderable implements RSModel {
 
     public void resetBounds() {
         this.boundsType = 0;
-        this.xMidOffset = -1;
+        this.aabb.clear();
     }
 
     @Override
@@ -2756,36 +2745,6 @@ public class Model extends Renderable implements RSModel {
 
         this.resetBounds();
         invalidate();
-    }
-
-    @Override
-    public int getCenterX() {
-        return xMid;
-    }
-
-    @Override
-    public int getCenterY() {
-        return yMid;
-    }
-
-    @Override
-    public int getCenterZ() {
-        return zMid;
-    }
-
-    @Override
-    public int getExtremeX() {
-        return xMidOffset;
-    }
-
-    @Override
-    public int getExtremeY() {
-        return yMidOffset;
-    }
-
-    @Override
-    public int getExtremeZ() {
-        return zMidOffset;
     }
 
     @Override
@@ -2860,6 +2819,11 @@ public class Model extends Renderable implements RSModel {
     }
 
     @Override
+    public HashMap<Integer, net.runelite.api.AABB> getAABBMap() {
+        return aabb;
+    }
+
+    @Override
     public Shape getConvexHull(int localX, int localY, int orientation, int tileHeight) {
         int[] x2d = new int[getVerticesCount()];
         int[] y2d = new int[getVerticesCount()];
@@ -2884,7 +2848,7 @@ public class Model extends Renderable implements RSModel {
 
     @Override
     public int getBottomY() {
-        return modelBaseY;
+        return maxY;
     }
 
     private void vertexNormals()
@@ -3058,6 +3022,20 @@ public class Model extends Renderable implements RSModel {
         }
 
         faceTextureUVCoordinates = faceTextureUCoordinates;
+    }
+
+    public int lastOrientation = -1;
+
+    @Override
+    public int getLastOrientation() {
+        return lastOrientation;
+    }
+
+    @Override
+    public AABB getAABB(int orientation) {
+        calculateExtreme(orientation);
+        lastOrientation = orientation;
+        return (AABB) getAABBMap().get(lastOrientation);
     }
 
 }

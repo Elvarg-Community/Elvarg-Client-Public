@@ -26,6 +26,8 @@ package net.runelite.api;
 
 import net.runelite.api.model.Triangle;
 import net.runelite.api.model.Vertex;
+
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -96,13 +98,6 @@ public interface Model extends Renderable
 
 	void calculateExtreme(int orientation);
 
-	int getCenterX();
-	int getCenterY();
-	int getCenterZ();
-	int getExtremeX();
-	int getExtremeY();
-	int getExtremeZ();
-
 	int getXYZMag();
 	boolean isClickable();
 	
@@ -116,4 +111,12 @@ public interface Model extends Renderable
 	byte getOverrideHue();
 	byte getOverrideSaturation();
 	byte getOverrideLuminance();
+
+	HashMap<Integer, AABB> getAABBMap();
+
+	AABB getAABB(int orientation);
+
+	void calculateBoundingBox(int orientation);
+
+	int getLastOrientation();
 }

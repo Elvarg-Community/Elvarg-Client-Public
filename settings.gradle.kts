@@ -1,4 +1,4 @@
-rootProject.name = "Elvarg-Client-data"
+rootProject.name = "Elvarg-Client-Coummnity"
 
 dependencyResolutionManagement {
     @Suppress("UnstableApiUsage")
