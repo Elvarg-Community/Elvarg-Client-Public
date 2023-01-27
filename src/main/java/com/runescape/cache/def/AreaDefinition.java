@@ -46,7 +46,6 @@ public final class AreaDefinition {
         );
 
         size = stream.readUShort();
-        mapFunctionsSize = stream.readUShort();
 
         indices = new int[size];
         int offset = 2;
