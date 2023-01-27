@@ -769,8 +769,8 @@ public final class ItemDefinition implements RSItemComposition {
                 colorReplace = new int[length];
                 colorFind = new int[length];
                 for (int index = 0; index < length; index++) {
-                    colorFind[index] = buffer.readUShort();
                     colorReplace[index] = buffer.readUShort();
+                    colorFind[index] = buffer.readUShort();
                 }
             } else if (opcode == 41) {
                 int length = buffer.readUnsignedByte();
