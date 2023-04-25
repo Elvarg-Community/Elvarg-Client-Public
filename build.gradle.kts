@@ -19,7 +19,6 @@ plugins {
     application
     id("org.openjfx.javafxplugin")
     id("com.github.johnrengelman.shadow")
-    id("com.mark.bootstrap.bootstrap")
 }
 
 kotlin {
@@ -30,14 +29,6 @@ kotlin {
 
 javafx {
     modules("javafx.base")
-}
-
-configure<com.mark.bootstrap.BootstrapPluginExtension> {
-    uploadType.set(com.mark.bootstrap.UploadType.FTP)
-    releaseType.set("normal")
-    baseLink.set("https://urllink.com/")
-    customRepo.set("https://urllink.com/client/repo/")
-    passiveMode.set(false)
 }
 
 dependencies {
