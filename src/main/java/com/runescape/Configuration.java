@@ -7,8 +7,11 @@ package com.runescape;
  */
 public final class Configuration {
 
+    public static final String CACHE_HASH_LINK = "https://assets.illerai.com/hash";
+    public static final String CACHE_LINK = "https://assets.illerai.com/elvarg_cache.zip";
+
     public static final int UPDATE_SERVER_PORT = 43580;
-    public static final int CACHE_VERSION = 2;
+    public static final int CACHE_VERSION = 160;
     public static final int UPDATE_SERVER_VERSION = 1;
     public static final int UID = 8784521;
     public static final String CACHE_DIRECTORY = "./Cache/"; //System.getProperty("user.home") + File.separator + "OSRSPKV"+CLIENT_VERSION+"/";

@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.RandomAccessFile;
 
 import com.runescape.Configuration;
+import net.runelite.client.RuneLite;
 
 public final class SignLink {
 
@@ -94,10 +95,7 @@ public final class SignLink {
     }
 
     public static String findcachedir() {
-        final File cacheDirectory = new File(Configuration.CACHE_DIRECTORY);
-        if (!cacheDirectory.exists())
-            cacheDirectory.mkdir();
-        return Configuration.CACHE_DIRECTORY;
+        return RuneLite.CACHE_DIR.getAbsolutePath() + "/";
     }
     
     public static String indexLocation(int cacheIndex, int index) {

@@ -4170,6 +4170,7 @@ public class Client extends GameEngine implements RSClient {
         setGameState(GameState.STARTING);
 
         drawLoadingText(20, "Starting up");
+        new CacheDownloader().init();
         if (SignLink.cache_dat != null) {
             for (int i = 0; i < 6; i++)
                 indices[i] = new FileStore(SignLink.cache_dat, SignLink.indices[i], i + 1);

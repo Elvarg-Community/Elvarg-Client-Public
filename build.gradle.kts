@@ -49,6 +49,7 @@ dependencies {
 
     annotationProcessor(group = "org.projectlombok", name = "lombok", version = lombokVersion)
 
+
     compileOnly(group = "javax.annotation", name = "javax.annotation-api", version = "1.3.2")
     compileOnly(group = "org.projectlombok", name = "lombok", version = lombokVersion)
     compileOnly(group = "net.runelite", name = "orange-extensions", version = "1.0")
